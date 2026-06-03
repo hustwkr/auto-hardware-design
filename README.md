@@ -1,53 +1,87 @@
-# ⚡ 电解电容寿命计算工具
-# Electrolytic Capacitor Lifetime Calculator
+# ⚡ 自动硬件设计工具
+# Auto Hardware Design Tool
 
-基于 Arrhenius 加速模型 + Miner 累积损伤法则的电解电容寿命评估工具，支持多段运行剖面、多频率纹波电流叠加、质保期判定及报告导出。
+一站式自动化硬件设计辅助工具集，覆盖电源、安规、热设计等常见硬件工程计算场景。
+持续集成更多模块。
 
-An electrolytic capacitor lifetime evaluation tool based on the Arrhenius acceleration model and Miner cumulative damage rule. Supports multi-segment mission profiles, multi-frequency ripple current superposition, warranty period assessment, and report export.
+A one-stop automated hardware design assistant toolset covering power, safety, thermal, and other common hardware engineering calculations. More modules are continuously being integrated.
 
-## 功能特性 Features
+---
+
+## 模块列表 Modules
+
+### 1. 电解电容寿命计算
+### Electrolytic Capacitor Lifetime Calculator
+
+基于 Arrhenius 加速模型 + Miner 累积损伤法则，支持多段运行剖面、多频率纹波电流叠加、质保期判定及报告导出。
+
+An electrolytic capacitor lifetime evaluation tool based on the Arrhenius acceleration model and Miner cumulative damage rule. Supports multi-segment mission profiles, multi-frequency ripple current superposition, warranty assessment, and report export.
+
+#### 功能特性 Features
 
 - **多段运行剖面** Multi-segment mission profile — 自定义一天中各时段的温度、电压、纹波电流
 - **多频率纹波叠加** Multi-frequency ripple superposition — 每个时段可添加多组不同频率的纹波电流分量
 - **频率修正** Frequency correction — 根据纹波频率自动查表修正等效电流
 - **质保期判定** Warranty assessment — 设置目标质保期，自动评估裕量是否满足要求
-- **LaTeX 公式** LaTeX formulas — 公式使用 KaTeX 渲染（有网络时），无网络时降级为可读 Unicode 文本
-- **导出 Word** Export to Word — 一键导出含详细计算过程的 `.doc` 报告
-- **项目信息** Project info — 可选输入项目名称和电容型号
+- **LaTeX 公式** LaTeX formulas — 公式使用 KaTeX 渲染
 
-## 使用方法 Usage
+#### 寿命模型 Life Model
 
-直接打开 `index.html` 即可使用（无需服务器）。
+```
+L_i = L_0 × 2^((T_max - T_hs_i)/10) × K_V
+ΔT = ΔT_0 × Σ_j(I_j / (I_rated × K_freq_j))^2 / 散热系数
+D = Σ_i(t_i × 工作天数 / L_i)
+寿命 = 1 / D (年)
+```
 
-Open `index.html` directly in a browser (no server required).
+---
 
-### 参数说明 Parameter Guide
+### 2. 安规距离计算
+### Creepage & Clearance Calculator
+
+基于 IEC 60664-1 / UL 840 标准的爬电距离和电气间隙计算工具，适用于并网逆变器设计。支持多测量节点、绝缘类型、PCB/三防漆配置，自动生成带公式推导的设计报告。
+
+A creepage and clearance distance calculation tool based on IEC 60664-1 / UL 840 standards for grid-tied inverter design. Supports multiple measurement nodes, insulation type, PCB/conformal coating configuration, and automatic report generation with formula derivation.
+
+#### 功能特性 Features
+
+- **双标准支持** Dual standard support — IEC 60664-1 / IEC 62109-1 或 UL 840 / UL 1741
+- **多测量节点** Multiple measurement nodes — 可定义 L-N、L-PE、DC+-PE 等多个被测节点
+- **绝缘类型** Insulation type — 功能/基本/附加/加强绝缘，各节点独立设置
+- **污染等级 & 材料组别** Pollution degree & Material group — PD 1-3, CTI 分组 I-IIIb
+- **过电压类别 (OVC)** Overvoltage category — 根据 OVC I-IV + 系统额定电压自动查表确定额定冲击电压 Uimp (IEC 60664-1 Table B.1)
+- **海拔修正** Altitude correction — 海拔系数自动应用至电气间隙
+- **PCB/三防漆** PCB & coating — 每个节点独立设置走线方式和三防漆使用情况
+- **设计报告** Design report — 含各节点计算公式推导详情，支持 Word 导出
+
+#### 计算依据 Standards Reference
+
+- **电气间隙 Clearance**: IEC 60664-1 Table 1（按峰值电压 + 污染等级查表，乘海拔系数 + 绝缘倍率）
+- **爬电距离 Creepage**: IEC 60664-1 Table 18（按 RMS 电压 + 污染等级 + 材料组别查表，乘 PCB/三防漆修正 + 绝缘倍率）
+- **额定冲击电压 Uimp**: IEC 60664-1 Table B.1（按 OVC 类别 + 系统额定电压查表）
+
+#### 参数说明 Parameter Guide
 
 | 参数 Parameter | 说明 Description |
 |---|---|
-| L₀ | 额定寿命 (h)，通常 1000-10000 |
-| T_max | 最高额定温度 (°C)，常见 85/105/125 |
-| V_rated | 额定电压 (V) |
-| I_rated | 额定纹波电流 (mA)，@ 120Hz |
-| ΔT₀ | 最大芯温升 (°C)，标准 10 / 长寿命 5 |
-| T_a | 环境温度 (°C) |
-| V_op | 运行电压 (V) |
-| I_op | 运行纹波电流 (mA) |
+| OVC I-IV | 过电压类别，决定额定冲击电压 |
+| 污染等级 PD 1-3 | 环境清洁程度，影响爬电和间隙 |
+| 材料组别 CTI I-IIIb | 材料耐漏电起痕指数 |
+| 海拔 Altitude | >=2000m 时电气间隙需乘系数放大 |
+| 绝缘类型 | 功能/基本(1x)/附加(1x)/加强(2x) |
 
-### 寿命模型 Life Model
+---
 
-每段寿命: L_i = L₀ × 2^{(T_max - T_hs_i)/10} × K_V
+## 使用方式 Usage
 
-芯温升: ΔT = ΔT₀ × Σⱼ(Iⱼ / (I_rated × K_freqⱼ))² / 散热系数
+直接打开 `index.html` 在浏览器中打开即可（无需服务器）。顶部导航栏切换计算模块。
 
-累积损伤: D = Σᵢ(tᵢ × 工作天数 / Lᵢ)
-
-预计寿命: 1 / D (年)
+Open `index.html` directly in a browser (no server required). Switch between calculation modules using the top navigation bar.
 
 ## 构建 Build
 
 ```bash
-cd capacitor-lifetime-calculator
+cd auto-hardware-design
 python build.py
 ```
 
@@ -73,10 +107,10 @@ This runs all generation scripts in `gen-scripts/` in order, outputting the fina
 ## 文件结构 File Structure
 
 ```
-capacitor-lifetime-calculator/
-├── index.html                     # 最终输出文件
+auto-hardware-design/
+├── index.html                     # 最终输出文件（所有模块）
 ├── build.py                       # 构建脚本
-├── gen-scripts/                   # 生成脚本
+├── gen-scripts/                   # 生成脚本（电容器模块）
 │   ├── 01_base.py
 │   ├── ...
 │   └── 10_readable_fallback.py
@@ -84,6 +118,16 @@ capacitor-lifetime-calculator/
 │   └── index.html
 └── README.md
 ```
+
+## 路线图 Roadmap
+
+计划中的后续模块 Planned modules:
+
+- 变压器/电感设计计算 Transformer & Inductor Design
+- 散热器热阻计算 Heatsink Thermal Resistance
+- PCB 载流能力计算 PCB Trace Current Capacity
+- EMC 滤波器设计 EMC Filter Design
+- 保险丝/断路器选型 Fuse & Breaker Selection
 
 ## 许可证 License
 
