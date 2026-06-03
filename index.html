@@ -37,7 +37,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .fgl label{font-size:.78rem;font-weight:500;color:#64748b;margin-bottom:1px}
 .fgl input,.fgl select{padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:.88rem;background:#fff}
 .fgl input:focus,.fgl select:focus{border-color:#2563eb;outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-.hint{font-size:.72rem;color:#64748b;margin-top:1px}
+.hint{font-size:.72rem;color:#64748b;margin-top:0}
 .seg{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px 14px;margin-bottom:10px}
 .rt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:4px}
 .rt th,.rt td{text-align:left;padding:4px 6px;border:1px solid #e2e8f0}
@@ -138,16 +138,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <div class="container">
 <h1 style="font-size:1.6rem;margin-bottom:4px">安规距离计算工具 <span style="font-size:.9rem;font-weight:400;color:#64748b">Creepage &amp; Clearance Calculator</span></h1>
 <p style="color:#64748b;margin-bottom:24px;font-size:.9rem">IEC 62109-1 / UL 840 爬电距离 + 电气间隙 | 适用于并网逆变器</p>
-<div class="card" style="padding:12px 20px;margin-bottom:20px"><div class="fg"><div class="fgl"><label>项目名称</label><input type="text" id="sProjName" placeholder="选填" oninput="sCalc()"></div><div class="fgl"><label>位置</label><input type="text" id="sPos" placeholder="选填" oninput="sCalc()"></div></div></div>
+<div class="card" style="padding:12px 20px;margin-bottom:20px"><div class="fgl"><label>项目名称</label><input type="text" id="sProjName" placeholder="选填" oninput="sCalc()"></div></div>
 <div class="layout">
 <div>
-<div class="card"><h2>标准与基础参数</h2><div class="fg">
-<div class="fgl"><label>标准体系</label><select id="sStd" onchange="sCalc()"><option value="iec" selected>IEC 62109-1</option><option value="ul">UL 840</option></select></div>
+<div class="card"><h2>标准体系</h2><div class="fgl"><label>标准体系</label><select id="sStd" onchange="sCalc()"><option value="iec" selected>IEC 62109-1</option><option value="ul">UL 840</option></select></div></div>
+<div class="card"><h2>基础参数</h2><div class="fg">
 <div class="fgl"><label>污染等级</label><select id="sPd" onchange="sCalc()"><option value="1">PD 1 (无污染/密封)</option><option value="2" selected>PD 2 (一般污染)</option><option value="3">PD 3 (严重污染)</option></select></div>
 <div class="fgl"><label>材料组别 (CTI)</label><select id="sMg" onchange="sCalc()"><option value="i">I 组 (CTI >= 600)</option><option value="ii" selected>II 组 (400 <= CTI < 600)</option><option value="iiia">IIIa 组 (175 <= CTI < 400)</option><option value="iiib">IIIb 组 (100 <= CTI < 175)</option></select></div>
-<div class="fgl"><label>海拔</label><select id="sAlt" onchange="sCalc()"><option value="2000" selected><= 2000 m</option><option value="3000">2000 - 3000 m</option><option value="4000">3000 - 4000 m</option><option value="5000">4000 - 5000 m</option></select></div><div class="fgl"><label>过电压类别 (OVC)</label><select id="sOvc" onchange="sCalc()"><option value="i">I (有浪涌保护的设备)</option><option value="ii" selected>II (插接式设备)</option><option value="iii">III (固定安装设备)</option><option value="iv">IV (建筑入口设备)</option></select><span class="hint">决定额定冲击电压</span></div>
-<div class="fgl"><label>AC系统电压 (V)</label><input type="number" id="sSysV_AC" value="300" min="0" step="10" oninput="sCalc()" style="width:100px"><span class="hint">AC主回路</span></div><div class="fgl"><label>DC开路电压 (V)</label><input type="number" id="sSysV_DC" value="600" min="0" step="10" oninput="sCalc()" style="width:100px"><span class="hint">PV最大开路电压</span></div>
-<div class="fgl"><label>额定冲击电压 Uimp</label><span id="sUimp" style="padding:7px 10px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;font-size:.88rem;font-weight:600;color:#2563eb">- kV</span></div>
+<div class="fgl"><label>海拔</label><select id="sAlt" onchange="sCalc()"><option value="2000" selected><= 2000 m</option><option value="3000">2000 - 3000 m</option><option value="4000">3000 - 4000 m</option><option value="5000">4000 - 5000 m</option></select></div><div class="fgl"><label>过电压类别 (OVC)</label><select id="sOvc" onchange="sCalc()"><option value="i">I (有浪涌保护的设备)</option><option value="ii" selected>II (插接式设备)</option><option value="iii">III (固定安装设备)</option><option value="iv">IV (建筑入口设备)</option></select><span class="hint">决定额定计算冲击电压</span></div>
+<div class="fgl"><label>AC系统电压 (V)</label><input type="number" id="sSysV_AC" value="300" min="0" step="10" oninput="sCalc()" style="width:100px"><span class="hint">AC主回路</span></div><div class="fgl"><label>DC系统电压 (V)</label><input type="number" id="sSysV_DC" value="600" min="0" step="10" oninput="sCalc()" style="width:100px"><span class="hint">PV最大开路电压</span></div>
+
 
 </div></div>
 <div class="card"><h2>测量节点定义</h2>
@@ -164,7 +164,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <div class="ri"><div class="rl">节点数</div><div class="rv"><span id="sNc">-</span></div></div>
 </div>
 <h3 style="margin-top:14px;font-size:.88rem;font-weight:600;margin-bottom:6px">各节点所需安规距离</h3>
-<table class="sg-tbl"><thead><tr><th>节点</th><th>Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr></thead><tbody id="sRtb"></tbody></table>
+<table class="sg-tbl"><thead><tr><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr></thead><tbody id="sRtb"></tbody></table>
 </div>
 <div class="card"><h2>评估详情</h2><div id="sMa" style="font-size:.88rem"><p>-</p></div></div>
 </div>
@@ -333,16 +333,16 @@ function mNode(id,idx,name,vrms,ins,pcb,coat,interp,circ){
   var co='<option value="0" '+(coat==0?'selected':'')+'>否</option><option value="1" '+(coat==1?'selected':'')+'>Type 1 (降低PD)</option><option value="2" '+(coat==2?'selected':'')+'>Type 2/灌封 (取消爬电)</option>';
   return '<div class=seg data-id='+id+'><div><strong>节点'+(idx+1)+': </strong><span class=sn>'+name+'</span></div><div class=fg3>'
     +'<div class=fgl><label>节点名称</label><input class=sname type=text value="'+name+'" style=width:100px oninput=sNChange(this);sCalc()></div>'
-    +'<div class=fgl><label>Vrms (V)</label><input class=svrms type=number value='+vrms+' min=0 step=10 oninput=sCalc() style=width:90px></div>'
+    +'<div class=fgl><label>工作电压Vrms (V)</label><input class=svrms type=number value='+vrms+' min=0 step=10 oninput=sCalc() style=width:90px></div>'
     +'<div class=fgl><label>绝缘类型</label><select class=sins onchange=sCalc()>'+io+'</select></div>'
     +'</div><div class=fg3>'
     +'<div class=fgl><label>PCB走线</label><select class=spcb onchange=sCalc()>'+po+'</select></div>'
     +'<div class=fgl><label>三防漆</label><select class=scoat onchange=sCalc()>'+co+'</select></div>'
     +'<div class=fgl><label>电路</label><select class=scirc onchange=sCalc()><option value=ac '+(circ=='ac'?'selected':'')+'>AC</option><option value=dc '+(circ=='dc'?'selected':'')+'>DC(PV)</option></select></div>'
     +'</div><div class=fg3>'
-    +'<div class=fgl><label>DC插值</label><input type=checkbox class=sinterp '+(interp?'checked':'')+' onchange=sCalc()><span class=hint>IEC 62109-1注1</span></div>'
-    +'<div class=fgl><label>冲击电压</label><span class=suimp style="padding:6px 10px;background:#f1f5f9;border-radius:6px;font-size:.85rem;color:#2563eb;font-weight:500">- kV</span></div>'
-    +'</div><button class="btn-sm" style="margin-top:4px;color:#ef4444" onclick=sRmNode(this)>删除节点</button></div>';
+    +'<div class=fgl><label>DC插值</label><div style=display:flex;align-items:center;gap:4px><input type=checkbox class=sinterp '+(interp?'checked':'')+' onchange=sCalc()><span class=hint style=margin-top:0>IEC 62109-1注1</span></div></div>'
+    +'<div class=fgl><label>计算冲击电压</label><span class=suimp style="padding:6px 10px;background:#f1f5f9;border-radius:6px;font-size:.85rem;color:#2563eb;font-weight:500">- kV</span></div>'
+    +'</div><button class="btn-sm" style="margin-top:12px;color:#ef4444" onclick=sRmNode(this)>删除节点</button></div>';
 }
 
 function sNChange(inp){inp.closest(".seg").querySelector(".sn").textContent=inp.value||"节点";}
@@ -411,7 +411,7 @@ function sCalc(){
   });
   document.getElementById("sRtb").innerHTML=tb;
   var ah="<p style=margin-bottom:6px><strong>安规距离计算结果</strong></p>";
-  document.getElementById("sUimp").textContent=sGetTov(false)+' kV ('+(document.getElementById('sStd').value=='iec'?'IEC':'UL')+')';
+
   ah+="<p style=font-size:.85rem>标准: "+document.getElementById("sStd").selectedOptions[0].text+" | PD: "+pd+" | 材料: "+document.getElementById("sMg").selectedOptions[0].text+" | 海拔: "+alt+"m(系数"+altk+")</p>";
   ah+="<p style=font-size:.85rem>注:电气间隙已乘海拔系数和绝缘倍率; 爬电距离已乘绝缘倍率(详见各节点); 非PCB走线爬电距离增加1.2倍</p>";
   document.getElementById("sMa").innerHTML=ah;
@@ -428,9 +428,9 @@ function sGenRep(){
   var sr="";d.results.forEach(function(r){
     sr+="<tr><td>"+r.name+"</td><td>"+r.vrms+"</td><td>"+r.insL+"</td><td>"+r.reqClr+"</td><td>"+r.reqCrp+"</td></tr>";
   });
-  document.getElementById("sRc").innerHTML="<h3>1. 项目信息</h3><table><tr><th>项目</th><th>内容</th></tr><tr><td>报告编号</td><td>SA-"+ds.replace(/\//g,"")+"-"+(1e3+Math.floor(9e3*Math.random()))+"</td></tr><tr><td>生成日期</td><td>"+ds+" "+ts+"</td></tr><tr><td>项目/位置</td><td>"+(document.getElementById('sProjName').value||'-')+" / "+(document.getElementById('sPos').value||'-')+"</td></tr></table>"
+  document.getElementById("sRc").innerHTML=(document.getElementById('sProjName').value?'<p><strong>项目: </strong>'+document.getElementById('sProjName').value+'</p>':'')+"<h3>1. 项目信息</h3><table><tr><th>项目</th><th>内容</th></tr><tr><td>报告编号</td><td>SA-"+ds.replace(/\//g,"")+"-"+(1e3+Math.floor(9e3*Math.random()))+"</td></tr><tr><td>生成日期</td><td>"+ds+" "+ts+"</td></tr><tr><td>项目名称</td><td>"+(document.getElementById('sProjName').value||'-')+"</td></tr></table>"
     +"<h3>2. 基础参数</h3><table><tr><th>参数</th><th>值</th></tr><tr><td>标准</td><td>"+document.getElementById('sStd').selectedOptions[0].text+"</td></tr><tr><td>污染等级</td><td>PD "+d.pd+"</td></tr><tr><td>材料组别</td><td>"+document.getElementById('sMg').selectedOptions[0].text+"</td></tr><tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr></table>"
-    +"<h3>3. 各节点所需安规距离</h3><table><tr><th>节点</th><th>Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr>"+sr+"</table>"
+    +"<h3>3. 各节点所需安规距离</h3><table><tr><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr>"+sr+"</table>"
     +sCalcFormulas()+"<h3>4. 设计建议</h3><ul style=margin:4px 0 0 20px>"
     +"<li>实际工程设计中应确保实际距离大于上表所需值</li>"
     +"<li>海拔超过2000m时电气间隙需按系数放大</li>"
@@ -443,8 +443,8 @@ function sGenRep(){
 function sExportWord(){
   var d=window._sd;
   if(!d||!d.results||!d.results.length)return;
-  var pn=document.getElementById('sProjName').value,im=document.getElementById('sPos').value,te=[];
-  if(pn)te.push(pn);if(im)te.push(im);
+  var pn=document.getElementById('sProjName').value,te=[];
+  if(pn)te.push(pn);
   var ts=te.length?' ('+te.join(' - ')+')':'',sr='';
   d.results.forEach(function(r){
     sr+='<tr><td>'+r.name+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+'</td><td>'+r.reqCrp+'</td></tr>';
@@ -455,7 +455,7 @@ function sExportWord(){
   h+='<p>\u751f\u6210\u65e5\u671f: '+new Date().toLocaleDateString('zh-CN')+'</p>';
   h+='<h2>1. \u9879\u76ee\u4fe1\u606f</h2><table><tr><th>\u9879\u76ee</th><th>\u5185\u5bb9</th></tr>'+(pn?'<tr><td>\u9879\u76ee\u540d\u79f0</td><td>'+pn+'</td></tr>':'')+(im?'<tr><td>\u9006\u53d8\u5668\u578b\u53f7</td><td>'+im+'</td></tr>':'')+'<tr><td>\u6807\u51c6</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr><tr><td>\u7edd\u7f18\u7c7b\u578b</td><td>'+document.getElementById('sInsType').selectedOptions[0].text+'</td></tr></table>';
   h+='<h2>2. \u57fa\u7840\u53c2\u6570</h2><table><tr><th>\u53c2\u6570</th><th>\u503c</th></tr><tr><td>\u6c61\u67d3\u7b49\u7ea7</td><td>PD '+d.pd+'</td></tr><tr><td>\u6750\u6599\u7ec4\u522b</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr><tr><td>\u6d77\u62d4</td><td>'+d.alt+'m</td></tr><tr><td>\u7535\u6c14\u95f4\u9699\u5b9e\u9645\u503c</td><td>'+d.actClr+' mm</td></tr><tr><td>\u722c\u7535\u8ddd\u79bb\u5b9e\u9645\u503c</td><td>'+d.actCrp+' mm</td></tr></table>';
-  h+='<h2>3. \u5404\u8282\u70b9\u5b89\u89c4\u8ddd\u79bb\u5224\u5b9a</h2><table><tr><th>\u8282\u70b9</th><th>Vrms(V)</th><th>Vpk(V)</th><th>\u77ac\u6001(kV)</th><th>\u6240\u9700Clr(mm)</th><th>\u6240\u9700Crp(mm)</th><th>Clr\u5224\u5b9a</th><th>Crp\u5224\u5b9a</th></tr>'+sr+'</table>';
+  h+='<h2>3. \u5404\u8282\u70b9\u5b89\u89c4\u8ddd\u79bb\u5224\u5b9a</h2><table><tr><th>\u8282\u70b9</th><th>工作电压Vrms(V)</th><th>Vpk(V)</th><th>\u77ac\u6001(kV)</th><th>\u6240\u9700Clr(mm)</th><th>\u6240\u9700Crp(mm)</th><th>Clr\u5224\u5b9a</th><th>Crp\u5224\u5b9a</th></tr>'+sr+'</table>';
   
   h+='<p style="margin-top:20px"><i>\u5b89\u89c4\u8ddd\u79bb\u8ba1\u7b97\u5de5\u5177 v1.0 - \u62a5\u544a\u81ea\u52a8\u751f\u6210</i></p></body></html>';
   var b=new Blob([h],{type:'application/msword'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='\u5b89\u89c4\u8ddd\u79bb\u8bc4\u4f30\u62a5\u544a'+(te.length?'('+te.join('-')+')':'')+'.doc';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
