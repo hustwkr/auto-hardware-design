@@ -268,7 +268,7 @@ var snid=0;
 var CLR_TBL_IEC=[[0,0.2,0.2,0.2],[330,0.2,0.2,0.2],[500,0.2,0.2,0.2],[800,0.2,0.2,0.2],[1500,0.5,0.5,0.8],[2500,1.5,1.5,1.5],[4000,3.0,3.0,3.0],[6000,5.5,5.5,5.5],[8000,8.0,8.0,8.0],[12000,14.0,14.0,14.0]];
 var CRP_IEC=[[0,0.35,0.35,0.35,0.87,0.025,0.87,0.87,0.87,0.87],[2,0.35,0.35,0.35,0.87,0.025,0.87,0.87,0.87,0.87],[10,0.40,0.40,0.40,1.0,0.025,1.0,1.0,1.0,1.0],[25,0.50,0.50,0.50,1.25,0.025,1.25,1.25,1.25,1.25],[32,0.53,0.53,0.53,1.3,0.025,1.3,1.3,1.3,1.3],[40,0.56,0.80,1.1,1.4,0.025,1.4,1.6,1.8,1.8],[50,0.60,0.85,1.20,1.5,0.025,1.5,1.7,1.9,1.9],[63,0.63,0.90,1.25,1.6,0.04,1.6,1.8,2.0,2.0],[80,0.67,0.95,1.3,1.7,0.063,1.7,1.9,2.1,2.1],[100,0.71,1.0,1.4,1.8,0.10,1.8,2.0,2.2,2.2],[125,0.75,1.05,1.5,1.9,0.16,1.9,2.1,2.4,2.4],[160,0.80,1.1,1.6,2.0,0.25,2.0,2.2,2.5,2.5],[200,1.0,1.4,2.0,2.5,0.40,2.5,2.8,3.2,3.2],[250,1.25,1.8,2.5,3.2,0.56,3.2,3.6,4.0,4.0],[320,1.6,2.2,3.2,4.0,0.75,4.0,4.5,5.0,5.0],[400,2.0,2.8,4.0,5.0,1.0,5.0,5.6,6.3,6.3],[500,2.5,3.6,5.0,6.3,1.3,6.3,7.1,8.0,8.0],[630,3.2,4.5,6.3,8.0,1.8,8.0,9.0,10.0,10.0],[800,4.0,5.6,8.0,10.0,2.4,10.0,11,12.5,12.5],[1000,5.0,7.1,10.0,12.5,3.2,12.5,14,16,16],[1250,6.3,9,12.5,16,4.2,16,18,20,20],[1600,8.0,11,16,20,5.6,20,22,25,25],[2000,10.0,14,20,25,7.5,25,28,32,32],[2500,12.5,18,25,32,10.0,32,36,40,40],[3200,16,22,32,40,12.5,40,45,50,50],[4000,20,28,40,50,16,50,56,63,63],[5000,25,36,50,63,20,63,71,80,80],[6300,32,45,63,80,25,80,90,100,100]];
 // IEC 60664-1 Table 18: Creepage (mm) based on RMS voltage, pollution degree, material group
-// [rmsVoltage,  PD1, PD2_I, PD2_II, PD2_IIIa, PD2_IIIb, PD3_I, PD3_II, PD3_IIIa, PD3_IIIb]
+// [rmsVoltage, PD2_I, PD2_II, PD2_IIIa, PD2_IIIb, PWB/PD1, PD3_I, PD3_II, PD3_IIIa, PD3_IIIb]
 // Simplified: PD1 all groups same, PD2/PD3 vary by material group
 
 
@@ -307,18 +307,20 @@ function sLookupClr(v,pd,std,interp){
   return tbl[tbl.length-1][pd];
 }
 
-function sLookupCrp(rmsV,pd,mg,std){
+function sLookupCrp(rmsV,pd,mg,std,pcb){
   var v=Math.min(rmsV,6300);
   var tbl=std=='ul'?CRP_UL:CRP_IEC;
   var mi={'i':0,'ii':1,'iiia':2,'iiib':3}[mg]||0;
   for(var i=0;i<tbl.length;i++){
     if(v<=tbl[i][0]){
-      if(pd==1) return tbl[i][5];
-      if(pd==2) return tbl[i][1+mi];
-      return tbl[i][6+mi];
+      if(pcb&&pd<=2) return tbl[i][5];  // PCB+PD1/PD2: use PWB column
+      if(pd==1) return tbl[i][5];  // PD1: use PWB/PD1 column
+      if(pd==2) return tbl[i][1+mi];  // PD2: by material group
+      return tbl[i][6+mi];  // PD3: by material group
     }
   }
   var last=tbl[tbl.length-1];
+  if(pcb&&pd<=2) return last[5];
   if(pd==1) return last[5];
   if(pd==2) return last[1+mi];
   return last[6+mi];
@@ -328,7 +330,7 @@ function mNode(id,idx,name,vrms,ins,pcb,coat,interp,circ){
   ins=ins||'basic';pcb=pcb||0;coat=coat||0;interp=interp||false;circ=circ||'ac';
   var io='<option value="func" '+(ins=='func'?'selected':'')+'>功能绝缘</option><option value="basic" '+(ins=='basic'?'selected':'')+'>基本绝缘</option><option value="supp" '+(ins=='supp'?'selected':'')+'>附加绝缘</option><option value="reinf" '+(ins=='reinf'?'selected':'')+'>加强绝缘</option>';
   var po='<option value="0" '+(pcb==0?'selected':'')+'>否(接线端子)</option><option value="1" '+(pcb==1?'selected':'')+'>是(PCB走线)</option>';
-  var co='<option value="0" '+(coat==0?'selected':'')+'>否</option><option value="1" '+(coat==1?'selected':'')+'>是(可降低爬电距离)</option>';
+  var co='<option value="0" '+(coat==0?'selected':'')+'>否</option><option value="1" '+(coat==1?'selected':'')+'>Type 1 (降低PD)</option><option value="2" '+(coat==2?'selected':'')+'>Type 2/灌封 (取消爬电)</option>';
   return '<div class=seg data-id='+id+'><div><strong>节点'+(idx+1)+': </strong><span class=sn>'+name+'</span></div><div class=fg3>'
     +'<div class=fgl><label>节点名称</label><input class=sname type=text value="'+name+'" style=width:100px oninput=sNChange(this);sCalc()></div>'
     +'<div class=fgl><label>Vrms (V)</label><input class=svrms type=number value='+vrms+' min=0 step=10 oninput=sCalc() style=width:90px></div>'
@@ -397,9 +399,10 @@ function sCalc(){
     }
     var reqClr=Math.round(baseClr*altk*clrMult*10)/10;
     
-    var reqCrp=sLookupCrp(vrms,pd,mg,std);
-    if(!pcb) reqCrp=Math.round(reqCrp*1.2*10)/10;
-    if(coat) reqCrp=Math.round(reqCrp*0.5*10)/10;
+    var localPd=pd;
+    if(coat==1) localPd=Math.max(1,localPd-1);  // Type 1 coating: reduce PD by 1
+    var reqCrp=sLookupCrp(vrms,localPd,mg,std,pcb?1:0);  // with PCB parameter
+    if(coat==2) reqCrp=0;  // Type 2 coating/potting: cancel creepage
 
     reqCrp=Math.round(reqCrp*im*10)/10;
     var insL={func:"功能",basic:"基本",supp:"附加",reinf:"加强"};
