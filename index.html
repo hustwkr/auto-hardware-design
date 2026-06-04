@@ -44,7 +44,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .rt th,.rt td{text-align:left;padding:4px 6px;border:1px solid #e2e8f0}
 .rt th{background:#f1f5f9;font-weight:500;font-size:.76rem}
 .btn-sm{padding:2px 8px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;cursor:pointer;font-size:.78rem}
-.btn-sm:hover{background:#f1f5f9}
+.btn-sm:hover{background:#f1f5f9}.btn-add{padding:8px 18px;border:2px solid #2563eb;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer;font-size:.85rem;font-weight:500;transition:background .15s}.btn-add:hover{background:#1d4ed8}.btn-export-group{position:relative;display:inline-flex}.btn-export-group .btn{border-radius:6px 0 0 6px}.btn-export-group .btn-export-arrow{padding:8px 10px;border:1px solid #e2e8f0;border-left:none;border-radius:0 6px 6px 0;background:#fff;cursor:pointer;font-size:.75rem;line-height:1}.btn-export-group .btn-export-arrow:hover{background:#f1f5f9}.export-dropdown{display:none;position:absolute;top:100%;right:0;margin-top:2px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:100;min-width:140px}.export-dropdown.show{display:block}.export-dropdown div{padding:8px 14px;cursor:pointer;font-size:.85rem;white-space:nowrap}.export-dropdown div:hover{background:#f1f5f9}.info-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.7rem;font-weight:700;cursor:pointer;margin-left:4px;vertical-align:middle;transition:background .15s;user-select:none}.info-icon:hover{background:#cbd5e1;color:#1e293b}.info-popup{display:none;position:absolute;z-index:200;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;font-size:.78rem;line-height:1.5;color:#334155;box-shadow:0 4px 16px rgba(0,0,0,.12);max-width:420px;white-space:normal;top:100%;left:0;margin-top:4px}.info-popup.show{display:block}
 .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ri{padding:10px 12px;background:#f8fafc;border-radius:6px}
 .ri .rl{font-size:.73rem;color:#64748b}
@@ -103,7 +103,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <div class="card"><h2>运行剖面 <span style="font-size:.78rem;font-weight:400;color:#64748b">(多段工况 + 多频率纹波)</span></h2>
 <p style="font-size:.78rem;color:#64748b;margin-bottom:8px">各时段可添加多组不同频率纹波分量, 总温升按各频率 (I/K_freq)^2 平方和叠加</p>
 <div id="sc"></div>
-<button class="btn-sm" id="addSegBtn">+ 添加时段</button>
+<button class="btn-add" id="addSegBtn">+ 添加时段</button>
 <span id="stt" style="font-size:.78rem;color:#64748b;margin-left:10px"></span>
 <div id="stw" style="font-size:.78rem;color:#ef4444;margin-top:4px;display:none"></div>
 <div class="fg" style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0">
@@ -136,8 +136,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
 <h2 style="font-size:1.1rem;font-weight:600">设计报告</h2>
 <div style="display:flex;gap:8px">
-<button class="btn" onclick="genRep()">刷新报告</button>
-<button class="btn" onclick="exportWord()">导出 Word</button><button class="btn btn-p" onclick="window.print()">打印/导出 PDF</button>
+<div class="btn-export-group"><button class="btn" onclick="exportReport('word')" id="exportCapBtn">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'cap')">▼</button><div class="export-dropdown" id="exportCapDropdown"><div onclick="exportReport('word')">Word (.doc)</div><div onclick="exportReport('pdf')">PDF</div></div></div>
 </div></div>
 <div id="rc"><h3>电解电容寿命评估报告</h3><p>请调整参数后刷新。</p></div>
 
@@ -154,14 +153,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <div class="fgl"><label>污染等级</label><select id="sPd" onchange="sCalc()"><option value="1">PD 1 (无污染/密封)</option><option value="2" selected>PD 2 (一般污染)</option><option value="3">PD 3 (严重污染)</option></select></div>
 <div class="fgl"><label>材料组别 (CTI)</label><select id="sMg" onchange="sCalc()"><option value="i">I 组 (CTI >= 600)</option><option value="ii" selected>II 组 (400 <= CTI < 600)</option><option value="iiia">IIIa 组 (175 <= CTI < 400)</option><option value="iiib">IIIb 组 (100 <= CTI < 175)</option></select></div>
 <div class="fgl"><label>海拔</label><select id="sAlt" onchange="sCalc()"><option value="2000" selected><= 2000 m</option><option value="3000">2000 - 3000 m</option><option value="4000">3000 - 4000 m</option><option value="5000">4000 - 5000 m</option></select></div><div class="fgl"><label>过电压类别 (OVC)</label><select id="sOvc" onchange="sCalc()"><option value="i">I (有浪涌保护的设备)</option><option value="ii" selected>II (插接式设备)</option><option value="iii">III (固定安装设备)</option><option value="iv">IV (建筑入口设备)</option></select><span class="hint">决定额定计算冲击电压</span></div>
-<div class="fgl"><label>AC系统电压 (V)</label><input type="number" id="sSysV_AC" value="300" min="0" step="10" oninput="sCalc()" style="width:100px"><span class="hint">AC主回路</span></div><div class="fgl"><label>DC系统电压 (V)</label><input type="number" id="sSysV_DC" value="600" min="0" step="10" oninput="sCalc()" style="width:100px"><span class="hint">PV最大开路电压</span></div>
+<div class="fgl" style="position:relative"><label>AC系统电压 (V)<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.7rem;font-weight:700;cursor:pointer;margin-left:4px;transition:background .15s;user-select:none">?</span></label><input type="number" id="sSysV_AC" value="300" min="0" step="10" oninput="sCalc()" style="width:100px"><div id="acVoltageInfo" class="info-popup">For clearance distances and solid insulation the voltage used is as described in 7.3.7.2.2 to 7.3.7.2.4.<br>The impulse voltage and temporary overvoltage are taken from Table 12.<br>When using Table 12, the system voltage in column 1 is:<br>• in TN and TT systems: the r.m.s. value of the rated voltage between a phase and earth;<br>NOTE 1 A corner-earthed system is a TN system with one phase earthed, in which the system voltage is the r.m.s. value of the rated voltage between a non-earthed phase and earth (i.e. the phase-phase voltage).</div><span class="hint">AC主回路</span></div><div class="fgl"><label>DC系统电压 (V)</label><input type="number" id="sSysV_DC" value="600" min="0" step="10" oninput="sCalc()" style="width:100px"><span class="hint">PV最大开路电压</span></div>
 
 
 </div></div>
 <div class="card"><h2>测量节点定义</h2>
 <p style="font-size:.78rem;color:#64748b;margin-bottom:8px">定义逆变器中各需要计算安规距离的节点及其电气参数</p>
 <div id="sN"></div>
-<button class="btn-sm" id="addNodeBtn">+ 添加测量节点</button>
+<button class="btn-add" id="addNodeBtn">+ 添加测量节点</button>
 <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;gap:14px;flex-wrap:wrap">
 
 </div>
@@ -181,8 +180,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
 <h2 style="font-size:1.1rem;font-weight:600">安距设计报告</h2>
 <div style="display:flex;gap:8px">
-<button class="btn" onclick="sGenRep()">刷新报告</button>
-<button class="btn" onclick="sExportWord()">导出 Word</button><button class="btn btn-p" onclick="window.print()">打印/导出 PDF</button>
+<div class="btn-export-group"><button class="btn" onclick="sExportReport('word')" id="exportSafeBtn">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'safe')">▼</button><div class="export-dropdown" id="exportSafeDropdown"><div onclick="sExportReport('word')">Word (.doc)</div><div onclick="sExportReport('pdf')">PDF</div></div></div>
 </div></div>
 <div id="sRc"><h3>安规距离评估报告</h3><p>请添加测量节点后刷新。</p></div>
 </div>
@@ -205,7 +203,7 @@ var sid=0;
 function mU(){return '<select class=fu onchange=calc()><option value=1 selected>Hz</option><option value=1000>kHz</option></select>'}
 function mSeg(id,idx,dur,ta,vop,rips){
 var rr="";
-rips.forEach(function(v){rr+="<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td><td><input class=fc type=number value="+v+" min=0 step=10 style=width:80px oninput=calc()></td><td><button class=btn-sm onclick=removeRippleRow(this)>X</button></td></tr>"});
+rips.forEach(function(v){rr+="<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td><td><input class=fc type=number value="+v+" min=0 step=10 style=width:80px oninput=calc()></td><td><button class=btn-sm onclick=removeRippleRow(this)>删除分量</button></td></tr>"});
 return"<div class=seg data-id="+id+"><div><span>时段"+(idx+1)+"</span><span style=font-size:.78rem;color:#64748b> 每天 <span class=sh>"+dur+" h</span></span></div>"
 +"<div class=fg3><div class=fgl><label>时长(h/天)</label><input class=sd type=number value="+dur+" min=0 max=24 step=0.5 oninput=sdChange(this);calc()></div>"
 +"<div class=fgl><label>温度Ta(C)</label><input class=stp type=number value="+ta+" min=-40 max=150 oninput=calc()></div>"
@@ -218,7 +216,7 @@ function updT(){var t=0;document.querySelectorAll("#tab-capacitor .sd").forEach(
 function addSeg(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,50,30,[100]));updT();calc()}
 function rmSeg(b){b.closest(".seg").remove();reNum();updT();calc()}
 function reNum(){document.querySelectorAll("#tab-capacitor .seg").forEach(function(s,i){s.querySelector(".seg>div>:first-child").textContent="时段"+(i+1)})}
-function addRR(b){b.closest(".seg").querySelector(".rtb").insertAdjacentHTML("beforeend","<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td><td><input class=fc type=number value=50 min=0 step=10 style=width:80px oninput=calc()></td><td><button class=btn-sm onclick=removeRippleRow(this)>X</button></td></tr>");calc()}
+function addRR(b){b.closest(".seg").querySelector(".rtb").insertAdjacentHTML("beforeend","<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td><td><input class=fc type=number value=50 min=0 step=10 style=width:80px oninput=calc()></td><td><button class=btn-sm onclick=removeRippleRow(this)>删除分量</button></td></tr>");calc()}
 function removeRippleRow(b){var tb=b.closest(".rtb");if(tb.querySelectorAll("tr").length<=1)return;b.closest("tr").remove();calc()}
 function l2r(l){try{return l.replace(/\\times/g,"\u00D7").replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g,"($1)/($2)").replace(/\\Delta/g,"\u0394").replace(/\\sum/g,"\u2211").replace(/\\left/g,"").replace(/\\right/g,"").replace(/\\text\{([^}]+)\}/g,"$1").replace(/\\cdot/g,"\u00B7").replace(/\\,/g," ").replace(/\^{([^}]+)\}/g,"^($1)").replace(/\^{([a-zA-Z0-9])}/g,"^$1").replace(/_{([^}]+)}/g,"_$1").replace(/{/g,"").replace(/}/g,"")}catch(e){return l}}
 
@@ -248,7 +246,7 @@ document.getElementById("wml").textContent=fv(mb,0)+"年";
 var tb="";sr.forEach(function(r){tb+="<tr><td>时段"+r.i+"</td><td>"+fv(r.dur,1)+"</td><td>"+fv(r.ths,1)+"</td><td>"+fv(r.kt,2)+"</td><td>"+fv(r.kv,3)+"</td><td>"+(r.Li>=1e6?fv(r.Li/1e4,1)+"万":fv(r.Li,0))+"</td><td>"+fv(r.d*100,3)+"%</td></tr>"});document.getElementById("srb").innerHTML=tb;
 var td=sr.reduce(function(s,r){return s+r.d},0)||1,ah="<p style=margin-bottom:6px><strong>寿命预测</strong></p><p style=font-size:.85rem>预计寿命: <strong>"+fv(ly,1)+" 年</strong></p><p style=font-size:.85rem>质保期: "+wt+"年 | "+mi.l+" | 裕量: <strong>"+fv(margin,2)+"x</strong> "+(margin>=req?"✓":"✗")+"</p><p style=font-size:.85rem;color:#64748b;margin-top:4px>"+wd2+"</p><p style=font-size:.85rem;margin-top:8px><strong>各时段寿命消耗占比</strong></p><div style=display:flex;gap:4px;margin-top:4px;align-items:flex-end;flex-wrap:wrap;min-height:50px>";
 sr.forEach(function(r){var p=(r.d/td)*100,h=Math.max(20,p*2);ah+="<div style=display:flex;flex-direction:column;align-items:center;gap:2px><div style=width:32px;height:"+h+"px;background:#2563eb;border-radius:4px 4px 0 0;opacity:.75></div><span style=font-size:.68rem;color:#64748b>"+fv(p,0)+"%</span><span style=font-size:.62rem;color:#64748b>T"+r.i+"</span></div>"});ah+="</div>";document.getElementById("ma").innerHTML=ah;
-window._cd={l0:tmax,vr,ir,dt0,cl,wd,wt,sc,mi,sr,dmg,lh:lh,ly,margin,ws,wd2,req};genRep()
+window._cd={l0:tmax,tmax:tmax,vr,ir,dt0,cl,wd,wt,sc,mi,sr,dmg,lh:lh,ly,margin,ws,wd2,req};genRep()
 }
 function calcFormulas(){var d=window._cd;if(!d||!d.sr||!d.sr.length)return '';var fs='';d.sr.forEach(function(r){fs+='<p style=margin:4px 0><b>时段'+r.i+':</b> <span class=latex data-l="L_i = L_0 \\times 2^{\\frac{T_{max} - T_{hs_i}}{10}} \\times K_V"></span> = <span class=latex data-l="'+d.l0+' \\times 2^{\\frac{'+d.tmax+'-'+r.ths.toFixed(1)+'}{10}} \\times '+r.kv.toFixed(3)+'"></span> = <span class=latex data-l="'+r.Li.toFixed(0)+'\,\\text{h}"></span></p>';if(r.rd&&r.rd.length){fs+='<p style=margin:2px 0 4px 20px;font-size:.82rem;color:#555>';r.rd.forEach(function(x,i){if(i>0)fs+=' + ';fs+=x.iop+'mA@'+x.f+'Hz(K='+x.k.toFixed(2)+')'});fs+='<br><span class=latex data-l="\Delta T = \Delta T_0 \\times \sum_j \left(\\frac{I_j}{I_{rated} \\times K_{freq_j}}\\right)^2 / C"></span> = '+r.dt.toFixed(2)+'C, T_{hs}='+r.ths.toFixed(1)+'C</p>'}});fs+='<p style=margin:4px 0><b>累计:</b> <span class=latex data-l="D = \sum_i \\frac{t_i \\times days}{L_i}"></span> = ';var ft=true;d.sr.forEach(function(r){if(!ft)fs+=' + ';ft=false;fs+=r.dur.toFixed(1)+'x'+d.wd+'/'+r.Li.toFixed(0)});fs+=' = '+(d.dmg*100).toFixed(3)+'%/年, 寿命 = 1/('+d.dmg.toFixed(6)+') = '+d.ly.toFixed(1)+'年</p>';return fs}
 
@@ -264,7 +262,35 @@ document.getElementById("rc").innerHTML="<h3>1. 项目信息</h3><table><tr><th>
 +"<p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>结论:</strong> "+d.wd2+"</p>"
 +calcFormulas()+"<h3>6. 设计建议</h3><ul style=margin:4px 0 0 20px><li>温度每降10C寿命延长一倍</li><li>"+(d.margin>=d.req?"裕量满足":"裕量不足,需改善")+"</li><li>建议高温负载试验验证</li></ul>"
 +"<div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b><span>电解电容寿命计算器 v2.0</span><span>报告: "+ds+" "+ts+"</span></div>"}
-function exportWord(){var d=window._cd;if(!d||!d.sr||!d.sr.length)return;var pn=document.getElementById('projName').value,cm=document.getElementById('capModel').value,te=[];if(pn)te.push(pn);if(cm)te.push(cm);var ts=te.length?' ('+te.join(' - ')+')':'',sr='';d.sr.forEach(function(r){var rd=r.rd.length?r.rd.map(function(x){return x.iop+'mA@'+x.f+'Hz'}).join(', '):'\u65e0';sr+='<tr><td>\u65f6\u6bb5'+r.i+'</td><td>'+r.dur.toFixed(1)+'</td><td>'+r.ta.toFixed(1)+'</td><td>'+r.vop.toFixed(1)+'</td><td>'+r.dt.toFixed(2)+'</td><td>'+r.ths.toFixed(1)+'</td><td>'+r.kt.toFixed(2)+'</td><td>'+r.kv.toFixed(3)+'</td><td>'+r.Li.toFixed(0)+'</td><td>'+rd+'</td></tr>'});var fh=calcFormulas();fh=fh.replace(/<span class=latex data-l="([^"]*)"><\/span>/g,'$1');var lh=d.lh>=1e6?(d.lh/1e4).toFixed(1)+'\u4e07':d.lh.toFixed(0);var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+ts+'</title><style>body{font-family:SimSun,serif;font-size:11pt}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:3px 6px;font-size:10pt}th{background:#eee}h2{font-size:13pt;margin-top:14px}</style></head><body>';h+='<h2 style="text-align:center">\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+ts+'</h2>';h+='<p>\u62a5\u544a\u7f16\u53f7: EL-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';h+='<p>\u751f\u6210\u65e5\u671f: '+new Date().toLocaleDateString('zh-CN')+'</p>';h+='<h2>1. \u9879\u76ee\u4fe1\u606f</h2><table><tr><th>\u9879\u76ee</th><th>\u5185\u5bb9</th></tr>'+(pn?'<tr><td>\u9879\u76ee\u540d\u79f0</td><td>'+pn+'</td></tr>':'')+(cm?'<tr><td>\u7535\u5bb9\u578b\u53f7</td><td>'+cm+'</td></tr>':'')+'<tr><td>\u5e94\u7528\u573a\u666f</td><td>'+d.mi.l+'</td></tr><tr><td>\u6563\u70ed\u6761\u4ef6</td><td>'+document.getElementById('cooling').selectedOptions[0].text+'</td></tr><tr><td>\u5e74\u5de5\u4f5c\u5929\u6570</td><td>'+d.wd+'</td></tr><tr><td>\u76ee\u6807\u8d28\u4fdd\u671f</td><td>'+d.wt+'\u5e74</td></tr></table>';h+='<h2>2. \u7535\u5bb9\u5668\u989d\u5b9a\u53c2\u6570</h2><table><tr><th>\u53c2\u6570</th><th>\u6570\u503c</th></tr><tr><td>\u989d\u5b9a\u5bff\u547d L0</td><td>'+d.l0+' h</td></tr><tr><td>\u6700\u9ad8\u6e29\u5ea6 Tmax</td><td>'+d.tmax+' C</td></tr><tr><td>\u989d\u5b9a\u7535\u538b Vrated</td><td>'+d.vr+' V</td></tr><tr><td>\u989d\u5b9a\u7eb9\u6ce2 Irated</td><td>'+d.ir+' mA</td></tr><tr><td>\u6700\u5927\u82af\u6e29\u5347 DT0</td><td>'+d.dt0+' C</td></tr></table>';h+='<h2>3. \u8fd0\u884c\u5256\u9762</h2><table><tr><th>\u65f6\u6bb5</th><th>h/\u5929</th><th>Ta C</th><th>Vop V</th><th>DT C</th><th>Ths C</th><th>KT</th><th>KV</th><th>Li h</th><th>\u7eb9\u6ce2</th></tr>'+sr+'</table>';h+='<h2>4. \u7d2f\u79ef\u635f\u4f24</h2><table><tr><th>\u9879\u76ee</th><th>\u6570\u503c</th></tr><tr><td>\u5e74\u635f\u4f24 D</td><td>'+(d.dmg*100).toFixed(3)+'%</td></tr><tr><td>\u9884\u8ba1\u5bff\u547d</td><td>'+d.ly.toFixed(1)+' \u5e74 ('+lh+' h)</td></tr><tr><td>\u8d28\u4fdd\u671f\u76ee\u6807</td><td>'+d.wt+' \u5e74</td></tr><tr><td>\u5b9e\u9645\u88d5\u91cf</td><td>'+d.margin.toFixed(2)+'x</td></tr><tr><td>\u5224\u5b9a</td><td>'+d.ws+'</td></tr></table>';h+='<h2>5. \u8be6\u7ec6\u8ba1\u7b97\u8fc7\u7a0b</h2>'+fh;h+='<h2>6. \u8bbe\u8ba1\u5efa\u8bae</h2><ul><li>\u73af\u5883\u6e29\u5ea6\u6bcf\u964d\u4f4e10C\uff0c\u5bff\u547d\u7ea6\u5ef6\u957f\u4e00\u500d</li><li>'+(d.margin>=d.req?'\u88d5\u91cf\u6ee1\u8db3\u8981\u6c42':'\u88d5\u91cf\u4e0d\u8db3\uff0c\u9700\u6539\u5584\u8bbe\u8ba1')+'</li><li>\u5efa\u8bae\u6279\u91cf\u751f\u4ea7\u524d\u8fdb\u884c\u9ad8\u6e29\u8d1f\u8f7d\u8bd5\u9a8c\u9a8c\u8bc1</li></ul>';h+='<p style="margin-top:20px"><i>\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8ba1\u7b97\u5de5\u5177 v2.0 - \u62a5\u544a\u81ea\u52a8\u751f\u6210</i></p></body></html>';var b=new Blob([h],{type:'application/msword'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+(te.length?'('+te.join('-')+')':'')+'.doc';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
+function toggleExportDropdown(e,tab){e.stopPropagation();var d=document.getElementById('export'+tab.charAt(0).toUpperCase()+tab.slice(1)+'Dropdown');d.classList.toggle('show')}
+document.addEventListener('click',function(){document.querySelectorAll('.export-dropdown,.info-popup').forEach(function(d){d.classList.remove('show')})});
+function toggleInfo(e){e.stopPropagation();var box=document.getElementById('acVoltageInfo');box.classList.toggle('show')}
+function buildPlainFormulas(sr,l0,tmax,wd,dmg,ly){var fs='';sr.forEach(function(r){fs+='<p style=margin:4px 0><b>\u65f6\u6bb5'+r.i+':</b> Li = L0 x 2^((Tmax - Ths)/10) x KV = '+l0+' x 2^(('+tmax+'-'+r.ths.toFixed(1)+')/10) x '+r.kv.toFixed(3)+' = '+r.Li.toFixed(0)+' h</p>';if(r.rd&&r.rd.length){fs+='<p style=margin:2px 0 4px 20px;font-size:.82rem;color:#555>';r.rd.forEach(function(x,i){if(i>0)fs+=' + ';fs+=x.iop+'mA@'+x.f+'Hz(K='+x.k.toFixed(2)+')'});fs+='<br>\u0394T = \u0394T0 x \u03a3(Ij/(Irated x Kfreq_j))^2 / C = '+r.dt.toFixed(2)+'C, Ths='+r.ths.toFixed(1)+'C</p>'}});fs+='<p style=margin:4px 0><b>\u7d2f\u8ba1:</b> D = \u03a3(ti x days / Li) = ';var ft=true;sr.forEach(function(r){if(!ft)fs+=' + ';ft=false;fs+=r.dur.toFixed(1)+'x'+wd+'/'+r.Li.toFixed(0)});fs+=' = '+(dmg*100).toFixed(3)+'%/\u5e74, \u5bff\u547d = 1/('+dmg.toFixed(6)+') = '+ly.toFixed(1)+'\u5e74</p>';return fs}
+async function saveBlobWithDialog(b,dn){try{var h=await window.showSaveFilePicker({suggestedName:dn,types:[{description:'Word Document',accept:{'application/msword':['.doc']}}]});var w=await h.createWritable();await w.write(b);await w.close()}catch(e){if(e.name!=='AbortError'){var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=dn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}}}
+function exportReport(mode){
+  var d=window._cd;
+  if(!d||!d.sr||!d.sr.length)return;
+  if(mode==='pdf'){window.print();return}
+  var pn=document.getElementById('projName').value,cm=document.getElementById('capModel').value,te=[];
+  if(pn)te.push(pn);if(cm)te.push(cm);
+  var ts=te.length?' ('+te.join(' - ')+')':'',sr='';
+  d.sr.forEach(function(r){var rd=r.rd.length?r.rd.map(function(x){return x.iop+'mA@'+x.f+'Hz'}).join(', '):'无';sr+='<tr><td>时段'+r.i+'</td><td>'+r.dur.toFixed(1)+'</td><td>'+r.ta.toFixed(1)+'</td><td>'+r.vop.toFixed(1)+'</td><td>'+r.dt.toFixed(2)+'</td><td>'+r.ths.toFixed(1)+'</td><td>'+r.kt.toFixed(2)+'</td><td>'+r.kv.toFixed(3)+'</td><td>'+r.Li.toFixed(0)+'</td><td>'+rd+'</td></tr>'});
+  var fh=buildPlainFormulas(d.sr,d.l0,d.tmax,d.wd,d.dmg,d.ly);
+  var lh=d.lh>=1e6?(d.lh/1e4).toFixed(1)+'万':d.lh.toFixed(0);
+  var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>电解电容寿命评估报告'+ts+'</title><style>body{font-family:SimSun,serif;font-size:11pt}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:3px 6px;font-size:10pt}th{background:#eee}h2{font-size:13pt;margin-top:14px}</style></head><body>';
+  h+='<h2 style="text-align:center">电解电容寿命评估报告'+ts+'</h2>';
+  h+='<p>报告编号: EL-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
+  h+='<p>生成日期: '+new Date().toLocaleDateString('zh-CN')+'</p>';
+  h+='<h2>1. 项目信息</h2><table><tr><th>项目</th><th>内容</th></tr>'+(pn?'<tr><td>项目名称</td><td>'+pn+'</td></tr>':'')+(cm?'<tr><td>电容型号</td><td>'+cm+'</td></tr>':'')+'<tr><td>应用场景</td><td>'+d.mi.l+'</td></tr><tr><td>散热条件</td><td>'+document.getElementById('cooling').selectedOptions[0].text+'</td></tr><tr><td>年工作天数</td><td>'+d.wd+'</td></tr><tr><td>目标质保期</td><td>'+d.wt+'年</td></tr></table>';
+  h+='<h2>2. 电容器额定参数</h2><table><tr><th>参数</th><th>数值</th></tr><tr><td>额定寿命 L0</td><td>'+d.l0+' h</td></tr><tr><td>最高温度 Tmax</td><td>'+d.tmax+' C</td></tr><tr><td>额定电压 Vrated</td><td>'+d.vr+' V</td></tr><tr><td>额定纹波 Irated</td><td>'+d.ir+' mA</td></tr><tr><td>最大芯温升 DT0</td><td>'+d.dt0+' C</td></tr></table>';
+  h+='<h2>3. 运行剖面</h2><table><tr><th>时段</th><th>h/天</th><th>Ta C</th><th>Vop V</th><th>DT C</th><th>Ths C</th><th>KT</th><th>KV</th><th>Li h</th><th>纹波</th></tr>'+sr+'</table>';
+  h+='<h2>4. 累积损伤</h2><table><tr><th>项目</th><th>数值</th></tr><tr><td>年损伤 D</td><td>'+(d.dmg*100).toFixed(3)+'%</td></tr><tr><td>预计寿命</td><td>'+d.ly.toFixed(1)+' 年 ('+lh+' h)</td></tr><tr><td>质保期目标</td><td>'+d.wt+' 年</td></tr><tr><td>实际裕量</td><td>'+d.margin.toFixed(2)+'x</td></tr><tr><td>判定</td><td>'+d.ws+'</td></tr></table>';
+  h+='<h2>5. 详细计算过程</h2>'+fh;h+='<h2>6. 设计建议</h2><ul><li>环境温度每降低10C，寿命约延长一倍</li><li>'+(d.margin>=d.req?'裕量满足要求':'裕量不足，需改善设计')+'</li><li>建议批量生产前进行高温负载试验验证</li></ul>';
+  h+='<p style="margin-top:20px"><i>电解电容寿命计算工具 v2.0 - 报告自动生成</i></p></body></html>';
+  var b=new Blob([h],{type:'application/msword'});
+  var dn='电解电容寿命评估报告'+(te.length?'('+te.join('-')+')':'')+'.doc';
+  saveBlobWithDialog(b,dn);
+}
 
 function init(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,60,30,[250,150]));document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,1,16,40,30,[100]));document.getElementById("addSegBtn").onclick=addSeg;updT();calc()}
 
@@ -448,25 +474,27 @@ function sGenRep(){
     +"<div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b><span>安规距离计算工具 v1.0</span><span>报告: "+ds+" "+ts+"</span></div>";
 }
 
-function sExportWord(){
+function sExportReport(mode){
   var d=window._sd;
   if(!d||!d.results||!d.results.length)return;
+  if(mode==='pdf'){window.print();return}
   var pn=document.getElementById('sProjName').value,te=[];
   if(pn)te.push(pn);
   var ts=te.length?' ('+te.join(' - ')+')':'',sr='';
   d.results.forEach(function(r){
     sr+='<tr><td>'+r.name+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+'</td><td>'+r.reqCrp+'</td></tr>';
   });
-  var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>\u5b89\u89c4\u8ddd\u79bb\u8bc4\u4f30\u62a5\u544a'+ts+'</title><style>body{font-family:SimSun,serif;font-size:11pt}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:3px 6px;font-size:10pt}th{background:#eee}h2{font-size:13pt;margin-top:14px}</style></head><body>';
-  h+='<h2 style="text-align:center">\u5b89\u89c4\u8ddd\u79bb\u8bc4\u4f30\u62a5\u544a'+ts+'</h2>';
-  h+='<p>\u62a5\u544a\u7f16\u53f7: SA-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
-  h+='<p>\u751f\u6210\u65e5\u671f: '+new Date().toLocaleDateString('zh-CN')+'</p>';
-  h+='<h2>1. \u9879\u76ee\u4fe1\u606f</h2><table><tr><th>\u9879\u76ee</th><th>\u5185\u5bb9</th></tr>'+(pn?'<tr><td>\u9879\u76ee\u540d\u79f0</td><td>'+pn+'</td></tr>':'')+(im?'<tr><td>\u9006\u53d8\u5668\u578b\u53f7</td><td>'+im+'</td></tr>':'')+'<tr><td>\u6807\u51c6</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr><tr><td>\u7edd\u7f18\u7c7b\u578b</td><td>'+document.getElementById('sInsType').selectedOptions[0].text+'</td></tr></table>';
-  h+='<h2>2. \u57fa\u7840\u53c2\u6570</h2><table><tr><th>\u53c2\u6570</th><th>\u503c</th></tr><tr><td>\u6c61\u67d3\u7b49\u7ea7</td><td>PD '+d.pd+'</td></tr><tr><td>\u6750\u6599\u7ec4\u522b</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr><tr><td>\u6d77\u62d4</td><td>'+d.alt+'m</td></tr><tr><td>\u7535\u6c14\u95f4\u9699\u5b9e\u9645\u503c</td><td>'+d.actClr+' mm</td></tr><tr><td>\u722c\u7535\u8ddd\u79bb\u5b9e\u9645\u503c</td><td>'+d.actCrp+' mm</td></tr></table>';
-  h+='<h2>3. \u5404\u8282\u70b9\u5b89\u89c4\u8ddd\u79bb\u5224\u5b9a</h2><table><tr><th>\u8282\u70b9</th><th>工作电压Vrms(V)</th><th>Vpk(V)</th><th>\u77ac\u6001(kV)</th><th>\u6240\u9700Clr(mm)</th><th>\u6240\u9700Crp(mm)</th><th>Clr\u5224\u5b9a</th><th>Crp\u5224\u5b9a</th></tr>'+sr+'</table>';
-  
-  h+='<p style="margin-top:20px"><i>\u5b89\u89c4\u8ddd\u79bb\u8ba1\u7b97\u5de5\u5177 v1.0 - \u62a5\u544a\u81ea\u52a8\u751f\u6210</i></p></body></html>';
-  var b=new Blob([h],{type:'application/msword'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='\u5b89\u89c4\u8ddd\u79bb\u8bc4\u4f30\u62a5\u544a'+(te.length?'('+te.join('-')+')':'')+'.doc';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
+  var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>安规距离评估报告'+ts+'</title><style>body{font-family:SimSun,serif;font-size:11pt}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:3px 6px;font-size:10pt}th{background:#eee}h2{font-size:13pt;margin-top:14px}</style></head><body>';
+  h+='<h2 style="text-align:center">安规距离评估报告'+ts+'</h2>';
+  h+='<p>报告编号: SA-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
+  h+='<p>生成日期: '+new Date().toLocaleDateString('zh-CN')+'</p>';
+  h+='<h2>1. 项目信息</h2><table><tr><th>项目</th><th>内容</th></tr>'+(pn?'<tr><td>项目名称</td><td>'+pn+'</td></tr>':'')+'<tr><td>标准</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr></table>';
+  h+='<h2>2. 基础参数</h2><table><tr><th>参数</th><th>值</th></tr><tr><td>污染等级</td><td>PD '+d.pd+'</td></tr><tr><td>材料组别</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr><tr><td>海拔</td><td>'+d.alt+'m</td></tr></table>';
+  h+='<h2>3. 各节点安规距离判定</h2><table><tr><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr>'+sr+'</table>';
+  h+='<p style="margin-top:20px"><i>安规距离计算工具 v1.0 - 报告自动生成</i></p></body></html>';
+  var b=new Blob([h],{type:'application/msword'});
+  var dn='安规距离评估报告'+(te.length?'('+te.join('-')+')':'')+'.doc';
+  saveBlobWithDialog(b,dn);
 }
 
 function sCalcFormulas(){

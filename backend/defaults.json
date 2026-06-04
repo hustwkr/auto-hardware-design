@@ -11,7 +11,7 @@
     "scenario": "industrial",
     "segments": [
       {
-        "dur": 8,
+        "dur": 6,
         "ta": 75,
         "vop": 400,
         "rips": [
@@ -28,7 +28,7 @@
         ]
       },
       {
-        "dur": 16,
+        "dur": 18,
         "ta": 40,
         "vop": 400,
         "rips": [
