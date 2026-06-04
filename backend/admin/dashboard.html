@@ -27,7 +27,7 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 .btn-p{background:#2563eb;color:#fff;border-color:#2563eb}
 .btn-p:hover{background:#1d4ed8}
 .status{margin-top:10px;font-size:.85rem;color:#10b981}
-</style></head>
+.seg-card{border:1px solid #e2e8f0;border-radius:6px;padding:12px;margin-bottom:10px;background:#fafbfc}.seg-card .fg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.seg-card .fgl{display:flex;flex-direction:column}.seg-card .fgl label{font-size:.75rem;color:#64748b;margin-bottom:1px}.seg-card .fgl input,.seg-card .fgl select{padding:5px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:.85rem;width:100%}.rip-row{display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap}.rip-row input{width:65px;padding:4px 6px;border:1px solid #e2e8f0;border-radius:4px;font-size:.82rem}.rip-row select{padding:4px;border:1px solid #e2e8f0;border-radius:4px;font-size:.82rem}.rip-row button{padding:2px 6px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;cursor:pointer;font-size:.78rem;color:#ef4444}.seg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.seg-header strong{font-size:.85rem}</style></head>
 <body>
 <div class="nav"><h1>默认值管理后台</h1><span><a href="/">返回工具</a><a onclick="logout()">退出登录</a></span></div>
 <div class="container">
@@ -48,7 +48,10 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 <div class="fgl"><label>质保期 (年)</label><input type="number" id="warrantyTarget" value="5"></div>
 <div class="fgl"><label>应用场景</label><select id="scenario"><option value="consumer">消费电子</option><option value="industrial" selected>工业设备</option><option value="automotive">汽车电子</option><option value="medical">医疗设备</option></select></div>
 </div></div>
-<div class="card"><h2>运行段定义 (JSON)</h2><p style="font-size:.82rem;color:#64748b;margin-bottom:8px">每段: dur(时长), ta(温度), vop(电压), rips(纹波数组)</p><textarea id="segmentsJson"></textarea></div></div>
+<div class="card"><h2>运行段定义</h2>
+<div id="segEditor"><p style="color:#94a3b8;font-size:.85rem">暂无运行段</p></div>
+<button class="btn" onclick="addSeg()" style="margin-top:8px;background:#2563eb;color:#fff;border-color:#2563eb">+ 添加运行段</button>
+</div></div>
 
 <div id="tab-safety" class="tab">
 <div class="card"><h2>标准与基础参数</h2><div class="fg">
@@ -93,7 +96,7 @@ async function loadCurrent(){
     ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget"].forEach(function(k){var el=document.getElementById(k);if(el)el.value=c[k]||""});
     document.getElementById("cooling").value=c.cooling||"1.0";
     document.getElementById("scenario").value=c.scenario||"industrial";
-    document.getElementById("segmentsJson").value=JSON.stringify(c.segments||[],null,2);
+    renderSegments(c.segments||[]);
   }
   if(d.safety){
     var s=d.safety;
@@ -108,7 +111,7 @@ async function saveDefaults(){
   ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget"].forEach(function(k){d.capacitor[k]=document.getElementById(k).value});
   d.capacitor.cooling=document.getElementById("cooling").value;
   d.capacitor.scenario=document.getElementById("scenario").value;
-  try{ d.capacitor.segments=JSON.parse(document.getElementById("segmentsJson").value); }catch(e){ showStatus("段定义JSON错误: "+e.message,"#ef4444"); return; }
+  d.capacitor.segments=collectSegments();
   
   ["sStd","sPd","sMg","sAlt","sOvc","sSysV_AC","sSysV_DC"].forEach(function(k){d.safety[k]=document.getElementById(k).value});
   try{ d.safety.nodes=JSON.parse(document.getElementById("nodesJson").value); }catch(e){ showStatus("节点定义JSON错误: "+e.message,"#ef4444"); return; }
@@ -119,5 +122,69 @@ async function saveDefaults(){
 }
 
 loadCurrent();
+
+function renderSegments(segs){
+  var el=document.getElementById("segEditor");
+  if(!segs||!segs.length){el.innerHTML="<p style=\"color:#94a3b8;font-size:.85rem\">暂无运行段</p>";return}
+  var h="";
+  segs.forEach(function(sg,i){
+    h+="<div class=\"seg-card\"><div class=\"seg-header\"><strong>时段"+(i+1)+"</strong><button onclick=\"removeSeg("+i+")\" style=\"padding:2px 8px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;cursor:pointer;font-size:.78rem;color:#ef4444\">\u2715 删除</button></div>";
+    h+="<div class=\"fg\"><div class=\"fgl\"><label>时长(h/天)</label><input class=\"sd\" type=number value=\""+(sg.dur||8)+"\" min=0 max=24 step=0.5></div>";
+    h+="<div class=\"fgl\"><label>温度Ta(C)</label><input class=\"st\" type=number value=\""+(sg.ta||60)+"\" min=-40 max=150></div>";
+    h+="<div class=\"fgl\"><label>电压Vop(V)</label><input class=\"sv\" type=number value=\""+(sg.vop||30)+"\" min=0 step=1></div></div>";
+    h+="<div style=\"margin-top:6px\"><label style=\"font-size:.75rem;color:#64748b\">纹波电流:</label>";
+    (sg.rips||[]).forEach(function(r,j){
+      var freq=r.freq||r.f||120,unit=r.unit||"Hz",cur=(r.current!==undefined?r.current:r);
+      if(typeof r==="number"){freq=120;unit="Hz";cur=r}
+      h+="<div class=\"rip-row\"><input class=\"rf\" type=number value=\""+freq+"\" style=width:65px>";
+      h+="<select class=\"ru\"><option value=\"Hz\""+(unit==="Hz"?" selected":"")+">Hz</option><option value=\"kHz\""+(unit==="kHz"?" selected":"")+">kHz</option></select>";
+      h+="<input class=\"rc\" type=number value=\""+cur+"\" min=0 style=width:70px><span style=\"font-size:.78rem;color:#64748b\">mA</span>";
+      h+="<button onclick=\"removeRip("+i+","+j+")\">\u2715</button></div>";
+    });
+    h+="<button class=\"btn-sm\" onclick=\"addRip("+i+")\" style=\"margin-top:4px\">+ 纹波</button></div></div>";
+  });
+  el.innerHTML=h;
+}
+function collectSegments(){
+  var segs=[];
+  document.querySelectorAll("#segEditor .seg-card").forEach(function(card){
+    segs.push({
+      dur:+(card.querySelector(".sd").value)||0,
+      ta:+(card.querySelector(".st").value)||0,
+      vop:+(card.querySelector(".sv").value)||0,
+      rips:Array.from(card.querySelectorAll(".rip-row")).map(function(row){
+        return{freq:+(row.querySelector(".rf").value)||120,unit:row.querySelector(".ru").value,current:+(row.querySelector(".rc").value)||0};
+      })
+    });
+  });
+  return segs;
+}
+function addSeg(){
+  var n=document.querySelectorAll("#segEditor .seg-card").length;
+  var h="<div class=\"seg-card\"><div class=\"seg-header\"><strong>时段"+(n+1)+"</strong><button onclick=\"removeSeg("+n+")\" style=\"padding:2px 8px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;cursor:pointer;font-size:.78rem;color:#ef4444\">\u2715 删除</button></div>";
+  h+="<div class=\"fg\"><div class=\"fgl\"><label>时长(h/天)</label><input class=\"sd\" type=number value=\"8\" min=0 max=24 step=0.5></div>";
+  h+="<div class=\"fgl\"><label>温度Ta(C)</label><input class=\"st\" type=number value=\"50\" min=-40 max=150></div>";
+  h+="<div class=\"fgl\"><label>电压Vop(V)</label><input class=\"sv\" type=number value=\"30\" min=0 step=1></div></div>";
+  h+="<div style=\"margin-top:6px\"><label style=\"font-size:.75rem;color:#64748b\">纹波电流:</label><div class=\"rip-row\"><input class=\"rf\" type=number value=\"120\" style=width:65px><select class=\"ru\"><option value=\"Hz\" selected>Hz</option><option value=\"kHz\">kHz</option></select><input class=\"rc\" type=number value=\"100\" min=0 style=width:70px><span style=\"font-size:.78rem;color:#64748b\">mA</span><button onclick=\"removeRip("+n+",0)\">\u2715</button></div>";
+  h+="<button class=\"btn-sm\" onclick=\"addRip("+n+")\" style=\"margin-top:4px\">+ 纹波</button></div></div>";
+  document.getElementById("segEditor").insertAdjacentHTML("beforeend",h);
+}
+function removeSeg(i){
+  var cards=document.querySelectorAll("#segEditor .seg-card");
+  if(cards.length<=1)return;
+  cards[i].remove();
+  document.querySelectorAll("#segEditor .seg-card").forEach(function(c,j){c.querySelector(".seg-header strong").textContent="时段"+(j+1)});
+}
+function addRip(i){
+  var card=document.querySelectorAll("#segEditor .seg-card")[i],n=card.querySelectorAll(".rip-row").length;
+  var h="<div class=\"rip-row\"><input class=\"rf\" type=number value=\"120\" style=width:65px><select class=\"ru\"><option value=\"Hz\" selected>Hz</option><option value=\"kHz\">kHz</option></select><input class=\"rc\" type=number value=\"100\" min=0 style=width:70px><span style=\"font-size:.78rem;color:#64748b\">mA</span><button onclick=\"removeRip("+i+","+n+")\">\u2715</button></div>";
+  card.insertAdjacentHTML("beforeend",h);
+}
+function removeRip(i,j){
+  var card=document.querySelectorAll("#segEditor .seg-card")[i],rows=card.querySelectorAll(".rip-row");
+  if(rows.length<=1)return;
+  card.removeChild(rows[j]);
+}
+
 </script></body></html>
 

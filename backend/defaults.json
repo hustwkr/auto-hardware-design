@@ -12,19 +12,31 @@
     "segments": [
       {
         "dur": 8,
-        "ta": 60,
-        "vop": 30,
+        "ta": 75,
+        "vop": 400,
         "rips": [
-          250,
-          150
+          {
+            "freq": 120,
+            "unit": "Hz",
+            "current": 800
+          },
+          {
+            "freq": 2,
+            "unit": "kHz",
+            "current": 500
+          }
         ]
       },
       {
         "dur": 16,
         "ta": 40,
-        "vop": 30,
+        "vop": 400,
         "rips": [
-          100
+          {
+            "freq": 120,
+            "unit": "Hz",
+            "current": 100
+          }
         ]
       }
     ]

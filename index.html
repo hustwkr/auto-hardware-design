@@ -82,6 +82,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <nav class="tab-nav">
   <button class="tab-btn active" data-tab="capacitor">电解电容寿命计算</button>
   <button class="tab-btn" data-tab="safety">安规距离计算</button>
+  <button class="tab-btn" style="margin-left:auto" onclick="window.location.href='/admin/login'">⚙ 后台</button>
 </nav>
 <div id="tab-capacitor" class="tab-content active">
 <div class="container">
@@ -214,7 +215,7 @@ return"<div class=seg data-id="+id+"><div><span>时段"+(idx+1)+"</span><span st
 function sdChange(inp){inp.closest(".seg").querySelector(".sh").textContent=parseFloat(inp.value)||0;updT()}
 function updT(){var t=0;document.querySelectorAll("#tab-capacitor .sd").forEach(function(i){t+=parseFloat(i.value)||0});document.getElementById("stt").textContent="合计: "+fv(t,1)+" / 24 h";var w=document.getElementById("stw");if(t>24){w.style.display="block";w.textContent="总时长 "+fv(t,1)+" h 超 24 h"}else if(t<24){w.style.display="block";w.textContent="剩余 "+fv(24-t,1)+" h 未定义(停机)"}else w.style.display="none"}
 function addSeg(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,50,30,[100]));updT();calc()}
-function rmSeg(b){b.closest(".seg").remove();reNum();calc()}
+function rmSeg(b){b.closest(".seg").remove();reNum();updT();calc()}
 function reNum(){document.querySelectorAll("#tab-capacitor .seg").forEach(function(s,i){s.querySelector(".seg>div>:first-child").textContent="时段"+(i+1)})}
 function addRR(b){b.closest(".seg").querySelector(".rtb").insertAdjacentHTML("beforeend","<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td><td><input class=fc type=number value=50 min=0 step=10 style=width:80px oninput=calc()></td><td><button class=btn-sm onclick=removeRippleRow(this)>X</button></td></tr>");calc()}
 function removeRippleRow(b){var tb=b.closest(".rtb");if(tb.querySelectorAll("tr").length<=1)return;b.closest("tr").remove();calc()}
@@ -533,32 +534,52 @@ init();
     updT();calc();sCalc();
   }catch(e){}
 })();
+
+// ---- Load defaults ----
+setTimeout(function(){
+  try{
+    var x=new XMLHttpRequest();x.open("GET","/api/defaults",false);x.send();
+    var d=JSON.parse(x.responseText);if(!d||!d.capacitor)return;
+    var c=d.capacitor;
+    ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget"].forEach(function(id){
+      var el=document.getElementById(id);if(el&&c[id]!==undefined)el.value=c[id];
+    });
+    if(c.cooling)document.getElementById("cooling").value=c.cooling;
+    if(c.scenario)document.getElementById("scenario").value=c.scenario;
+    if(c.segments&&c.segments.length){
+      document.getElementById("sc").innerHTML="";sid=0;
+      c.segments.forEach(function(sg){
+        var r=sg.rips||[];if(r.length&&typeof r[0]==="object")r=r.map(function(v){return v.current||0});
+        document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,sg.dur||8,sg.ta||60,sg.vop||30,r));
+      });
+      // Apply frequency from defaults
+      var e=document.querySelectorAll("#tab-capacitor .seg");
+      c.segments.forEach(function(sg,si){
+        if(sg.rips&&sg.rips.length&&typeof sg.rips[0]==="object"){
+          var s=e[si];if(s){
+            s.querySelectorAll(".rtb tr").forEach(function(row,ri){
+              var rp=sg.rips[ri];
+              if(rp&&rp.freq)row.querySelector(".fv").value=rp.freq;
+              if(rp&&rp.unit)row.querySelector(".fu").value=rp.unit==="kHz"?1000:1;
+            });
+          }
+        }
+      });
+    }
+    var s=d.safety;
+    if(s){
+      ["sStd","sPd","sMg","sAlt","sOvc","sSysV_AC","sSysV_DC"].forEach(function(id){
+        var el=document.getElementById(id);if(el&&s[id]!==undefined)el.value=s[id];
+      });
+      if(s.nodes&&s.nodes.length){
+        document.getElementById("sN").innerHTML="";snid=0;
+        s.nodes.forEach(function(n){document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,0,n.name||"",n.vrms||0,n.ins||"basic",n.pcb||0,n.coat||0,n.interp||false,n.circ||"ac"))});
+      }
+    }
+    updT();calc();sCalc();
+  }catch(e){}
+},200);
+
 </script>
 
-// ---- Load backend defaults ----
-// ---- Apply server defaults ----
-window._DEFAULTS = /*_DEFAULTS_JSON_*/;
-(function(){
-  var d=window._DEFAULTS; if(!d||!d.capacitor) return;
-  var c=d.capacitor;
-  ['l0','tmax','vrated','irated','dt0','workdays','warrantyTarget'].forEach(function(id){
-    var el=document.getElementById(id); if(el&&c[id]!==undefined) el.value=c[id];
-  });
-  if(c.cooling) document.getElementById('cooling').value=c.cooling;
-  if(c.scenario) document.getElementById('scenario').value=c.scenario;
-  if(c.segments&&c.segments.length){
-    document.getElementById('sc').innerHTML='';sid=0;
-    c.segments.forEach(function(sg){document.getElementById('sc').insertAdjacentHTML('beforeend',mSeg(sid++,0,sg.dur||8,sg.ta||60,sg.vop||30,sg.rips||[]))});
-  }
-  var s=d.safety; if(s){
-    ['sStd','sPd','sMg','sAlt','sOvc','sSysV_AC','sSysV_DC'].forEach(function(id){
-      var el=document.getElementById(id); if(el&&s[id]!==undefined) el.value=s[id];
-    });
-    if(s.nodes&&s.nodes.length){
-      document.getElementById('sN').innerHTML='';snid=0;
-      s.nodes.forEach(function(n){document.getElementById('sN').insertAdjacentHTML('beforeend',mNode(snid++,0,n.name||'',n.vrms||0,n.ins||'basic',n.pcb||0,n.coat||0,n.interp||false,n.circ||'ac'))});
-    }
-  }
-  updT();calc();sCalc();
-})();
 
