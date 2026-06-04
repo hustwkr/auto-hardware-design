@@ -1,0 +1,70 @@
+{
+  "capacitor": {
+    "l0": "5000",
+    "tmax": "105",
+    "vrated": "450",
+    "irated": "2000",
+    "dt0": "10",
+    "workdays": "365",
+    "warrantyTarget": "10",
+    "cooling": "1.0",
+    "scenario": "industrial",
+    "segments": [
+      {
+        "dur": 8,
+        "ta": 60,
+        "vop": 30,
+        "rips": [
+          250,
+          150
+        ]
+      },
+      {
+        "dur": 16,
+        "ta": 40,
+        "vop": 30,
+        "rips": [
+          100
+        ]
+      }
+    ]
+  },
+  "safety": {
+    "sStd": "iec",
+    "sPd": "2",
+    "sMg": "ii",
+    "sAlt": "3000",
+    "sOvc": "ii",
+    "sSysV_AC": "300",
+    "sSysV_DC": "600",
+    "nodes": [
+      {
+        "name": "L-N",
+        "vrms": 230,
+        "ins": "basic",
+        "pcb": 0,
+        "coat": 0,
+        "circ": "ac",
+        "interp": false
+      },
+      {
+        "name": "L-PE",
+        "vrms": 230,
+        "ins": "basic",
+        "pcb": 0,
+        "coat": 0,
+        "circ": "ac",
+        "interp": false
+      },
+      {
+        "name": "DC+-PE",
+        "vrms": 800,
+        "ins": "reinf",
+        "pcb": 0,
+        "coat": 0,
+        "circ": "dc",
+        "interp": false
+      }
+    ]
+  }
+}

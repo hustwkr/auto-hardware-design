@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="zh-CN">
+<head><meta charset="UTF-8"><meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"><meta http-equiv="Pragma" content="no-cache"><title>管理员登录</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f1f5f9;display:flex;align-items:center;justify-content:center;height:100vh}
+.card{background:#fff;border-radius:12px;padding:24px 32px;box-shadow:0 4px 24px rgba(0,0,0,.08);width:360px}
+h1{font-size:1.2rem;margin-bottom:20px;text-align:center;color:#1e293b}
+.form-group{margin-bottom:16px}
+label{display:block;font-size:.85rem;font-weight:500;color:#475569;margin-bottom:4px}
+input{width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:.9rem}
+input:focus{border-color:#2563eb;outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+button{width:100%;padding:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:.95rem;cursor:pointer}
+button:hover{background:#1d4ed8}
+.error{color:#ef4444;font-size:.85rem;margin-top:8px;text-align:center}
+</style></head>
+<body>
+<div class="card">
+<h1>管理员登录</h1>
+<form action="/api/login" method="POST">
+<div class="form-group"><label>密码</label><input type="password" name="password" placeholder="输入管理员密码" autofocus></div>
+<button type="submit">登录</button>
+</form>
+</div></body></html>

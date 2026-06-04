@@ -212,20 +212,20 @@ return"<div class=seg data-id="+id+"><div><span>时段"+(idx+1)+"</span><span st
 +"<button class=btn-sm style=margin-top:4px onclick=addRR(this)>+ 添加纹波分量</button></div>"
 +"<button class=btn-sm style=margin-top:8px;color:#ef4444 onclick=rmSeg(this)>删除该时段</button></div>"}
 function sdChange(inp){inp.closest(".seg").querySelector(".sh").textContent=parseFloat(inp.value)||0;updT()}
-function updT(){var t=0;document.querySelectorAll(".sd").forEach(function(i){t+=parseFloat(i.value)||0});document.getElementById("stt").textContent="合计: "+fv(t,1)+" / 24 h";var w=document.getElementById("stw");if(t>24){w.style.display="block";w.textContent="总时长 "+fv(t,1)+" h 超 24 h"}else if(t<24){w.style.display="block";w.textContent="剩余 "+fv(24-t,1)+" h 未定义(停机)"}else w.style.display="none"}
+function updT(){var t=0;document.querySelectorAll("#tab-capacitor .sd").forEach(function(i){t+=parseFloat(i.value)||0});document.getElementById("stt").textContent="合计: "+fv(t,1)+" / 24 h";var w=document.getElementById("stw");if(t>24){w.style.display="block";w.textContent="总时长 "+fv(t,1)+" h 超 24 h"}else if(t<24){w.style.display="block";w.textContent="剩余 "+fv(24-t,1)+" h 未定义(停机)"}else w.style.display="none"}
 function addSeg(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,50,30,[100]));updT();calc()}
 function rmSeg(b){b.closest(".seg").remove();reNum();calc()}
-function reNum(){document.querySelectorAll(".seg").forEach(function(s,i){s.querySelector(".seg>div>:first-child").textContent="时段"+(i+1)})}
+function reNum(){document.querySelectorAll("#tab-capacitor .seg").forEach(function(s,i){s.querySelector(".seg>div>:first-child").textContent="时段"+(i+1)})}
 function addRR(b){b.closest(".seg").querySelector(".rtb").insertAdjacentHTML("beforeend","<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td><td><input class=fc type=number value=50 min=0 step=10 style=width:80px oninput=calc()></td><td><button class=btn-sm onclick=removeRippleRow(this)>X</button></td></tr>");calc()}
 function removeRippleRow(b){var tb=b.closest(".rtb");if(tb.querySelectorAll("tr").length<=1)return;b.closest("tr").remove();calc()}
 function l2r(l){try{return l.replace(/\\times/g,"\u00D7").replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g,"($1)/($2)").replace(/\\Delta/g,"\u0394").replace(/\\sum/g,"\u2211").replace(/\\left/g,"").replace(/\\right/g,"").replace(/\\text\{([^}]+)\}/g,"$1").replace(/\\cdot/g,"\u00B7").replace(/\\,/g," ").replace(/\^{([^}]+)\}/g,"^($1)").replace(/\^{([a-zA-Z0-9])}/g,"^$1").replace(/_{([^}]+)}/g,"_$1").replace(/{/g,"").replace(/}/g,"")}catch(e){return l}}
 
 function renderLatex(){try{document.querySelectorAll('.latex').forEach(function(e){try{var w=window;if(!w.katex){e.textContent=e.getAttribute('data-l');return}w.katex.render(e.getAttribute('data-l'),e,{throwOnError:false})}catch(er){}})}catch(er){}}
 function calc(){
-if(!document.querySelectorAll(".seg").length){document.getElementById("lh").textContent="-";document.getElementById("ly").textContent="-";document.getElementById("ad").textContent="-";document.getElementById("wt").textContent="-";document.getElementById("wk").textContent="-";return}
+if(!document.querySelectorAll("#tab-capacitor .seg").length){document.getElementById("lh").textContent="-";document.getElementById("ly").textContent="-";document.getElementById("ad").textContent="-";document.getElementById("wt").textContent="-";document.getElementById("wk").textContent="-";return}
 var l0=+document.getElementById("l0").value||2e3,tmax=+document.getElementById("tmax").value||105,vr=+document.getElementById("vrated").value||50,ir=+document.getElementById("irated").value||500,dt0=+document.getElementById("dt0").value||10,cl=+document.getElementById("cooling").value||1,wd=+document.getElementById("workdays").value||365,wt=+document.getElementById("warrantyTarget").value||5,sc=document.getElementById("scenario").value,mi=MG[sc]||MG.industrial,dmg=0,wtHs=-1/0,wtKt=1/0,sr=[];
-document.querySelectorAll(".seg").forEach(function(seg,i){var dur=+seg.querySelector(".sd").value||0,ta=+seg.querySelector(".stp").value||25,vop=+seg.querySelector(".sv").value||0,sq=0,rd=[];seg.querySelectorAll(".rtb tr").forEach(function(row){var f=(+row.querySelector(".fv").value||120)*(+row.querySelector(".fu").value||1),iop=+row.querySelector(".fc").value||0;if(iop<=0)return;var k=FF[f]||1,ec=iop/k,s=(ec/ir)*(ec/ir);sq+=s;rd.push({f:f,iop:iop,k:k,ec:ec,s:s})});var dt=Math.min(dt0*sq/cl,dt0*3),ths=ta+dt,kt=Math.pow(2,(tmax-ths)/10),kv=kvf(vop,vr),Li=l0*kt*kv,d=Li>0?dur*wd/Li:1/0;dmg+=d;if(ths>wtHs)wtHs=ths;if(kt<wtKt)wtKt=kt;sr.push({i:i+1,dur:dur,ta:ta,vop:vop,ths:ths,kt:kt,kv:kv,Li:Li,d:d,dt:dt,rd:rd})});
-var ly=dmg>0?1/dmg:1/0,lh=ly*wd*Array.from(document.querySelectorAll(".seg")).reduce(function(s,seg){return s+(+seg.querySelector(".sd").value||0)},0),margin=ly/wt,req=mi.r,ws,wc,wd2;
+document.querySelectorAll("#tab-capacitor .seg").forEach(function(seg,i){var dur=+seg.querySelector(".sd").value||0,ta=+seg.querySelector(".stp").value||25,vop=+seg.querySelector(".sv").value||0,sq=0,rd=[];seg.querySelectorAll(".rtb tr").forEach(function(row){var f=(+row.querySelector(".fv").value||120)*(+row.querySelector(".fu").value||1),iop=+row.querySelector(".fc").value||0;if(iop<=0)return;var k=FF[f]||1,ec=iop/k,s=(ec/ir)*(ec/ir);sq+=s;rd.push({f:f,iop:iop,k:k,ec:ec,s:s})});var dt=Math.min(dt0*sq/cl,dt0*3),ths=ta+dt,kt=Math.pow(2,(tmax-ths)/10),kv=kvf(vop,vr),Li=l0*kt*kv,d=Li>0?dur*wd/Li:1/0;dmg+=d;if(ths>wtHs)wtHs=ths;if(kt<wtKt)wtKt=kt;sr.push({i:i+1,dur:dur,ta:ta,vop:vop,ths:ths,kt:kt,kv:kv,Li:Li,d:d,dt:dt,rd:rd})});
+var ly=dmg>0?1/dmg:1/0,lh=ly*wd*Array.from(document.querySelectorAll("#tab-capacitor .seg")).reduce(function(s,seg){return s+(+seg.querySelector(".sd").value||0)},0),margin=ly/wt,req=mi.r,ws,wc,wd2;
 if(margin>=req*1.2){ws="优秀("+fv(margin,1)+"x,需"+req+"x)";wc="g";wd2="质保期"+wt+"年,预计"+fv(ly,1)+"年,裕量充足"}
 else if(margin>=req){ws="合格("+fv(margin,1)+"x,需"+req+"x)";wc="p";wd2="质保期"+wt+"年,预计"+fv(ly,1)+"年,满足要求"}
 else if(margin>=req*0.7){ws="边缘("+fv(margin,1)+"x,需"+req+"x)";wc="c";wd2="质保期"+wt+"年,预计"+fv(ly,1)+"年,建议增加裕量"}
@@ -499,7 +499,66 @@ function sCalcFormulas(){
     sCalc();
   };
 })();
-window.addEventListener("DOMContentLoaded",init);
+init();
+
+(function(){
+  try{
+    var x=new XMLHttpRequest();
+    x.open("GET","/api/defaults",false);
+    x.send();
+    var d=JSON.parse(x.responseText);
+    if(!d||!d.capacitor)return;
+    var c=d.capacitor;
+    ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget"].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el&&c[id]!==undefined)el.value=c[id];
+    });
+    if(c.cooling)document.getElementById("cooling").value=c.cooling;
+    if(c.scenario)document.getElementById("scenario").value=c.scenario;
+    if(c.segments&&c.segments.length){
+      document.getElementById("sc").innerHTML="";sid=0;
+      c.segments.forEach(function(sg){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,sg.dur||8,sg.ta||60,sg.vop||30,sg.rips||[]))});
+    }
+    var s=d.safety;
+    if(s){
+      ["sStd","sPd","sMg","sAlt","sOvc","sSysV_AC","sSysV_DC"].forEach(function(id){
+        var el=document.getElementById(id);
+        if(el&&s[id]!==undefined)el.value=s[id];
+      });
+      if(s.nodes&&s.nodes.length){
+        document.getElementById("sN").innerHTML="";snid=0;
+        s.nodes.forEach(function(n){document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,0,n.name||"",n.vrms||0,n.ins||"basic",n.pcb||0,n.coat||0,n.interp||false,n.circ||"ac"))});
+      }
+    }
+    updT();calc();sCalc();
+  }catch(e){}
+})();
 </script>
-</body>
-</html>
+
+// ---- Load backend defaults ----
+// ---- Apply server defaults ----
+window._DEFAULTS = /*_DEFAULTS_JSON_*/;
+(function(){
+  var d=window._DEFAULTS; if(!d||!d.capacitor) return;
+  var c=d.capacitor;
+  ['l0','tmax','vrated','irated','dt0','workdays','warrantyTarget'].forEach(function(id){
+    var el=document.getElementById(id); if(el&&c[id]!==undefined) el.value=c[id];
+  });
+  if(c.cooling) document.getElementById('cooling').value=c.cooling;
+  if(c.scenario) document.getElementById('scenario').value=c.scenario;
+  if(c.segments&&c.segments.length){
+    document.getElementById('sc').innerHTML='';sid=0;
+    c.segments.forEach(function(sg){document.getElementById('sc').insertAdjacentHTML('beforeend',mSeg(sid++,0,sg.dur||8,sg.ta||60,sg.vop||30,sg.rips||[]))});
+  }
+  var s=d.safety; if(s){
+    ['sStd','sPd','sMg','sAlt','sOvc','sSysV_AC','sSysV_DC'].forEach(function(id){
+      var el=document.getElementById(id); if(el&&s[id]!==undefined) el.value=s[id];
+    });
+    if(s.nodes&&s.nodes.length){
+      document.getElementById('sN').innerHTML='';snid=0;
+      s.nodes.forEach(function(n){document.getElementById('sN').insertAdjacentHTML('beforeend',mNode(snid++,0,n.name||'',n.vrms||0,n.ins||'basic',n.pcb||0,n.coat||0,n.interp||false,n.circ||'ac'))});
+    }
+  }
+  updT();calc();sCalc();
+})();
+

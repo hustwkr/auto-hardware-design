@@ -1,0 +1,123 @@
+<!DOCTYPE html><html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>默认值管理</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f1f5f9;color:#1e293b}
+.nav{background:#fff;border-bottom:1px solid #e2e8f0;padding:12px 24px;display:flex;justify-content:space-between;align-items:center}
+.nav h1{font-size:1.1rem;font-weight:600}
+.nav a{color:#64748b;text-decoration:none;font-size:.85rem;margin-left:16px;cursor:pointer}
+.nav a:hover{color:#2563eb}
+.container{max-width:1000px;margin:0 auto;padding:24px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px 24px;margin-bottom:20px}
+.card h2{font-size:1rem;font-weight:600;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #e2e8f0}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fgl{display:flex;flex-direction:column}
+.fgl label{font-size:.8rem;font-weight:500;color:#64748b;margin-bottom:2px}
+.fgl input,.fgl select{width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:.88rem}
+.fgl input:focus,.fgl select:focus{border-color:#2563eb;outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.tab-nav{display:flex;border-bottom:2px solid #e2e8f0;margin-bottom:20px}
+.tab-btn{padding:10px 20px;border:none;background:transparent;font-size:.9rem;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab-btn.active{color:#2563eb;border-bottom-color:#2563eb;background:#f0f4ff}
+.tab{display:none}
+.tab.active{display:block}
+textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-family:monospace;font-size:.85rem;min-height:200px;resize:vertical}
+.btn-bar{display:flex;gap:10px;margin-top:16px}
+.btn{padding:8px 20px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;font-size:.88rem}
+.btn:hover{background:#f1f5f9}
+.btn-p{background:#2563eb;color:#fff;border-color:#2563eb}
+.btn-p:hover{background:#1d4ed8}
+.status{margin-top:10px;font-size:.85rem;color:#10b981}
+</style></head>
+<body>
+<div class="nav"><h1>默认值管理后台</h1><span><a href="/">返回工具</a><a onclick="logout()">退出登录</a></span></div>
+<div class="container">
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('capacitor')">电解电容寿命计算</button>
+  <button class="tab-btn" onclick="switchTab('safety')">安规距离计算</button>
+</div>
+
+<div id="tab-capacitor" class="tab active">
+<div class="card"><h2>电容器额定参数</h2><div class="fg">
+<div class="fgl"><label>额定寿命 L0 (h)</label><input type="number" id="l0" value="2000"></div>
+<div class="fgl"><label>Tmax (C)</label><input type="number" id="tmax" value="105"></div>
+<div class="fgl"><label>Vrated (V)</label><input type="number" id="vrated" value="50"></div>
+<div class="fgl"><label>Irated (mA)</label><input type="number" id="irated" value="500"></div>
+<div class="fgl"><label>DT0 (C)</label><input type="number" id="dt0" value="10"></div>
+<div class="fgl"><label>散热</label><select id="cooling"><option value="1.0">自然对流</option><option value="1.15">风冷1-2m/s</option><option value="1.30">风冷>2m/s</option></select></div>
+<div class="fgl"><label>年工作天数</label><input type="number" id="workdays" value="365"></div>
+<div class="fgl"><label>质保期 (年)</label><input type="number" id="warrantyTarget" value="5"></div>
+<div class="fgl"><label>应用场景</label><select id="scenario"><option value="consumer">消费电子</option><option value="industrial" selected>工业设备</option><option value="automotive">汽车电子</option><option value="medical">医疗设备</option></select></div>
+</div></div>
+<div class="card"><h2>运行段定义 (JSON)</h2><p style="font-size:.82rem;color:#64748b;margin-bottom:8px">每段: dur(时长), ta(温度), vop(电压), rips(纹波数组)</p><textarea id="segmentsJson"></textarea></div></div>
+
+<div id="tab-safety" class="tab">
+<div class="card"><h2>标准与基础参数</h2><div class="fg">
+<div class="fgl"><label>标准体系</label><select id="sStd"><option value="iec">IEC 62109-1</option><option value="ul">UL 840</option></select></div>
+<div class="fgl"><label>污染等级</label><select id="sPd"><option value="1">PD 1</option><option value="2" selected>PD 2</option><option value="3">PD 3</option></select></div>
+<div class="fgl"><label>材料组别 (CTI)</label><select id="sMg"><option value="i">I 组</option><option value="ii" selected>II 组</option><option value="iiia">IIIa 组</option><option value="iiib">IIIb 组</option></select></div>
+<div class="fgl"><label>海拔</label><select id="sAlt"><option value="2000" selected><=2000m</option><option value="3000">2000-3000m</option><option value="4000">3000-4000m</option><option value="5000">4000-5000m</option></select></div>
+<div class="fgl"><label>过电压类别</label><select id="sOvc"><option value="i">I</option><option value="ii" selected>II</option><option value="iii">III</option><option value="iv">IV</option></select></div>
+<div class="fgl"><label>AC系统电压 (V)</label><input type="number" id="sSysV_AC" value="300"></div>
+<div class="fgl"><label>DC系统电压 (V)</label><input type="number" id="sSysV_DC" value="600"></div>
+</div></div>
+<div class="card"><h2>测量节点定义 (JSON)</h2><p style="font-size:.82rem;color:#64748b;margin-bottom:8px">每节点: name, vrms, ins, pcb, coat, circ, interp</p><textarea id="nodesJson"></textarea></div></div>
+
+<div class="btn-bar">
+<button class="btn btn-p" onclick="saveDefaults()">保存默认值</button>
+<button class="btn" onclick="loadCurrent()">重新加载</button>
+<span class="status" id="status"></span>
+</div></div>
+
+<script>
+var token = localStorage.getItem("admin_token");
+if(!token){var m=document.cookie.match(/token=([^;]+)/);if(m){localStorage.setItem("admin_token",m[1]);token=m[1]}}
+if(!token){ window.location.href="/admin/login?e=2"; }
+
+function logout(){ localStorage.removeItem("admin_token"); window.location.href="/admin/login"; }
+function switchTab(t){
+  document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});
+  document.querySelectorAll(".tab").forEach(function(tb){tb.classList.remove("active")});
+  document.querySelector("[onclick*='"+t+"']").classList.add("active");
+  document.getElementById("tab-"+t).classList.add("active");
+}
+function authFetch(url,opt){ opt=opt||{}; opt.headers=opt.headers||{}; opt.headers["x-auth-token"]=token; return fetch(url,opt); }
+function showStatus(msg,color){ var el=document.getElementById("status"); el.textContent=msg; el.style.color=color||"#10b981"; setTimeout(function(){el.textContent=""},3000); }
+
+async function loadCurrent(){
+  var r=await authFetch("/api/admin/defaults");
+  if(r.status===401){ alert("登录已过期，请重新登录"); localStorage.removeItem("admin_token"); window.location.href="/admin/login"; return; }
+  if(!r.ok){ showStatus("加载失败","#ef4444"); return; }
+  var d=await r.json();
+  if(d.capacitor){
+    var c=d.capacitor;
+    ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget"].forEach(function(k){var el=document.getElementById(k);if(el)el.value=c[k]||""});
+    document.getElementById("cooling").value=c.cooling||"1.0";
+    document.getElementById("scenario").value=c.scenario||"industrial";
+    document.getElementById("segmentsJson").value=JSON.stringify(c.segments||[],null,2);
+  }
+  if(d.safety){
+    var s=d.safety;
+    ["sStd","sPd","sMg","sAlt","sOvc","sSysV_AC","sSysV_DC"].forEach(function(k){var el=document.getElementById(k);if(el)el.value=s[k]||""});
+    document.getElementById("nodesJson").value=JSON.stringify(s.nodes||[],null,2);
+  }
+  showStatus("已加载");
+}
+
+async function saveDefaults(){
+  var d={capacitor:{},safety:{}};
+  ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget"].forEach(function(k){d.capacitor[k]=document.getElementById(k).value});
+  d.capacitor.cooling=document.getElementById("cooling").value;
+  d.capacitor.scenario=document.getElementById("scenario").value;
+  try{ d.capacitor.segments=JSON.parse(document.getElementById("segmentsJson").value); }catch(e){ showStatus("段定义JSON错误: "+e.message,"#ef4444"); return; }
+  
+  ["sStd","sPd","sMg","sAlt","sOvc","sSysV_AC","sSysV_DC"].forEach(function(k){d.safety[k]=document.getElementById(k).value});
+  try{ d.safety.nodes=JSON.parse(document.getElementById("nodesJson").value); }catch(e){ showStatus("节点定义JSON错误: "+e.message,"#ef4444"); return; }
+  
+  var r=await authFetch("/api/admin/defaults",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});
+  if(r.status===401){ alert("登录已过期"); localStorage.removeItem("admin_token"); window.location.href="/admin/login"; return; }
+  if(r.ok) showStatus("保存成功"); else showStatus("保存失败","#ef4444");
+}
+
+loadCurrent();
+</script></body></html>
+
