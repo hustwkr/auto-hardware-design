@@ -213,7 +213,7 @@ return"<div class=seg data-id="+id+"><div><span>时段"+(idx+1)+"</span><span st
 +"<button class=btn-sm style=margin-top:8px;color:#ef4444 onclick=rmSeg(this)>删除该时段</button></div>"}
 function sdChange(inp){inp.closest(".seg").querySelector(".sh").textContent=parseFloat(inp.value)||0;updT()}
 function updT(){var t=0;document.querySelectorAll("#tab-capacitor .sd").forEach(function(i){t+=parseFloat(i.value)||0});document.getElementById("stt").textContent="合计: "+fv(t,1)+" / 24 h";var w=document.getElementById("stw");if(t>24){w.style.display="block";w.textContent="总时长 "+fv(t,1)+" h 超 24 h"}else if(t<24){w.style.display="block";w.textContent="剩余 "+fv(24-t,1)+" h 未定义(停机)"}else w.style.display="none"}
-function addSeg(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,50,30,[100]));updT();calc()}
+function addSeg(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,50,30,[100]));updT();calc();reNum()}
 function rmSeg(b){b.closest(".seg").remove();reNum();updT();calc()}
 function reNum(){document.querySelectorAll("#tab-capacitor .seg").forEach(function(s,i){s.querySelector(".seg>div>:first-child").textContent="时段"+(i+1)})}
 function addRR(b){b.closest(".seg").querySelector(".rtb").insertAdjacentHTML("beforeend","<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td><td><input class=fc type=number value=50 min=0 step=10 style=width:80px oninput=calc()></td><td><button class=btn-sm onclick=removeRippleRow(this)>删除分量</button></td></tr>");calc()}
@@ -292,7 +292,7 @@ function exportReport(mode){
   saveBlobWithDialog(b,dn);
 }
 
-function init(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,60,30,[250,150]));document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,1,16,40,30,[100]));document.getElementById("addSegBtn").onclick=addSeg;updT();calc()}
+function init(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,60,30,[250,150]));document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,1,16,40,30,[100]));document.getElementById("addSegBtn").onclick=addSeg;updT();calc();reNum()}
 
 // ===== 安规距离计算模块 =====
 var snid=0;
@@ -547,7 +547,7 @@ init();
     if(c.scenario)document.getElementById("scenario").value=c.scenario;
     if(c.segments&&c.segments.length){
       document.getElementById("sc").innerHTML="";sid=0;
-      c.segments.forEach(function(sg){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,sg.dur||8,sg.ta||60,sg.vop||30,sg.rips||[]))});
+      c.segments.forEach(function(sg){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,sg.dur||8,sg.ta||60,sg.vop||30,sg.rips||[]))});reNum();
     }
     var s=d.safety;
     if(s){
@@ -557,7 +557,7 @@ init();
       });
       if(s.nodes&&s.nodes.length){
         document.getElementById("sN").innerHTML="";snid=0;
-        s.nodes.forEach(function(n){document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,0,n.name||"",n.vrms||0,n.ins||"basic",n.pcb||0,n.coat||0,n.interp||false,n.circ||"ac"))});
+        s.nodes.forEach(function(n){document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,0,n.name||"",n.vrms||0,n.ins||"basic",n.pcb||0,n.coat||0,n.interp||false,n.circ||"ac"))});sReNum();sReNum();
       }
     }
     updT();calc();sCalc();
@@ -579,7 +579,7 @@ setTimeout(function(){
       document.getElementById("sc").innerHTML="";sid=0;
       c.segments.forEach(function(sg){
         var r=sg.rips||[];if(r.length&&typeof r[0]==="object")r=r.map(function(v){return v.current||0});
-        document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,sg.dur||8,sg.ta||60,sg.vop||30,r));
+        document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,sg.dur||8,sg.ta||60,sg.vop||30,r));reNum();
       });
       // Apply frequency from defaults
       var e=document.querySelectorAll("#tab-capacitor .seg");
@@ -602,7 +602,7 @@ setTimeout(function(){
       });
       if(s.nodes&&s.nodes.length){
         document.getElementById("sN").innerHTML="";snid=0;
-        s.nodes.forEach(function(n){document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,0,n.name||"",n.vrms||0,n.ins||"basic",n.pcb||0,n.coat||0,n.interp||false,n.circ||"ac"))});
+        s.nodes.forEach(function(n){document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,0,n.name||"",n.vrms||0,n.ins||"basic",n.pcb||0,n.coat||0,n.interp||false,n.circ||"ac"))});sReNum();sReNum();
       }
     }
     updT();calc();sCalc();
