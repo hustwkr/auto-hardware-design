@@ -1,5 +1,6 @@
-p = r"C:\Users\Lenovo\Documents\Codex\2026-06-02\webapp-testing\outputs\electrolytic-capacitor-lifetime.html"
-t = open(p, "r", encoding="utf-8").read()
+import sys
+sys.stdin.reconfigure(encoding="utf-8")
+t = sys.stdin.read()
 
 # 1. Add latexToReadable function before renderLatex
 rl_idx = t.find("function renderLatex")
@@ -17,7 +18,7 @@ old_word_replace = 'fh=fh.replace(/<span class=latex data-l="([^"]*)"><\\/span>/
 new_word_replace = 'fh=fh.replace(/<span class=latex data-l="([^"]*)"><\\/span>/g,function(m,m1){return l2r(m1)})'
 t = t.replace(old_word_replace, new_word_replace)
 
-with open(p, "w", encoding="utf-8") as f:
-    f.write(t)
-print("latexToReadable function added and integrated")
-print(f"Size: {len(t)} bytes")
+sys.stdout.write(t)
+sys.stdout.flush()
+print("latexToReadable function added and integrated", file=sys.stderr)
+print(f"Size: {len(t)} bytes", file=sys.stderr)

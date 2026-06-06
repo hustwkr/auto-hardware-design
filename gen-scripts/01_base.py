@@ -1,7 +1,7 @@
 import sys
 sys.stdout.reconfigure(encoding="utf-8")
+sys.stdout.reconfigure(encoding="utf-8")
 
-p = r"C:\Users\Lenovo\Documents\Codex\2026-06-02\webapp-testing\outputs\electrolytic-capacitor-lifetime.html"
 
 # Start fresh
 lines = []
@@ -232,8 +232,8 @@ lines.append('</script>')
 lines.append('</body>')
 lines.append('</html>')
 
-with open(p, "w", encoding="utf-8") as f:
-    for line in lines:
-        f.write(line + "\n")
-
-print(f"Written {len(lines)} lines, {sum(len(l)+1 for l in lines)} bytes")
+# Output to stdout
+sys.stdout.write("\n".join(lines) + "\n")
+sys.stdout.flush()
+total_bytes = sum(len(l)+1 for l in lines)
+print(f"Generated {len(lines)} lines, {total_bytes} bytes", file=sys.stderr)

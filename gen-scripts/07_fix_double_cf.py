@@ -1,14 +1,15 @@
-p = r"C:\Users\Lenovo\Documents\Codex\2026-06-02\webapp-testing\outputs\electrolytic-capacitor-lifetime.html"
-t = open(p, "r", encoding="utf-8").read()
+import sys
+sys.stdin.reconfigure(encoding="utf-8")
+t = sys.stdin.read()
 
 # Fix the double calcFormulas
 t = t.replace('calcFormulas()+"calcFormulas()+"', 'calcFormulas()+"')
 
 # Also verify section 6 is correct
 if 'calcFormulas()+"calcFormulas()' in t:
-    print("Still has double calcFormulas!")
+    print("Still has double calcFormulas!", file=sys.stderr)
 else:
-    print("Double calcFormulas fixed!")
+    print("Double calcFormulas fixed!", file=sys.stderr)
 
 # Verify quote balance
 si = t.find("<script>") + 8
@@ -18,8 +19,8 @@ sq = js.count("'")
 dq = js.count('"')
 ob = js.count("{")
 cb = js.count("}")
-print(f"JS: single={sq}(even={sq%2==0}) double={dq}(even={dq%2==0}) braces={ob}/{cb}(match={ob==cb})")
+print(f"JS: single={sq}(even={sq%2==0}) double={dq}(even={dq%2==0}) braces={ob}/{cb}(match={ob==cb})", file=sys.stderr)
 
-with open(p, "w", encoding="utf-8") as f:
-    f.write(t)
-print(f"Size: {len(t)} bytes")
+sys.stdout.write(t)
+sys.stdout.flush()
+print(f"Size: {len(t)} bytes", file=sys.stderr)

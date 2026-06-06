@@ -1,5 +1,6 @@
-p = r"C:\Users\Lenovo\Documents\Codex\2026-06-02\webapp-testing\outputs\electrolytic-capacitor-lifetime.html"
-t = open(p, "r", encoding="utf-8").read()
+import sys
+sys.stdin.reconfigure(encoding="utf-8")
+t = sys.stdin.read()
 
 # Fix KaTeX CDN script to not block loading
 t = t.replace(
@@ -19,7 +20,7 @@ if cf_start > 0:
         next_fn = cf_start + 2000  # estimate
     # Remove the bad calcFormulas
     t = t[:cf_start] + t[next_fn:]
-    print("Removed misplaced calcFormulas")
+    print("Removed misplaced calcFormulas", file=sys.stderr)
 
 # Re-insert calcFormulas in the right place - before genRep
 gr_idx = t.find("function genRep")
@@ -27,14 +28,14 @@ cf_func = """function calcFormulas(){var d=window._cd;if(!d||!d.sr||!d.sr.length
 """
 t = t[:gr_idx] + cf_func + "\n" + t[gr_idx:]
 
-with open(p, "w", encoding="utf-8") as f:
-    f.write(t)
-print(f"Fixed. Size: {len(t)} bytes")
+sys.stdout.write(t)
+sys.stdout.flush()
+print(f"Fixed. Size: {len(t)} bytes", file=sys.stderr)
 
 # Verify
 si = t.find("<script>") + 8
 ei = t.find("</script>", si)
 js = t[si:ei]
-print(f"Main JS: {len(js)} chars")
+print(f"Main JS: {len(js)} chars", file=sys.stderr)
 for fn in ["renderLatex", "calcFormulas", "calc(", "genRep", "init"]:
-    print(f"  {fn}: {'OK' if 'function '+fn in js else 'MISSING'}")
+    print(f"  {fn}: {'OK' if 'function '+fn in js else 'MISSING'}", file=sys.stderr)

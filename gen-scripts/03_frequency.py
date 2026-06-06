@@ -1,5 +1,6 @@
-p = r"C:\Users\Lenovo\Documents\Codex\2026-06-02\webapp-testing\outputs\electrolytic-capacitor-lifetime.html"
-t = open(p, "r", encoding="utf-8").read()
+import sys
+sys.stdin.reconfigure(encoding="utf-8")
+t = sys.stdin.read()
 
 # Change 1: FO array
 t = t.replace(
@@ -30,10 +31,10 @@ t = t.replace(
     r'f=(+row.querySelector(".fv").value||120)*(+row.querySelector(".fu").value||1),iop=+row.querySelector(".fc").value||0;'
 )
 
-with open(p, "w", encoding="utf-8") as f:
-    f.write(t)
+sys.stdout.write(t)
+sys.stdout.flush()
 
 v = ["mO()" not in t, "mU()" in t, "class=fv" in t, "class=fc" in t, "class=fu" in t, "FO=[" not in t]
 for i, ok in enumerate(v):
-    print(f"  {i+1}: {'OK' if ok else 'FAIL'}")
-print(f"File: {len(t)} bytes")
+    print(f"  {i+1}: {'OK' if ok else 'FAIL'}", file=sys.stderr)
+print(f"File: {len(t)} bytes", file=sys.stderr)

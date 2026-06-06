@@ -1,5 +1,6 @@
-p = r"C:\Users\Lenovo\Documents\Codex\2026-06-02\webapp-testing\outputs\electrolytic-capacitor-lifetime.html"
-t = open(p, "r", encoding="utf-8").read()
+import sys
+sys.stdin.reconfigure(encoding="utf-8")
+t = sys.stdin.read()
 
 # 1. Insert renderLatex function before calc()
 calc_idx = t.find("function calc()")
@@ -29,7 +30,7 @@ rc_idx = t.find(rc_marker, t.find("function genRep"))
 rc_semi = t.find(";", rc_idx)
 t = t[:rc_semi+1] + 'setTimeout(renderLatex,200);' + t[rc_semi+1:]
 
-with open(p, "w", encoding="utf-8") as f:
-    f.write(t)
-print("calcFormulas + renderLatex + genRep mods applied")
-print(f"Size: {len(t)} bytes")
+sys.stdout.write(t)
+sys.stdout.flush()
+print("calcFormulas + renderLatex + genRep mods applied", file=sys.stderr)
+print(f"Size: {len(t)} bytes", file=sys.stderr)

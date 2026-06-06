@@ -1,5 +1,6 @@
-p = r"C:\Users\Lenovo\Documents\Codex\2026-06-02\webapp-testing\outputs\electrolytic-capacitor-lifetime.html"
-t = open(p, "r", encoding="utf-8").read()
+import sys
+sys.stdin.reconfigure(encoding="utf-8")
+t = sys.stdin.read()
 
 # 1. Update renderLatex with fallback
 old_rl = r"function renderLatex(){try{document.querySelectorAll('.latex').forEach(function(e){try{var w=window;if(!w.katex)return;w.katex.render(e.getAttribute('data-l'),e,{throwOnError:false})}catch(er){}})}catch(er){}}"
@@ -17,9 +18,9 @@ ew = r"""function exportWord(){var d=window._cd;if(!d||!d.sr||!d.sr.length)retur
 """
 t = t.replace(init_marker, ew + "\n" + init_marker)
 
-with open(p, "w", encoding="utf-8") as f:
-    f.write(t)
-print("exportWord + renderLatex fallback added")
+sys.stdout.write(t)
+sys.stdout.flush()
+print("exportWord + renderLatex fallback added", file=sys.stderr)
 
 # Verify
 si = t.find("<script>") + 8
@@ -29,7 +30,7 @@ sq = js.count("'")
 dq = js.count('"')
 ob = js.count("{")
 cb = js.count("}")
-print(f"JS: single={sq}(even={sq%2==0}) double={dq}(even={dq%2==0}) braces={ob}/{cb}(match={ob==cb})")
-print(f"Has exportWord: {'function exportWord' in js}")
-print(f"Has fallback: {'e.textContent=e.getAttribute' in js}")
-print(f"Size: {len(t)} bytes")
+print(f"JS: single={sq}(even={sq%2==0}) double={dq}(even={dq%2==0}) braces={ob}/{cb}(match={ob==cb})", file=sys.stderr)
+print(f"Has exportWord: {'function exportWord' in js}", file=sys.stderr)
+print(f"Has fallback: {'e.textContent=e.getAttribute' in js}", file=sys.stderr)
+print(f"Size: {len(t)} bytes", file=sys.stderr)

@@ -1,5 +1,6 @@
-p = r"C:\Users\Lenovo\Documents\Codex\2026-06-02\webapp-testing\outputs\electrolytic-capacitor-lifetime.html"
-t = open(p, "r", encoding="utf-8").read()
+import sys
+sys.stdin.reconfigure(encoding="utf-8")
+t = sys.stdin.read()
 
 # Step A: Add KaTeX CDN references
 t = t.replace(
@@ -18,7 +19,7 @@ sub_end = t.find("</p>", t.find(old_sub))
 if sub_end > -1:
     t = t[:sub_end+4] + "\n" + new_card + t[sub_end+4:]
 
-with open(p, "w", encoding="utf-8") as f:
-    f.write(t)
-print("KaTeX + project inputs added")
-print(f"Size: {len(t)} bytes")
+sys.stdout.write(t)
+sys.stdout.flush()
+print("KaTeX + project inputs added", file=sys.stderr)
+print(f"Size: {len(t)} bytes", file=sys.stderr)

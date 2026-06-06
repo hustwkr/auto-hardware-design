@@ -1,5 +1,6 @@
-p = r"C:\Users\Lenovo\Documents\Codex\2026-06-02\webapp-testing\outputs\electrolytic-capacitor-lifetime.html"
-t = open(p, "r", encoding="utf-8").read()
+import sys
+sys.stdin.reconfigure(encoding="utf-8")
+t = sys.stdin.read()
 
 # Find calcFormulas function
 cf_start = t.find("function calcFormulas")
@@ -20,19 +21,19 @@ for old, new in replacements:
 
 t = t[:cf_start] + new_cf + t[cf_end:]
 
-with open(p, "w", encoding="utf-8") as f:
-    f.write(t)
-print("Fixed LaTeX escaping in calcFormulas")
-print(f"Size: {len(t)} bytes")
+sys.stdout.write(t)
+sys.stdout.flush()
+print("Fixed LaTeX escaping in calcFormulas", file=sys.stderr)
+print(f"Size: {len(t)} bytes", file=sys.stderr)
 
 # Verify the data-l attributes now have double backslashes
 cf = t[t.find("function calcFormulas"):t.find("function genRep", t.find("function calcFormulas"))]
 # Check for \\times (double backslash in JS source)
 if "\\\\times" in cf:
-    print("  \\\\times: OK")
+    print("  \\\\times: OK", file=sys.stderr)
 if "\\\\frac" in cf:
-    print("  \\\\frac: OK") 
+    print("  \\\\frac: OK", file=sys.stderr) 
 if "\\\\right" in cf:
-    print("  \\\\right: OK")
+    print("  \\\\right: OK", file=sys.stderr)
 if "\\\\text" in cf:
-    print("  \\\\text: OK")
+    print("  \\\\text: OK", file=sys.stderr)
