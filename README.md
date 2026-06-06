@@ -74,9 +74,45 @@ A creepage and clearance distance calculation tool based on IEC 60664-1 / UL 840
 
 ## 使用方式 Usage
 
+### 离线模式（推荐）Offline Mode (Recommended)
+
 直接打开 `index.html` 在浏览器中打开即可（无需服务器）。顶部导航栏切换计算模块。
 
 Open `index.html` directly in a browser (no server required). Switch between calculation modules using the top navigation bar.
+
+### 后端管理面板 Backend Admin Panel
+
+启动 Node.js 后端服务，可通过 Web 界面修改默认参数：
+
+Start the Node.js backend to manage default parameters via web UI:
+
+```bash
+cd backend
+# Set a secure admin password (required for production)
+export ADMIN_PASSWORD=your_secure_password
+node server.js
+```
+
+- **计算器**: http://localhost:8080/
+- **管理面板**: http://localhost:8080/admin
+- **API 文档**: `/api/defaults` (GET), `/api/admin/defaults` (PUT, requires auth)
+
+#### API Endpoints
+
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| POST | /api/login | No | Login with password |
+| GET  | /api/session | Token | Check authentication status |
+| GET  | /api/defaults | No | Get current default parameters |
+| PUT  | /api/admin/defaults | Token | Update default parameters (validated) |
+
+#### Security Features
+
+- Path traversal protection on all file routes
+- Login rate limiting (10 attempts per 5 minutes per IP)
+- Request body size limit (1MB) to prevent DoS
+- Input validation on defaults structure
+- Default password warning on startup
 
 ## 构建 Build
 
@@ -111,9 +147,23 @@ auto-hardware-design/
 ├── index.html                     # 最终输出文件（所有模块）
 ├── build.py                       # 构建脚本
 ├── gen-scripts/                   # 生成脚本（电容器模块）
-│   ├── 01_base.py
-│   ├── ...
-│   └── 10_readable_fallback.py
+│   ├── 01_base.py                 # 基础 HTML 结构
+│   ├── 02_fix.py                  # 选择器修正
+│   ├── 03_frequency.py            # 频率输入组件
+│   ├── 04_katex_inputs.py         # KaTeX + 项目参数
+│   ├── 05_latex_formulas.py       # LaTeX 公式引擎
+│   ├── 06_fix_cf_position.py      # 公式位置修正
+│   ├── 07_fix_double_cf.py        # 去重修复
+│   ├── 08_export_word.py          # Word 导出
+│   ├── 09_fix_escaping.py         # LaTeX 转义修正
+│   └── 10_readable_fallback.py    # Unicode 降级方案
+├── backend/                       # Node.js 后端服务
+│   ├── server.js                  # HTTP 服务器 + API
+│   ├── defaults.json              # 默认参数配置
+│   ├── defaults_inject.js         # 前端注入脚本
+│   └── admin/                     # 管理面板
+│       ├── dashboard.html
+│       └── login.html
 ├── v2/                            # 备份版本
 │   └── index.html
 └── README.md
