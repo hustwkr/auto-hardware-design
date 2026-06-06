@@ -61,6 +61,12 @@ css.append('#rc th,#rc td{text-align:left;padding:6px 10px;border:1px solid #e2e
 css.append('#rc th{background:#f8fafc;font-weight:600}')
 css.append('@media print{body{padding:0;background:#fff}._np{display:none!important}.layout{display:block}.card{break-inside:avoid}}')
 
+css.append('.tab-nav{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:24px;background:#fff;border-radius:8px 8px 0 0;padding:0 4px;position:sticky;top:0;z-index:50}')
+css.append('.tab-btn{padding:10px 24px;border:none;background:transparent;font-size:.9rem;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}')
+css.append('.tab-btn:hover{color:#1e293b;background:#f8fafc}')
+css.append('.tab-btn.active{color:#2563eb;border-bottom-color:#2563eb;background:#f0f4ff}')
+css.append('.tab-content{display:none}')
+css.append('.tab-content.active{display:block}')
 for c in css:
     lines.append(c)
 
@@ -68,6 +74,12 @@ lines.append('</style>')
 lines.append('</head>')
 lines.append('<body>')
 lines.append('<div class="container">')
+lines.append('<nav class="tab-nav">')
+lines.append('  <button class="tab-btn active" data-tab="capacitor">电解电容寿命计算</button>')
+lines.append('  <button class="tab-btn" data-tab="safety">安规距离计算</button>')
+lines.append('  <button class="tab-btn" style="margin-left:auto" onclick="window.location.href=\'/admin/login\'">⚙ 后台</button>')
+lines.append('</nav>')
+lines.append('<div id="tab-capacitor" class="tab-content active">')
 
 # HTML body
 lines.append('<h1 style="font-size:1.6rem;margin-bottom:4px">电解电容寿命计算工具 <span style="font-size:.9rem;font-weight:400;color:#64748b">Electrolytic Capacitor Lifetime Calculator</span></h1>')
@@ -128,6 +140,9 @@ lines.append('</div></div>')
 lines.append('<div class="card"><h2>寿命评估</h2><div id="ma" style="font-size:.88rem"><p>-</p></div></div>')
 lines.append('</div></div>')
 
+lines.append('</div>')  # close tab-capacitor
+
+# Safety module HTML and JS - will be added by gen-scripts/10_safety.py
 # Report section
 lines.append('<div style="margin-top:24px">')
 lines.append('<div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">')

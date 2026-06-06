@@ -1,0 +1,351 @@
+<div id="tab-safety" class="tab-content">
+<div class="container">
+<h1 style="font-size:1.6rem;margin-bottom:4px">安规距离计算工具 <span style="font-size:.9rem;font-weight:400;color:#64748b">Creepage &amp; Clearance Calculator</span></h1>
+<p style="color:#64748b;margin-bottom:24px;font-size:.9rem">IEC 62109-1 / UL 840 爬电距离 + 电气间隙 | 适用于并网逆变器</p>
+<div class="card" style="padding:12px 20px;margin-bottom:20px"><div class="fgl"><label>项目名称</label><input type="text" id="sProjName" placeholder="选填" oninput="sCalc()"></div></div>
+<div class="layout">
+<div>
+<div class="card"><h2>标准体系</h2><div class="fgl"><label>标准体系</label><select id="sStd" onchange="sCalc()"><option value="iec" selected>IEC 62109-1</option><option value="ul">UL 840</option></select></div></div>
+<div class="card"><h2>基础参数</h2><div class="fg">
+<div class="fgl"><label>污染等级</label><select id="sPd" onchange="sCalc()"><option value="1">PD 1 (无污染/密封)</option><option value="2" selected>PD 2 (一般污染)</option><option value="3">PD 3 (严重污染)</option></select></div>
+<div class="fgl"><label>材料组别 (CTI)</label><select id="sMg" onchange="sCalc()"><option value="i">I 组 (CTI >= 600)</option><option value="ii" selected>II 组 (400 <= CTI < 600)</option><option value="iiia">IIIa 组 (175 <= CTI < 400)</option><option value="iiib">IIIb 组 (100 <= CTI < 175)</option></select></div>
+<div class="fgl"><label>海拔</label><select id="sAlt" onchange="sCalc()"><option value="2000" selected><= 2000 m</option><option value="3000">2000 - 3000 m</option><option value="4000">3000 - 4000 m</option><option value="5000">4000 - 5000 m</option></select></div><div class="fgl"><label>过电压类别 (OVC)</label><select id="sOvc" onchange="sCalc()"><option value="i">I (有浪涌保护的设备)</option><option value="ii" selected>II (插接式设备)</option><option value="iii">III (固定安装设备)</option><option value="iv">IV (建筑入口设备)</option></select><span class="hint">决定额定计算冲击电压</span></div>
+<div class="fgl" style="position:relative"><label>AC系统电压 (V)<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.7rem;font-weight:700;cursor:pointer;margin-left:4px;transition:background .15s;user-select:none">?</span></label><input type="number" id="sSysV_AC" value="300" min="0" step="10" oninput="sCalc()" style="width:100px"><div id="acVoltageInfo" class="info-popup">For clearance distances and solid insulation the voltage used is as described in 7.3.7.2.2 to 7.3.7.2.4.<br>The impulse voltage and temporary overvoltage are taken from Table 12.<br>When using Table 12, the system voltage in column 1 is:<br>• in TN and TT systems: the r.m.s. value of the rated voltage between a phase and earth;<br>NOTE 1 A corner-earthed system is a TN system with one phase earthed, in which the system voltage is the r.m.s. value of the rated voltage between a non-earthed phase and earth (i.e. the phase-phase voltage).</div><span class="hint">AC主回路</span></div><div class="fgl"><label>DC系统电压 (V)</label><input type="number" id="sSysV_DC" value="600" min="0" step="10" oninput="sCalc()" style="width:100px"><span class="hint">PV最大开路电压</span></div>
+
+
+</div></div>
+<div class="card"><h2>测量节点定义</h2>
+<p style="font-size:.78rem;color:#64748b;margin-bottom:8px">定义逆变器中各需要计算安规距离的节点及其电气参数</p>
+<div id="sN"></div>
+<button class="btn-add" id="addNodeBtn">+ 添加测量节点</button>
+<div style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;gap:14px;flex-wrap:wrap">
+
+</div>
+</div>
+</div>
+<div>
+<div class="card"><h2>计算结果</h2><div class="result-grid">
+<div class="ri"><div class="rl">节点数</div><div class="rv"><span id="sNc">-</span></div></div>
+</div>
+<h3 style="margin-top:14px;font-size:.88rem;font-weight:600;margin-bottom:6px">各节点所需安规距离</h3>
+<table class="sg-tbl"><thead><tr><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr></thead><tbody id="sRtb"></tbody></table>
+</div>
+<div class="card"><h2>评估详情</h2><div id="sMa" style="font-size:.88rem"><p>-</p></div></div>
+</div>
+</div>
+<div style="margin-top:24px">
+<div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+<h2 style="font-size:1.1rem;font-weight:600">安距设计报告</h2>
+<div style="display:flex;gap:8px">
+<div class="btn-export-group"><button class="btn" onclick="sExportReport('word')" id="exportSafeBtn">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'safe')">▼</button><div class="export-dropdown" id="exportSafeDropdown"><div onclick="sExportReport('word')">Word (.doc)</div><div onclick="sExportReport('pdf')">PDF</div></div></div>
+</div></div>
+<div id="sRc"><h3>安规距离评估报告</h3><p>请添加测量节点后刷新。</p></div>
+</div>
+</div></div>
+</div><script>
+// ---- Tab Switching ----
+document.querySelectorAll(".tab-btn").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});
+    this.classList.add("active");
+    document.querySelectorAll(".tab-content").forEach(function(tc){tc.classList.remove("active")});
+    document.getElementById("tab-"+this.dataset.tab).classList.add("active");
+  });
+});
+var FF={50:.85,60:.85,120:1,1e3:1.25,1e4:1.5,1e5:1.65};
+var MG={consumer:{r:1.3,l:"消费电子"},industrial:{r:1.5,l:"工业设备"},automotive:{r:2,l:"汽车电子"},medical:{r:2.5,l:"医疗设备"}};
+function fv(v,d){return typeof v!="number"||!isFinite(v)?"-":v.toFixed(d)}
+function kvf(v,vr){if(vr<=0||v<=0)return 1;var r=v/vr;return r>=1?1:1+0.6*Math.pow(1-r,1.5)}
+var sid=0;
+function mU(){return '<select class=fu onchange=calc()><option value=1 selected>Hz</option><option value=1000>kHz</option></select>'}
+function mSeg(id,idx,dur,ta,vop,rips){
+var rr="";
+rips.forEach(function(v){rr+="<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td><td><input class=fc type=number value="+v+" min=0 step=10 style=width:80px oninput=calc()></td><td><button class=btn-sm onclick=removeRippleRow(this)>删除分量</button></td></tr>"});
+return"<div class=seg data-id="+id+"><div><span>时段"+(idx+1)+"</span><span style=font-size:.78rem;color:#64748b> 每天 <span class=sh>"+dur+" h</span></span></div>"
++"<div class=fg3><div class=fgl><label>时长(h/天)</label><input class=sd type=number value="+dur+" min=0 max=24 step=0.5 oninput=sdChange(this);calc()></div>"
++"<div class=fgl><label>温度Ta(C)</label><input class=stp type=number value="+ta+" min=-40 max=150 oninput=calc()></div>"
++"<div class=fgl><label>电压Vop(V)</label><input class=sv type=number value="+vop+" min=0 step=1 oninput=calc()></div></div>"
++"<div class=fgl style=margin-top:6px><label>纹波电流分量</label><table class=rt><thead><tr><th>频率</th><th>电流(mA)</th><th></th></tr></thead><tbody class=rtb>"+rr+"</tbody></table>"
++"<button class=btn-sm style=margin-top:4px onclick=addRR(this)>+ 添加纹波分量</button></div>"
++"<button class=btn-sm style=margin-top:8px;color:#ef4444 onclick=rmSeg(this)>删除该时段</button></div>"}
+function sdChange(inp){inp.closest(".seg").querySelector(".sh").textContent=parseFloat(inp.value)||0;updT()}
+function updT(){var t=0;document.querySelectorAll("#tab-capacitor .sd").forEach(function(i){t+=parseFloat(i.value)||0});document.getElementById("stt").textContent="合计: "+fv(t,1)+" / 24 h";var w=document.getElementById("stw");if(t>24){w.style.display="block";w.textContent="总时长 "+fv(t,1)+" h 超 24 h"}else if(t<24){w.style.display="block";w.textContent="剩余 "+fv(24-t,1)+" h 未定义(停机)"}else w.style.display="none"}
+function addSeg(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,50,30,[100]));updT();calc();reNum()}
+function rmSeg(b){b.closest(".seg").remove();reNum();updT();calc()}
+function reNum(){document.querySelectorAll("#tab-capacitor .seg").forEach(function(s,i){s.querySelector(".seg>div>:first-child").textContent="时段"+(i+1)})}
+function addRR(b){b.closest(".seg").querySelector(".rtb").insertAdjacentHTML("beforeend","<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td><td><input class=fc type=number value=50 min=0 step=10 style=width:80px oninput=calc()></td><td><button class=btn-sm onclick=removeRippleRow(this)>删除分量</button></td></tr>");calc()}
+function removeRippleRow(b){var tb=b.closest(".rtb");if(tb.querySelectorAll("tr").length<=1)return;b.closest("tr").remove();calc()}
+function l2r(l){try{return l.replace(/\\times/g,"\u00D7").replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g,"($1)/($2)").replace(/\\Delta/g,"\u0394").replace(/\\sum/g,"\u2211").replace(/\\left/g,"").replace(/\\right/g,"").replace(/\\text\{([^}]+)\}/g,"$1").replace(/\\cdot/g,"\u00B7").replace(/\\,/g," ").replace(/\^{([^}]+)\}/g,"^($1)").replace(/\^{([a-zA-Z0-9])}/g,"^$1").replace(/_{([^}]+)}/g,"_$1").replace(/{/g,"").replace(/}/g,"")}catch(e){return l}}
+
+function renderLatex(){try{document.querySelectorAll('.latex').forEach(function(e){try{var w=window;if(!w.katex){e.textContent=e.getAttribute('data-l');return}w.katex.render(e.getAttribute('data-l'),e,{throwOnError:false})}catch(er){}})}catch(er){}}
+function calc(){
+if(!document.querySelectorAll("#tab-capacitor .seg").length){document.getElementById("lh").textContent="-";document.getElementById("ly").textContent="-";document.getElementById("ad").textContent="-";document.getElementById("wt").textContent="-";document.getElementById("wk").textContent="-";return}
+var l0=+document.getElementById("l0").value||2e3,tmax=+document.getElementById("tmax").value||105,vr=+document.getElementById("vrated").value||50,ir=+document.getElementById("irated").value||500,dt0=+document.getElementById("dt0").value||10,cl=+document.getElementById("cooling").value||1,wd=+document.getElementById("workdays").value||365,wt=+document.getElementById("warrantyTarget").value||5,sc=document.getElementById("scenario").value,mi=MG[sc]||MG.industrial,dmg=0,wtHs=-1/0,wtKt=1/0,sr=[];
+document.querySelectorAll("#tab-capacitor .seg").forEach(function(seg,i){var dur=+seg.querySelector(".sd").value||0,ta=+seg.querySelector(".stp").value||25,vop=+seg.querySelector(".sv").value||0,sq=0,rd=[];seg.querySelectorAll(".rtb tr").forEach(function(row){var f=(+row.querySelector(".fv").value||120)*(+row.querySelector(".fu").value||1),iop=+row.querySelector(".fc").value||0;if(iop<=0)return;var k=FF[f]||1,ec=iop/k,s=(ec/ir)*(ec/ir);sq+=s;rd.push({f:f,iop:iop,k:k,ec:ec,s:s})});var dt=Math.min(dt0*sq/cl,dt0*3),ths=ta+dt,kt=Math.pow(2,(tmax-ths)/10),kv=kvf(vop,vr),Li=l0*kt*kv,d=Li>0?dur*wd/Li:1/0;dmg+=d;if(ths>wtHs)wtHs=ths;if(kt<wtKt)wtKt=kt;sr.push({i:i+1,dur:dur,ta:ta,vop:vop,ths:ths,kt:kt,kv:kv,Li:Li,d:d,dt:dt,rd:rd})});
+var ly=dmg>0?1/dmg:1/0,lh=ly*wd*Array.from(document.querySelectorAll("#tab-capacitor .seg")).reduce(function(s,seg){return s+(+seg.querySelector(".sd").value||0)},0),margin=ly/wt,req=mi.r,ws,wc,wd2;
+if(margin>=req*1.2){ws="优秀("+fv(margin,1)+"x,需"+req+"x)";wc="g";wd2="质保期"+wt+"年,预计"+fv(ly,1)+"年,裕量充足"}
+else if(margin>=req){ws="合格("+fv(margin,1)+"x,需"+req+"x)";wc="p";wd2="质保期"+wt+"年,预计"+fv(ly,1)+"年,满足要求"}
+else if(margin>=req*0.7){ws="边缘("+fv(margin,1)+"x,需"+req+"x)";wc="c";wd2="质保期"+wt+"年,预计"+fv(ly,1)+"年,建议增加裕量"}
+else{ws="不合格("+fv(margin,1)+"x,需"+req+"x)";wc="b";wd2="质保期"+wt+"年,预计"+fv(ly,1)+"年,无法满足"}
+document.getElementById("lh").textContent=lh>=1e6?fv(lh/1e4,1)+"万":fv(lh,0);
+document.getElementById("ly").textContent=fv(ly,1);
+document.getElementById("ad").textContent=fv(dmg*100,3);
+document.getElementById("wt").textContent=fv(wtHs,1);
+document.getElementById("wk").textContent=fv(wtKt,2);
+document.getElementById("wb").innerHTML="<span class=badge "+wc+">"+ws+"</span>";
+document.getElementById("wd").textContent=wd2;
+var mb=Math.max(wt*3,ly);
+document.getElementById("wf").style.width=Math.min(100,(ly/mb)*100)+"%";
+document.getElementById("wm").style.left=Math.min(100,(wt/mb)*100)+"%";
+document.getElementById("wf").style.background=margin>=req?"#10b981":margin>=req*0.7?"#f59e0b":"#ef4444";
+document.getElementById("wtl").textContent="目标: "+wt+"年";
+document.getElementById("wml").textContent=fv(mb,0)+"年";
+var tb="";sr.forEach(function(r){tb+="<tr><td>时段"+r.i+"</td><td>"+fv(r.dur,1)+"</td><td>"+fv(r.ths,1)+"</td><td>"+fv(r.kt,2)+"</td><td>"+fv(r.kv,3)+"</td><td>"+(r.Li>=1e6?fv(r.Li/1e4,1)+"万":fv(r.Li,0))+"</td><td>"+fv(r.d*100,3)+"%</td></tr>"});document.getElementById("srb").innerHTML=tb;
+var td=sr.reduce(function(s,r){return s+r.d},0)||1,ah="<p style=margin-bottom:6px><strong>寿命预测</strong></p><p style=font-size:.85rem>预计寿命: <strong>"+fv(ly,1)+" 年</strong></p><p style=font-size:.85rem>质保期: "+wt+"年 | "+mi.l+" | 裕量: <strong>"+fv(margin,2)+"x</strong> "+(margin>=req?"✓":"✗")+"</p><p style=font-size:.85rem;color:#64748b;margin-top:4px>"+wd2+"</p><p style=font-size:.85rem;margin-top:8px><strong>各时段寿命消耗占比</strong></p><div style=display:flex;gap:4px;margin-top:4px;align-items:flex-end;flex-wrap:wrap;min-height:50px>";
+sr.forEach(function(r){var p=(r.d/td)*100,h=Math.max(20,p*2);ah+="<div style=display:flex;flex-direction:column;align-items:center;gap:2px><div style=width:32px;height:"+h+"px;background:#2563eb;border-radius:4px 4px 0 0;opacity:.75></div><span style=font-size:.68rem;color:#64748b>"+fv(p,0)+"%</span><span style=font-size:.62rem;color:#64748b>T"+r.i+"</span></div>"});ah+="</div>";document.getElementById("ma").innerHTML=ah;
+window._cd={l0:tmax,tmax:tmax,vr,ir,dt0,cl,wd,wt,sc,mi,sr,dmg,lh:lh,ly,margin,ws,wd2,req};genRep()
+}
+function calcFormulas(){var d=window._cd;if(!d||!d.sr||!d.sr.length)return '';var fs='';d.sr.forEach(function(r){fs+='<p style=margin:4px 0><b>时段'+r.i+':</b> <span class=latex data-l="L_i = L_0 \\times 2^{\\frac{T_{max} - T_{hs_i}}{10}} \\times K_V"></span> = <span class=latex data-l="'+d.l0+' \\times 2^{\\frac{'+d.tmax+'-'+r.ths.toFixed(1)+'}{10}} \\times '+r.kv.toFixed(3)+'"></span> = <span class=latex data-l="'+r.Li.toFixed(0)+'\,\\text{h}"></span></p>';if(r.rd&&r.rd.length){fs+='<p style=margin:2px 0 4px 20px;font-size:.82rem;color:#555>';r.rd.forEach(function(x,i){if(i>0)fs+=' + ';fs+=x.iop+'mA@'+x.f+'Hz(K='+x.k.toFixed(2)+')'});fs+='<br><span class=latex data-l="\Delta T = \Delta T_0 \\times \sum_j \left(\\frac{I_j}{I_{rated} \\times K_{freq_j}}\\right)^2 / C"></span> = '+r.dt.toFixed(2)+'C, T_{hs}='+r.ths.toFixed(1)+'C</p>'}});fs+='<p style=margin:4px 0><b>累计:</b> <span class=latex data-l="D = \sum_i \\frac{t_i \\times days}{L_i}"></span> = ';var ft=true;d.sr.forEach(function(r){if(!ft)fs+=' + ';ft=false;fs+=r.dur.toFixed(1)+'x'+d.wd+'/'+r.Li.toFixed(0)});fs+=' = '+(d.dmg*100).toFixed(3)+'%/年, 寿命 = 1/('+d.dmg.toFixed(6)+') = '+d.ly.toFixed(1)+'年</p>';return fs}
+
+function genRep(){
+var d=window._cd;if(!d||!d.sr||!d.sr.length){document.getElementById("rc").innerHTML="<h3>电解电容寿命评估报告</h3><p>请先定义运行剖面</p>";setTimeout(renderLatex,200);return}
+var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
+var rc=document.querySelectorAll(".rtb tr").length||0,sr="";
+d.sr.forEach(function(r){var rd=r.rd.length?r.rd.map(function(x){return fv(x.iop,0)+" mA @ "+x.f+" Hz(K="+x.k.toFixed(2)+")"}).join(", "):"无纹波";sr+="<tr><td>时段"+r.i+"</td><td>"+fv(r.dur,1)+"</td><td>"+fv(r.ta,1)+"</td><td>"+fv(r.vop,1)+"</td><td>"+fv(r.dt,2)+"</td><td>"+fv(r.ths,1)+"</td><td>"+fv(r.kt,2)+"</td><td>"+fv(r.kv,3)+"</td><td>"+(r.Li>=1e6?fv(r.Li/1e4,1)+"万":fv(r.Li,0))+"</td><td>"+rd+"</td></tr>"});
+document.getElementById("rc").innerHTML="<h3>1. 项目信息</h3><table><tr><th>项目</th><th>内容</th></tr><tr><td>报告编号</td><td>EL-"+ds.replace(/\//g,"")+"-"+(1e3+Math.floor(9e3*Math.random()))+"</td></tr><tr><td>生成日期</td><td>"+ds+" "+ts+"</td></tr><tr><td>应用场景</td><td>"+d.mi.l+"</td></tr><tr><td>散热</td><td>"+document.getElementById("cooling").selectedOptions[0].text+"</td></tr><tr><td>年工作天数</td><td>"+d.wd+"</td></tr><tr><td>质保期</td><td>"+d.wt+"年</td></tr><tr><td>时段数</td><td>"+d.sr.length+"</td></tr><tr><td>纹波分量</td><td>"+rc+"</td></tr></table>"
++"<h3>2. 额定参数</h3><table><tr><th>参数</th><th>数值</th></tr><tr><td>L0</td><td>"+d.l0+" h</td></tr><tr><td>Tmax</td><td>"+d.tmax+" C</td></tr><tr><td>Vrated</td><td>"+d.vr+" V</td></tr><tr><td>Irated</td><td>"+d.ir+" mA</td></tr><tr><td>DT0</td><td>"+d.dt0+" C</td></tr></table>"
++"<h3>3. 运行剖面</h3><table><tr><th>时段</th><th>h/天</th><th>Ta C</th><th>Vop V</th><th>DT C</th><th>Ths C</th><th>KT</th><th>KV</th><th>Li h</th><th>纹波</th></tr>"+sr+"</table>"
++"<h3>4. 累积损伤</h3><table><tr><th>项目</th><th>数值</th></tr><tr><td>年损伤 D</td><td>"+fv(d.dmg*100,3)+"%</td></tr><tr><td>预计寿命</td><td>"+fv(d.ly,1)+" 年</td></tr><tr><td>质保期</td><td>"+d.wt+" 年</td></tr><tr><td>裕量</td><td>"+fv(d.margin,2)+"x</td></tr><tr><td>判定</td><td><strong>"+d.ws+"</strong></td></tr></table>"
++"<p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>结论:</strong> "+d.wd2+"</p>"
++calcFormulas()+"<h3>6. 设计建议</h3><ul style=margin:4px 0 0 20px><li>温度每降10C寿命延长一倍</li><li>"+(d.margin>=d.req?"裕量满足":"裕量不足,需改善")+"</li><li>建议高温负载试验验证</li></ul>"
++"<div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b><span>电解电容寿命计算器 v2.0</span><span>报告: "+ds+" "+ts+"</span></div>"}
+function toggleExportDropdown(e,tab){e.stopPropagation();var d=document.getElementById('export'+tab.charAt(0).toUpperCase()+tab.slice(1)+'Dropdown');d.classList.toggle('show')}
+document.addEventListener('click',function(){document.querySelectorAll('.export-dropdown,.info-popup').forEach(function(d){d.classList.remove('show')})});
+function toggleInfo(e){e.stopPropagation();var box=document.getElementById('acVoltageInfo');box.classList.toggle('show')}
+function buildPlainFormulas(sr,l0,tmax,wd,dmg,ly){var fs='';sr.forEach(function(r){fs+='<p style=margin:4px 0><b>\u65f6\u6bb5'+r.i+':</b> Li = L0 x 2^((Tmax - Ths)/10) x KV = '+l0+' x 2^(('+tmax+'-'+r.ths.toFixed(1)+')/10) x '+r.kv.toFixed(3)+' = '+r.Li.toFixed(0)+' h</p>';if(r.rd&&r.rd.length){fs+='<p style=margin:2px 0 4px 20px;font-size:.82rem;color:#555>';r.rd.forEach(function(x,i){if(i>0)fs+=' + ';fs+=x.iop+'mA@'+x.f+'Hz(K='+x.k.toFixed(2)+')'});fs+='<br>\u0394T = \u0394T0 x \u03a3(Ij/(Irated x Kfreq_j))^2 / C = '+r.dt.toFixed(2)+'C, Ths='+r.ths.toFixed(1)+'C</p>'}});fs+='<p style=margin:4px 0><b>\u7d2f\u8ba1:</b> D = \u03a3(ti x days / Li) = ';var ft=true;sr.forEach(function(r){if(!ft)fs+=' + ';ft=false;fs+=r.dur.toFixed(1)+'x'+wd+'/'+r.Li.toFixed(0)});fs+=' = '+(dmg*100).toFixed(3)+'%/\u5e74, \u5bff\u547d = 1/('+dmg.toFixed(6)+') = '+ly.toFixed(1)+'\u5e74</p>';return fs}
+async function saveBlobWithDialog(b,dn){try{var h=await window.showSaveFilePicker({suggestedName:dn,types:[{description:'Word Document',accept:{'application/msword':['.doc']}}]});var w=await h.createWritable();await w.write(b);await w.close()}catch(e){if(e.name!=='AbortError'){var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=dn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}}}
+function exportReport(mode){
+  var d=window._cd;
+  if(!d||!d.sr||!d.sr.length)return;
+  if(mode==='pdf'){window.print();return}
+  var pn=document.getElementById('projName').value,cm=document.getElementById('capModel').value,te=[];
+  if(pn)te.push(pn);if(cm)te.push(cm);
+  var ts=te.length?' ('+te.join(' - ')+')':'',sr='';
+  d.sr.forEach(function(r){var rd=r.rd.length?r.rd.map(function(x){return x.iop+'mA@'+x.f+'Hz'}).join(', '):'无';sr+='<tr><td>时段'+r.i+'</td><td>'+r.dur.toFixed(1)+'</td><td>'+r.ta.toFixed(1)+'</td><td>'+r.vop.toFixed(1)+'</td><td>'+r.dt.toFixed(2)+'</td><td>'+r.ths.toFixed(1)+'</td><td>'+r.kt.toFixed(2)+'</td><td>'+r.kv.toFixed(3)+'</td><td>'+r.Li.toFixed(0)+'</td><td>'+rd+'</td></tr>'});
+  var fh=buildPlainFormulas(d.sr,d.l0,d.tmax,d.wd,d.dmg,d.ly);
+  var lh=d.lh>=1e6?(d.lh/1e4).toFixed(1)+'万':d.lh.toFixed(0);
+  var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>电解电容寿命评估报告'+ts+'</title><style>body{font-family:SimSun,serif;font-size:11pt}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:3px 6px;font-size:10pt}th{background:#eee}h2{font-size:13pt;margin-top:14px}</style></head><body>';
+  h+='<h2 style="text-align:center">电解电容寿命评估报告'+ts+'</h2>';
+  h+='<p>报告编号: EL-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
+  h+='<p>生成日期: '+new Date().toLocaleDateString('zh-CN')+'</p>';
+  h+='<h2>1. 项目信息</h2><table><tr><th>项目</th><th>内容</th></tr>'+(pn?'<tr><td>项目名称</td><td>'+pn+'</td></tr>':'')+(cm?'<tr><td>电容型号</td><td>'+cm+'</td></tr>':'')+'<tr><td>应用场景</td><td>'+d.mi.l+'</td></tr><tr><td>散热条件</td><td>'+document.getElementById('cooling').selectedOptions[0].text+'</td></tr><tr><td>年工作天数</td><td>'+d.wd+'</td></tr><tr><td>目标质保期</td><td>'+d.wt+'年</td></tr></table>';
+  h+='<h2>2. 电容器额定参数</h2><table><tr><th>参数</th><th>数值</th></tr><tr><td>额定寿命 L0</td><td>'+d.l0+' h</td></tr><tr><td>最高温度 Tmax</td><td>'+d.tmax+' C</td></tr><tr><td>额定电压 Vrated</td><td>'+d.vr+' V</td></tr><tr><td>额定纹波 Irated</td><td>'+d.ir+' mA</td></tr><tr><td>最大芯温升 DT0</td><td>'+d.dt0+' C</td></tr></table>';
+  h+='<h2>3. 运行剖面</h2><table><tr><th>时段</th><th>h/天</th><th>Ta C</th><th>Vop V</th><th>DT C</th><th>Ths C</th><th>KT</th><th>KV</th><th>Li h</th><th>纹波</th></tr>'+sr+'</table>';
+  h+='<h2>4. 累积损伤</h2><table><tr><th>项目</th><th>数值</th></tr><tr><td>年损伤 D</td><td>'+(d.dmg*100).toFixed(3)+'%</td></tr><tr><td>预计寿命</td><td>'+d.ly.toFixed(1)+' 年 ('+lh+' h)</td></tr><tr><td>质保期目标</td><td>'+d.wt+' 年</td></tr><tr><td>实际裕量</td><td>'+d.margin.toFixed(2)+'x</td></tr><tr><td>判定</td><td>'+d.ws+'</td></tr></table>';
+  h+='<h2>5. 详细计算过程</h2>'+fh;h+='<h2>6. 设计建议</h2><ul><li>环境温度每降低10C，寿命约延长一倍</li><li>'+(d.margin>=d.req?'裕量满足要求':'裕量不足，需改善设计')+'</li><li>建议批量生产前进行高温负载试验验证</li></ul>';
+  h+='<p style="margin-top:20px"><i>电解电容寿命计算工具 v2.0 - 报告自动生成</i></p></body></html>';
+  var b=new Blob([h],{type:'application/msword'});
+  var dn='电解电容寿命评估报告'+(te.length?'('+te.join('-')+')':'')+'.doc';
+  saveBlobWithDialog(b,dn);
+}
+
+function init(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,60,30,[250,150]));document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,1,16,40,30,[100]));document.getElementById("addSegBtn").onclick=addSeg;updT();calc();reNum()}
+
+// ===== 安规距离计算模块 =====
+var snid=0;
+// IEC 60664-1 Table 1: Clearance (mm) based on peak voltage and pollution degree, altitude <=2000m
+// [peakVoltage_kV, PD1, PD2, PD3]
+var CLR_TBL_IEC=[[0,0.2,0.2,0.2],[330,0.2,0.2,0.2],[500,0.2,0.2,0.2],[800,0.2,0.2,0.2],[1500,0.5,0.5,0.8],[2500,1.5,1.5,1.5],[4000,3.0,3.0,3.0],[6000,5.5,5.5,5.5],[8000,8.0,8.0,8.0],[12000,14.0,14.0,14.0]];
+var CRP_IEC=[[0,0.35,0.35,0.35,0.87,0.025,0.87,0.87,0.87,0.87],[2,0.35,0.35,0.35,0.87,0.025,0.87,0.87,0.87,0.87],[10,0.40,0.40,0.40,1.0,0.025,1.0,1.0,1.0,1.0],[25,0.50,0.50,0.50,1.25,0.025,1.25,1.25,1.25,1.25],[32,0.53,0.53,0.53,1.3,0.025,1.3,1.3,1.3,1.3],[40,0.56,0.80,1.1,1.4,0.025,1.4,1.6,1.8,1.8],[50,0.60,0.85,1.20,1.5,0.025,1.5,1.7,1.9,1.9],[63,0.63,0.90,1.25,1.6,0.04,1.6,1.8,2.0,2.0],[80,0.67,0.95,1.3,1.7,0.063,1.7,1.9,2.1,2.1],[100,0.71,1.0,1.4,1.8,0.10,1.8,2.0,2.2,2.2],[125,0.75,1.05,1.5,1.9,0.16,1.9,2.1,2.4,2.4],[160,0.80,1.1,1.6,2.0,0.25,2.0,2.2,2.5,2.5],[200,1.0,1.4,2.0,2.5,0.40,2.5,2.8,3.2,3.2],[250,1.25,1.8,2.5,3.2,0.56,3.2,3.6,4.0,4.0],[320,1.6,2.2,3.2,4.0,0.75,4.0,4.5,5.0,5.0],[400,2.0,2.8,4.0,5.0,1.0,5.0,5.6,6.3,6.3],[500,2.5,3.6,5.0,6.3,1.3,6.3,7.1,8.0,8.0],[630,3.2,4.5,6.3,8.0,1.8,8.0,9.0,10.0,10.0],[800,4.0,5.6,8.0,10.0,2.4,10.0,11,12.5,12.5],[1000,5.0,7.1,10.0,12.5,3.2,12.5,14,16,16],[1250,6.3,9,12.5,16,4.2,16,18,20,20],[1600,8.0,11,16,20,5.6,20,22,25,25],[2000,10.0,14,20,25,7.5,25,28,32,32],[2500,12.5,18,25,32,10.0,32,36,40,40],[3200,16,22,32,40,12.5,40,45,50,50],[4000,20,28,40,50,16,50,56,63,63],[5000,25,36,50,63,20,63,71,80,80],[6300,32,45,63,80,25,80,90,100,100]];
+// IEC 60664-1 Table 18: Creepage (mm) based on RMS voltage, pollution degree, material group
+// [rmsVoltage, PD2_I, PD2_II, PD2_IIIa, PD2_IIIb, PWB/PD1, PD3_I, PD3_II, PD3_IIIa, PD3_IIIb]
+// Simplified: PD1 all groups same, PD2/PD3 vary by material group
+
+
+
+// UL 840 Table 6.1: Clearance (mm) based on peak voltage and pollution degree (UL values ~10-25% larger)
+var CLR_TBL_UL=[[0.33,0.2,0.2,0.2],[0.4,0.5,0.5,0.8],[0.5,1.5,1.5,1.5],[0.6,2.2,2.2,2.2],[0.8,3.5,3.5,3.5],[1.0,4.5,4.5,4.5],[1.2,6.0,6.0,6.0],[1.5,9.0,9.0,9.0],[2.0,14,14,14],[2.5,18,18,18],[3.0,23,23,23],[4.0,32,32,32],[5.0,42,42,42],[6.0,50,50,50],[8.0,70,70,70],[10.0,95,95,95],[12.0,120,120,120]];
+// UL 840 Table 8.1: Creepage (mm) - UL values ~15-25% larger than IEC 60664-1
+// [rmsVoltage, PD1, PD2_I, PD2_II, PD2_IIIa, PD2_IIIb]
+var CRP_UL=[[0,0.5,0.5,0.5,1.0,0.04,1.0,1.0,1.0,1.0],[2,0.5,0.5,0.5,1.0,0.04,1.0,1.0,1.0,1.0],[10,0.6,0.6,0.6,1.2,0.04,1.2,1.2,1.2,1.2],[25,0.6,0.6,0.6,1.4,0.04,1.4,1.4,1.4,1.4],[32,1.0,1.0,1.0,1.5,0.04,1.5,1.5,1.5,1.5],[40,1.2,1.2,1.2,1.6,0.04,1.6,1.8,2.0,2.0],[50,1.5,1.5,1.5,1.7,0.04,1.7,2.0,2.2,2.2],[63,2.0,2.0,2.0,1.8,0.06,1.8,2.0,2.3,2.3],[80,2.5,2.5,2.5,2.0,0.10,2.0,2.2,2.5,2.5],[100,2.5,2.5,2.5,2.2,0.16,2.2,2.5,2.8,2.8],[125,3.2,3.2,3.2,2.4,0.25,2.4,2.6,3.0,3.0],[160,4.0,4.0,4.0,2.5,0.40,2.5,2.8,3.2,3.2],[200,5.0,5.0,5.0,3.2,0.63,3.2,3.6,4.0,4.0],[250,6.3,6.3,6.3,4.0,0.90,4.0,4.5,5.0,5.0],[320,8.0,8.0,8.0,5.0,1.2,5.0,5.6,6.3,6.3],[400,8.0,10,10,12,1.6,6.3,7.1,8.0,8.0],[500,10,12,12,14,2.0,8.0,9.0,10,10],[630,12,14,14,18,2.5,10,11,12.5,12.5],[800,12,14,14,18,3.2,12.5,14,16,16],[1000,16,18,20,25,4.0,16,18,20,20],[1250,20,22,25,32,5.0,20,22,25,25],[1600,20,25,32,40,6.3,25,28,32,32],[2000,20,32,40,50,8.0,32,36,40,40],[2500,25,40,50,63,10.0,40,45,50,50],[3200,32,50,63,80,12.5,50,56,63,63],[4000,40,63,80,100,16,63,71,80,80],[5000,50,80,100,125,20,80,90,100,100],[6300,63,100,100,125,25,100,110,125,125]];
+
+// Altitude correction factors for clearance (multiplier)
+var ALT_K={2000:1.0,3000:1.14,4000:1.29,5000:1.48};
+var OVC_K={i:1,ii:2,iii:3,iv:4};
+var TOV_TBL=[[50,0.33,0.5,0.8,1.5],[100,0.5,0.8,1.5,2.5],[150,0.8,1.5,2.5,4.0],[300,1.5,2.5,4.0,6.0],[600,2.5,4.0,6.0,8.0],[1000,4.0,6.0,8.0,12.0]];
+function sGetTov(interp,sysVId){var sv=+document.getElementById(sysVId||'sSysV_AC').value||300;var ov=document.getElementById('sOvc').value||'ii';var oi={i:1,ii:2,iii:3,iv:4}[ov]||2;for(var i=0;i<TOV_TBL.length;i++){if(sv==TOV_TBL[i][0])return TOV_TBL[i][oi];if(sv<TOV_TBL[i][0]){if(!interp||i==0)return TOV_TBL[i][oi];var x0=TOV_TBL[i-1][0],x1=TOV_TBL[i][0],y0=TOV_TBL[i-1][oi],y1=TOV_TBL[i][oi];return Math.round((y0+(sv-x0)/(x1-x0)*(y1-y0))*100)/100}}return TOV_TBL[TOV_TBL.length-1][oi]}
+
+// Insulation type multipliers for clearance
+var INS_K={func:1.0,basic:1.0,supp:1.0,reinf:2.0};
+// IEC 62109-1 additional creepage factor (1.3x for basic/supp, 2x for reinf when PV)
+
+
+// Material group index mapping
+var MG_I={i:0,ii:1,iiia:2,iiib:3};
+
+function sLookupClr(v,pd,std,interp){
+  if(v<=0) return 0;
+  var tbl=std=='ul'?CLR_TBL_UL:CLR_TBL_IEC;
+  for(var i=0;i<tbl.length;i++){
+    if(v==tbl[i][0]) return tbl[i][pd];
+    if(v<tbl[i][0]){
+      if(!interp||i==0) return tbl[i][pd];
+      var x0=tbl[i-1][0],x1=tbl[i][0],y0=tbl[i-1][pd],y1=tbl[i][pd];
+      return Math.round((y0+(v-x0)/(x1-x0)*(y1-y0))*1000)/1000;
+    }
+  }
+  return tbl[tbl.length-1][pd];
+}
+
+function sLookupCrp(rmsV,pd,mg,std,pcb){
+  var v=Math.min(rmsV,6300);
+  var tbl=std=='ul'?CRP_UL:CRP_IEC;
+  var mi={'i':0,'ii':1,'iiia':2,'iiib':3}[mg]||0;
+  for(var i=0;i<tbl.length;i++){
+    if(v<=tbl[i][0]){
+      if(pcb&&pd<=2) return tbl[i][5];  // PCB+PD1/PD2: use PWB column
+      if(pd==1) return tbl[i][5];  // PD1: use PWB/PD1 column
+      if(pd==2) return tbl[i][1+mi];  // PD2: by material group
+      return tbl[i][6+mi];  // PD3: by material group
+    }
+  }
+  var last=tbl[tbl.length-1];
+  if(pcb&&pd<=2) return last[5];
+  if(pd==1) return last[5];
+  if(pd==2) return last[1+mi];
+  return last[6+mi];
+}
+
+function mNode(id,idx,name,vrms,ins,pcb,coat,interp,circ){
+  ins=ins||'basic';pcb=pcb||0;coat=coat||0;interp=interp||false;circ=circ||'ac';
+  var io='<option value="func" '+(ins=='func'?'selected':'')+'>功能绝缘</option><option value="basic" '+(ins=='basic'?'selected':'')+'>基本绝缘</option><option value="supp" '+(ins=='supp'?'selected':'')+'>附加绝缘</option><option value="reinf" '+(ins=='reinf'?'selected':'')+'>加强绝缘</option>';
+  var po='<option value="0" '+(pcb==0?'selected':'')+'>否(接线端子)</option><option value="1" '+(pcb==1?'selected':'')+'>是(PCB走线)</option>';
+  var co='<option value="0" '+(coat==0?'selected':'')+'>否</option><option value="1" '+(coat==1?'selected':'')+'>Type 1 (降低PD)</option><option value="2" '+(coat==2?'selected':'')+'>Type 2/灌封 (取消爬电)</option>';
+  return '<div class=seg data-id='+id+'><div><strong>节点'+(idx+1)+': </strong><span class=sn>'+name+'</span></div><div class=fg3>'
+    +'<div class=fgl><label>节点名称</label><input class=sname type=text value="'+name+'" style=width:100px oninput=sNChange(this);sCalc()></div>'
+    +'<div class=fgl><label>工作电压Vrms (V)</label><input class=svrms type=number value='+vrms+' min=0 step=10 oninput=sCalc() style=width:90px></div>'
+    +'<div class=fgl><label>绝缘类型</label><select class=sins onchange=sCalc()>'+io+'</select></div>'
+    +'</div><div class=fg3>'
+    +'<div class=fgl><label>PCB走线</label><select class=spcb onchange=sCalc()>'+po+'</select></div>'
+    +'<div class=fgl><label>三防漆</label><select class=scoat onchange=sCalc()>'+co+'</select></div>'
+    +'<div class=fgl><label>电路</label><select class=scirc onchange=sCalc()><option value=ac '+(circ=='ac'?'selected':'')+'>AC</option><option value=dc '+(circ=='dc'?'selected':'')+'>DC(PV)</option></select></div>'
+    +'</div><div class=fg3>'
+    +'<div class=fgl><label>DC插值</label><div style=display:flex;align-items:center;gap:4px><input type=checkbox class=sinterp '+(interp?'checked':'')+' onchange=sCalc()><span class=hint style=margin-top:0>IEC 62109-1注1</span></div></div>'
+    +'<div class=fgl><label>计算冲击电压</label><span class=suimp style="padding:6px 10px;background:#f1f5f9;border-radius:6px;font-size:.85rem;color:#2563eb;font-weight:500">- kV</span></div>'
+    +'</div><button class="btn-sm" style="margin-top:12px;color:#ef4444" onclick=sRmNode(this)>删除节点</button></div>';
+}
+
+function sNChange(inp){inp.closest(".seg").querySelector(".sn").textContent=inp.value||"节点";}
+
+function sAddNode(){
+  document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,0,"L-N",230,"basic",0,0,false,"ac"));
+  var btn=document.getElementById("addNodeBtn");if(btn)btn.onclick=sAddNode;
+  sCalc();
+}
+
+function sRmNode(b){b.closest(".seg").remove();sReNum();sCalc();}
+
+function sReNum(){
+  document.querySelectorAll("#sN .seg").forEach(function(s,i){
+    s.querySelector(".seg>div>:first-child").textContent="节点"+(i+1)+": ";
+  });
+}
+
+
+function sCalc(){
+  var nodes=document.querySelectorAll("#sN .seg");
+  document.getElementById("sNc").textContent=nodes.length;
+  if(!nodes.length){
+    document.getElementById("sRtb").innerHTML="";
+    document.getElementById("sMa").innerHTML="<p>请添加测量节点。</p>";
+    return;
+  }
+  var pd=+document.getElementById("sPd").value||2;
+  var mg=document.getElementById("sMg").value||"ii";
+  var alt=+document.getElementById("sAlt").value||2000;
+  var std=document.getElementById("sStd").value||"iec";
+  
+  var altk=ALT_K[alt]||1.0;
+  var tb="",results=[];
+  nodes.forEach(function(seg,i){
+    var name=seg.querySelector(".sname").value||"节点"+(i+1);
+    var vrms=+seg.querySelector(".svrms").value||0;
+    var ins=seg.querySelector(".sins").value||"basic";
+    var pcb=+seg.querySelector(".spcb").value||0;
+    var coat=+seg.querySelector(".scoat").value||0;
+    var interp=seg.querySelector(".sinterp")?seg.querySelector(".sinterp").checked:false;
+    var circ=seg.querySelector('.scirc')?seg.querySelector('.scirc').value:'ac';
+    var tov=sGetTov(interp,circ=='dc'?'sSysV_DC':'sSysV_AC');
+    var ue=seg.querySelector('.suimp');if(ue)ue.textContent=tov+' kV';
+    var im=INS_K[ins]||1.0;
+    var baseClr=sLookupClr(std=='iec'?sGetTov(interp,circ=='dc'?'sSysV_DC':'sSysV_AC')*1000:sGetTov(),pd,std,std=='iec'?interp:false);
+    var clrMult=std=='iec'?1.0:im;
+    if(std=='iec'&&ins=='reinf'){
+      var ri=sGetTov(interp,circ=='dc'?'sSysV_DC':'sSysV_AC')*1000;
+      for(var j=0;j<CLR_TBL_IEC.length;j++){
+        if(ri<CLR_TBL_IEC[j][0]){baseClr=CLR_TBL_IEC[j][pd];break;}
+      }
+      clrMult=1.0;
+    }
+    var reqClr=Math.round(baseClr*altk*clrMult*10)/10;
+    
+    var localPd=pd;
+    if(coat==1) localPd=Math.max(1,localPd-1);  // Type 1 coating: reduce PD by 1
+    var reqCrp=sLookupCrp(vrms,localPd,mg,std,pcb?1:0);  // with PCB parameter
+    if(coat==2) reqCrp=0;  // Type 2 coating/potting: cancel creepage
+
+    reqCrp=Math.round(reqCrp*im*10)/10;
+    var insL={func:"功能",basic:"基本",supp:"附加",reinf:"加强"};
+    tb+="<tr><td>"+name+"</td><td>"+vrms+"</td><td>"+(insL[ins]||ins)+"</td><td>"+reqClr+"</td><td>"+reqCrp+"</td></tr>";
+    results.push({name:name,vrms:vrms,ins:ins,insL:insL[ins]||ins,im:im,pcb:pcb,coat:coat,reqClr:reqClr,reqCrp:reqCrp});
+  });
+  document.getElementById("sRtb").innerHTML=tb;
+  var ah="<p style=margin-bottom:6px><strong>安规距离计算结果</strong></p>";
+
+  ah+="<p style=font-size:.85rem>标准: "+document.getElementById("sStd").selectedOptions[0].text+" | PD: "+pd+" | 材料: "+document.getElementById("sMg").selectedOptions[0].text+" | 海拔: "+alt+"m(系数"+altk+")</p>";
+  ah+="<p style=font-size:.85rem>注:电气间隙已乘海拔系数和绝缘倍率; 爬电距离已乘绝缘倍率(详见各节点); 非PCB走线爬电距离增加1.2倍</p>";
+  document.getElementById("sMa").innerHTML=ah;
+  window._sd={results:results,pd:pd,mg:mg,alt:alt,altk:altk};
+  sGenRep();
+}
+
+function sGenRep(){
+  var d=window._sd;
+  if(!d||!d.results||!d.results.length){
+    document.getElementById("sRc").innerHTML="<h3>安规距离评估报告</h3><p>请添加测量节点。</p>";return;
+  }
+  var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
+  var sr="";d.results.forEach(function(r){
+    sr+="<tr><td>"+r.name+"</td><td>"+r.vrms+"</td><td>"+r.insL+"</td><td>"+r.reqClr+"</td><td>"+r.reqCrp+"</td></tr>";
+  });
+  document.getElementById("sRc").innerHTML=(document.getElementById('sProjName').value?'<p><strong>项目: </strong>'+document.getElementById('sProjName').value+'</p>':'')+"<h3>1. 项目信息</h3><table><tr><th>项目</th><th>内容</th></tr><tr><td>报告编号</td><td>SA-"+ds.replace(/\//g,"")+"-"+(1e3+Math.floor(9e3*Math.random()))+"</td></tr><tr><td>生成日期</td><td>"+ds+" "+ts+"</td></tr><tr><td>项目名称</td><td>"+(document.getElementById('sProjName').value||'-')+"</td></tr></table>"
+    +"<h3>2. 基础参数</h3><table><tr><th>参数</th><th>值</th></tr><tr><td>标准</td><td>"+document.getElementById('sStd').selectedOptions[0].text+"</td></tr><tr><td>污染等级</td><td>PD "+d.pd+"</td></tr><tr><td>材料组别</td><td>"+document.getElementById('sMg').selectedOptions[0].text+"</td></tr><tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr></table>"
+    +"<h3>3. 各节点所需安规距离</h3><table><tr><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr>"+sr+"</table>"
+    +sCalcFormulas()+"<h3>4. 设计建议</h3><ul style=margin:4px 0 0 20px>"
+    +"<li>实际工程设计中应确保实际距离大于上表所需值</li>"
+    +"<li>海拔超过2000m时电气间隙需按系数放大</li>"
+    +"<li>加强绝缘(Reinforced)要求为基本绝缘的2倍</li>"
+    +"<li>建议预留20%以上设计裕量</li>"
+    +"<li>最终需通过安规认证机构(如TUV/UL)的实测验证</li></ul>"
+    +"<p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>结论:</strong> 各节点安规距离计算结果如上表所示，实际工程设计中应确保实际距离大于所需值，并留足设计裕量。</p>"
+    +"<div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b><span>安规距离计算工具 v1.0</span><span>报告: "+ds+" "+ts+"</span></div>";
+}
+
+function sExportReport(mode){
+  var d=window._sd;
+  if(!d||!d.results||!d.results.length)return;
+  if(mode==='pdf'){window.print();return}
+  var pn=document.getElementById('sProjName').value,te=[];
+  if(pn)te.push(pn);
+  var ts=te.length?' ('+te.join(' - ')+')':'',sr='';
+  d.results.forEach(function(r){
+    sr+='<tr><td>'+r.name+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+'</td><td>'+r.reqCrp+'</td></tr>';
+  });
+  var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>安规距离评估报告'+ts+'</title><style>body{font-family:SimSun,serif;font-size:11pt}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:3px 6px;font-size:10pt}th{background:#eee}h2{font-size:13pt;margin-top:14px}</style></head><body>';
+  h+='<h2 style="text-align:center">安规距离评估报告'+ts+'</h2>';
+  h+='<p>报告编号: SA-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
+  h+='<p>生成日期: '+new Date().toLocaleDateString('zh-CN')+'</p>';
+  h+='<h2>1. 项目信息</h2><table><tr><th>项目</th><th>内容</th></tr>'+(pn?'<tr><td>项目名称</td><td>'+pn+'</td></tr>':'')+'<tr><td>标准</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr></table>';
+  h+='<h2>2. 基础参数</h2><table><tr><th>参数</th><th>值</th></tr><tr><td>污染等级</td><td>PD '+d.pd+'</td></tr><tr><td>材料组别</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr><tr><td>海拔</td><td>'+d.alt+'m</td></tr></table>';
+  h+='<h2>3. 各节点安规距离判定</h2><table><tr><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr>'+sr+'</table>';
+  h+='<p style="margin-top:20px"><i>安规距离计算工具 v1.0 - 报告自动生成</i></p>
