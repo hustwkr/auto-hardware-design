@@ -157,14 +157,21 @@
     // Render results to DOM
     var tb="";
     result.results.forEach(function(r){
-      tb+="<tr><td>"+r.name+"</td><td>"+r.vrms+"</td><td>"+r.insL+"</td><td>"+r.reqClr+"</td><td>"+r.reqCrp+"</td></tr>";
+      var gndMark = r.toGnd ? '<span style="color:#2563eb;font-size:.7rem" title="对地节点，IEC 62109-1 §7.3.7 强制加强绝缘">⊕</span>' : '';
+      var warnNote = r.forcedReinforced ? ' <span style="color:#f59e0b;font-size:.7rem" title="该节点为对地连接，标准强制要求加强绝缘(×2)，已自动应用">⚠ 已强制加强</span>' : '';
+      tb+="<tr><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+r.insL+warnNote+"</td><td>"+r.reqClr+"</td><td>"+r.reqCrp+"</td></tr>";
     });
     document.getElementById("sRtb").innerHTML=tb;
 
     var altk = SM.ALT_K[alt] || 1.0;
     var ah="<p style=margin-bottom:6px><strong>安规距离计算结果</strong></p>";
     ah+="<p style=font-size:.85rem>标准: "+document.getElementById("sStd").selectedOptions[0].text+" | PD: "+pd+" | 材料: "+document.getElementById("sMg").selectedOptions[0].text+" | 海拔: "+alt+"m(系数"+altk+")</p>";
-    ah+="<p style=font-size:.85rem>注:电气间隙已乘海拔系数和绝缘倍率; 爬电距离已乘绝缘倍率(详见各节点); 非PCB走线爬电距离增加1.2倍</p>";
+    ah+="<p style=font-size:.82rem;color:#64748b>注:</p><ul style=font-size:.82rem;color:#64748b;margin:2px 0 0 16px;line-height:1.7>";
+    ah+='<li>电气间隙已乘海拔系数和绝缘倍率</li>';
+    ah+='<li>爬电距离已乘绝缘倍率，非PCB走线按污染等级选取</li>';
+    ah+='<li style="color:#2563eb;font-weight:500">⊕ = 对地节点（连接PE/外壳），IEC 62109-1 §7.3.7 强制要求加强绝缘，电气间隙和爬电距离均×2</li>';
+    ah+='<li style="color:#f59e0b;font-weight:500">⚠ = 用户选择了非加强绝缘但对地连接，系统已自动按加强绝缘计算</li>';
+    ah+='</ul>';
     document.getElementById("sMa").innerHTML=ah;
 
     // Store for report/export
@@ -190,7 +197,7 @@
     var d=window._sd;
     if(!d||!d.results||!d.results.length){document.getElementById("sRc").innerHTML="<h3>安规距离评估报告</h3><p>请添加测量节点。</p>";return;}
     var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
-    var sr="";d.results.forEach(function(r){sr+="<tr><td>"+r.name+"</td><td>"+r.vrms+"</td><td>"+r.insL+"</td><td>"+r.reqClr+"</td><td>"+r.reqCrp+"</td></tr>";});
+    var sr="";d.results.forEach(function(r){var g=r.toGnd?' (对地)':'';var f=r.forcedReinforced?' ⚠强制加强':'';sr+="<tr><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+r.reqClr+"</td><td>"+r.reqCrp+"</td></tr>";});
 
     document.getElementById("sRc").innerHTML=
       (document.getElementById('sProjName').value?'<p><strong>项目: </strong>'+document.getElementById('sProjName').value+'</p>':'')
@@ -214,6 +221,7 @@
         +"<li>实际工程设计中应确保实际距离大于上表所需值</li>"
         +"<li>海拔超过2000m时电气间隙需按系数放大</li>"
         +"<li>加强绝缘(Reinforced)要求为基本绝缘的2倍</li>"
+        +'<li style="color:#2563eb;font-weight:500">对地节点（标记"对地"）：IEC 62109-1 §7.3.7 强制要求加强绝缘，电气间隙和爬电距离均×2</li>'
         +"<li>建议预留20%以上设计裕量</li>"
         +"<li>最终需通过安规认证机构(如TUV/UL)的实测验证</li></ul>"
       +"<p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>结论:</strong> 各节点安规距离计算结果如上表所示，实际工程设计中应确保实际距离大于所需值，并留足设计裕量。</p>"
@@ -226,7 +234,7 @@
     if(mode==='pdf'){window.print();return}
     var pn=document.getElementById('sProjName').value,te=[];if(pn)te.push(pn);
     var ts=te.length?' ('+te.join(' - ')+')':'',sr='';
-    d.results.forEach(function(r){sr+='<tr><td>'+r.name+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+'</td><td>'+r.reqCrp+'</td></tr>'});
+    d.results.forEach(function(r){var g=r.toGnd?' (对地)':'';sr+='<tr><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+'</td><td>'+r.reqCrp+'</td></tr>'});
     var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>安规距离评估报告'+ts+'</title><style>body{font-family:SimSun,serif;font-size:11pt}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:3px 6px;font-size:10pt}th{background:#eee}h2{font-size:13pt;margin-top:14px}</style></head><body>';
     h+='<h2 style="text-align:center">安规距离评估报告'+ts+'</h2>';
     h+='<p>报告编号: SA-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';

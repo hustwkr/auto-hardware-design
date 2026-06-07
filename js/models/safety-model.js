@@ -185,24 +185,36 @@
 
   /* ── Per-node calculation (pure) ─────────────── */
   function calcNode(node, pd, mgGroup, alt, standard, impAC, impDC) {
-    // node: { name, vrms, ins, pcb, coat, circ }
+    // node: { name, vrms, ins, pcb, coat, circ, toGnd }
     var vrms = node.vrms || 0;
     var ins  = node.ins  || 'basic';
     var pcb  = !!node.pcb;
     var coat = node.coat || 0;
     var circ = node.circ || 'ac';
+    var toGnd = !!node.toGnd;
 
     // Determine impulse withstand voltage (kV) from Table 12
     var impKV = circ === 'dc' ? impDC : impAC;
 
-    // Clearance calculation — based on impulse voltage per IEC 60664-1 Table A.1
+    /* ── IEC 62109-1 §7.3.7: Insulation type enforcement ─── */
+    // Between live parts and accessible conductive parts (PE/enclosure):
+    // reinforced insulation is MANDATORY — basic/functional alone is NOT compliant.
+    // Therefore toGnd=true forces clrMult=2.0 and crpMult=2.0 regardless of selected ins type.
     var im = INS_K[ins] || 1.0;
+    var forcedReinforced = false;
+    if (toGnd && im < 2.0) {
+      // toGnd requires reinforced insulation per IEC 62109-1 §7.3.7
+      // Apply reinforced multiplier even if user selected basic/functional
+      im = 2.0;
+      forcedReinforced = true;
+    }
+
     var baseClr, clrMult;
 
     if (standard === 'iec') {
       // IEC: clearance from Table 13 using impulse voltage (kV → V)
       var impV = impKV * 1000;
-      if (ins === 'reinf') {
+      if (ins === 'reinf' || toGnd) {
         // Reinforced: double the basic insulation clearance
         baseClr = lookupClr(impV, pd, standard, true);
         clrMult = 2.0;
@@ -222,18 +234,21 @@
     // Creepage calculation
     var localPd = pd;
     if (coat === 1) localPd = Math.max(1, localPd - 1);
+    var crpMult = im; // toGnd forces im=2.0 above
     var reqCrp = lookupCrp(vrms, localPd, mgGroup, standard, pcb ? 1 : 0);
     if (coat === 2) reqCrp = 0; // Coating cancels creepage requirement
-    reqCrp = Math.round(reqCrp * im * 10) / 10;
+    reqCrp = Math.round(reqCrp * crpMult * 10) / 10;
 
     return {
       name: node.name || "节点",
       vrms: vrms,
       ins: ins,
       insL: INS_LABELS[ins] || ins,
-      im: im,
+      im: crpMult,
       pcb: pcb ? 1 : 0,
       coat: coat,
+      toGnd: toGnd,
+      forcedReinforced: forcedReinforced,
       reqClr: reqClr,
       reqCrp: reqCrp
     };
