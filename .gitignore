@@ -7,4 +7,12 @@ node_modules/
 .env
 *.log
 
-*.pdf
+# Large reference files (keep in repo but don't track changes accidentally)
+IEC_62109-1_2010.pdf
+
+# Backup versions - not needed for production
+v2/
+
+# Build temp files
+build_temp_*.html
+*.tmp

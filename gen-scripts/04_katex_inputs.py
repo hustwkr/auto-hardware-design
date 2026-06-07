@@ -2,15 +2,13 @@ import sys
 sys.stdin.reconfigure(encoding="utf-8")
 t = sys.stdin.read()
 
-# Step A: Add KaTeX CDN references
-t = t.replace(
-    "</style>",
-    "</style>\n<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css\">"
-)
-t = t.replace(
-    "</head>",
-    "<script src=\"https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js\"></script>\n</head>"
-)
+# Step A: Add KaTeX CSS (JS already in 01_base.py — avoid duplicate <script src="katex.min.js">)
+if "katex.min.css" not in t:
+    t = t.replace(
+        "</style>",
+        "</style>\n<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css\">"
+    )
+# NOTE: katex.min.js <script> is already in 01_base.py — do NOT add a second copy
 
 # Step B: Add project inputs after subtitle
 old_sub = '<p style="color:#64748b;margin-bottom:24px;font-size:.9rem">Arrhenius + Miner '

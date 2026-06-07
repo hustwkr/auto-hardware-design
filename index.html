@@ -3,33 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>自动硬件设计工具</title>
-<link rel="icon" type="image/png" href="/hwlogo.png">
+<title>电解电容寿命计算工具</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f7fa;color:#1e293b;padding:24px}
-.tab-nav{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:24px;background:#fff;border-radius:8px 8px 0 0;padding:0 4px;position:sticky;top:0;z-index:50}
-.tab-btn{padding:10px 24px;border:none;background:transparent;font-size:.9rem;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
-.tab-btn:hover{color:#1e293b;background:#f8fafc}
-.tab-btn.active{color:#2563eb;border-bottom-color:#2563eb;background:#f0f4ff}
-.tab-content{display:none}
-.tab-content.active{display:block}
-.empty-state{text-align:center;padding:100px 20px;color:#94a3b8}
-.empty-state p{font-size:1.1rem;margin-bottom:6px}
-.empty-state small{font-size:.85rem}
-.tab-nav{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:24px;background:#fff;border-radius:8px 8px 0 0;padding:0 4px;position:sticky;top:0;z-index:50}
-.tab-btn{padding:10px 24px;border:none;background:transparent;font-size:.9rem;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
-.tab-btn:hover{color:#1e293b;background:#f8fafc}
-.tab-btn.active{color:#2563eb;border-bottom-color:#2563eb;background:#f0f4ff}
-.tab-content{display:none}
-.tab-content.active{display:block}
-.empty-state{text-align:center;padding:100px 20px;color:#94a3b8}
-.empty-state p{font-size:1.1rem;margin-bottom:6px}
-.empty-state small{font-size:.85rem}
-.container{max-width:1480px;margin:0 auto}
-.layout{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
-@media(max-width:960px){.layout{grid-template-columns:1fr}}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px 24px 24px;margin-bottom:20px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f7fa;color:#1e293b;padding:12px}
+.container{max-width:740px;margin:0 auto}
+.layout{display:block}
+
 .card h2{font-size:1rem;font-weight:600;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e2e8f0}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
 .fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 14px}
@@ -38,13 +18,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .fgl label{font-size:.78rem;font-weight:500;color:#64748b;margin-bottom:1px}
 .fgl input,.fgl select{padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:.88rem;background:#fff}
 .fgl input:focus,.fgl select:focus{border-color:#2563eb;outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-.hint{font-size:.72rem;color:#64748b;margin-top:0}
+.hint{font-size:.72rem;color:#64748b;margin-top:1px}
 .seg{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px 14px;margin-bottom:10px}
 .rt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:4px}
 .rt th,.rt td{text-align:left;padding:4px 6px;border:1px solid #e2e8f0}
 .rt th{background:#f1f5f9;font-weight:500;font-size:.76rem}
 .btn-sm{padding:2px 8px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;cursor:pointer;font-size:.78rem}
-.btn-sm:hover{background:#f1f5f9}.btn-add{padding:8px 18px;border:2px solid #2563eb;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer;font-size:.85rem;font-weight:500;transition:background .15s}.btn-add:hover{background:#1d4ed8}.btn-export-group{position:relative;display:inline-flex}.btn-export-group .btn{border-radius:6px 0 0 6px}.btn-export-group .btn-export-arrow{padding:8px 10px;border:1px solid #e2e8f0;border-left:none;border-radius:0 6px 6px 0;background:#fff;cursor:pointer;font-size:.75rem;line-height:1}.btn-export-group .btn-export-arrow:hover{background:#f1f5f9}.export-dropdown{display:none;position:absolute;top:100%;right:0;margin-top:2px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:100;min-width:140px}.export-dropdown.show{display:block}.export-dropdown div{padding:8px 14px;cursor:pointer;font-size:.85rem;white-space:nowrap}.export-dropdown div:hover{background:#f1f5f9}.info-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.7rem;font-weight:700;cursor:pointer;margin-left:4px;vertical-align:middle;transition:background .15s;user-select:none}.info-icon:hover{background:#cbd5e1;color:#1e293b}.info-popup{display:none;position:absolute;z-index:200;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;font-size:.78rem;line-height:1.5;color:#334155;box-shadow:0 4px 16px rgba(0,0,0,.12);max-width:420px;white-space:normal;top:100%;left:0;margin-top:4px}.info-popup.show{display:block}
+.btn-sm:hover{background:#f1f5f9}
 .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ri{padding:10px 12px;background:#f8fafc;border-radius:6px}
 .ri .rl{font-size:.73rem;color:#64748b}
@@ -68,25 +48,34 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 #rc table{width:100%;border-collapse:collapse;margin:8px 0}
 #rc th,#rc td{text-align:left;padding:6px 10px;border:1px solid #e2e8f0;font-size:.85rem}
 #rc th{background:#f8fafc;font-weight:600}
-#sRc{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:24px 28px;font-size:.88rem}
-#sRc h3{font-size:1.05rem;margin:16px 0 8px}
-#sRc h3:first-child{margin-top:0}
-#sRc table{width:100%;border-collapse:collapse;margin:8px 0}
-#sRc th,#sRc td{text-align:left;padding:6px 10px;border:1px solid #e2e8f0;font-size:.85rem}
-#sRc th{background:#f8fafc;font-weight:600}
 @media print{body{padding:0;background:#fff}._np{display:none!important}.layout{display:block}.card{break-inside:avoid}}
+.tab-nav{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:24px;background:#fff;border-radius:8px 8px 0 0;padding:0 4px;position:sticky;top:0;z-index:50}
+.tab-btn{padding:10px 24px;border:none;background:transparent;font-size:.9rem;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
+.tab-btn:hover{color:#1e293b;background:#f8fafc}
+.tab-btn.active{color:#2563eb;border-bottom-color:#2563eb;background:#f0f4ff}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.info-popup{display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:10px 14px;font-size:.78rem;color:#475569;line-height:1.5;box-shadow:0 4px 12px rgba(0,0,0,.12);max-width:360px;margin-top:4px}
+.info-popup.show{display:block}
+/* Node table */
+.node-tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:4px}
+.node-tbl th,.node-tbl td{padding:3px 5px;border:1px solid #e2e8f0;text-align:left;vertical-align:middle}
+.node-tbl th{background:#f1f5f9;font-weight:500;font-size:.74rem;color:#64748b}
+.nrow .snm{font-weight:600;color:#2563eb;border:none;background:transparent;padding:0;width:80px;outline:none}
+.ncell{display:inline-flex;align-items:center;gap:3px}
 </style>
+<link rel="icon" type="image/png" href="/hwlogo.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>
 </head>
 <body>
+<div class="container">
 <nav class="tab-nav">
   <button class="tab-btn active" data-tab="capacitor">电解电容寿命计算</button>
   <button class="tab-btn" data-tab="safety">安规距离计算</button>
   <button class="tab-btn" style="margin-left:auto" onclick="window.location.href='/admin/login'">⚙ 后台</button>
 </nav>
 <div id="tab-capacitor" class="tab-content active">
-<div class="container">
 <h1 style="font-size:1.6rem;margin-bottom:4px">电解电容寿命计算工具 <span style="font-size:.9rem;font-weight:400;color:#64748b">Electrolytic Capacitor Lifetime Calculator</span></h1>
 <p style="color:#64748b;margin-bottom:24px;font-size:.9rem">Arrhenius + Miner 累积损伤 + 多段运行剖面 + 多频率纹波叠加 + 质保期判定</p>
 <div class="card" style="padding:12px 20px;margin-bottom:20px"><div class="fg"><div class="fgl"><label>项目名称</label><input type="text" id="projName" placeholder="选填" oninput="calc()"></div><div class="fgl"><label>电容型号</label><input type="text" id="capModel" placeholder="选填" oninput="calc()"></div></div></div>
@@ -103,7 +92,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <div class="card"><h2>运行剖面 <span style="font-size:.78rem;font-weight:400;color:#64748b">(多段工况 + 多频率纹波)</span></h2>
 <p style="font-size:.78rem;color:#64748b;margin-bottom:8px">各时段可添加多组不同频率纹波分量, 总温升按各频率 (I/K_freq)^2 平方和叠加</p>
 <div id="sc"></div>
-<button class="btn-add" id="addSegBtn">+ 添加时段</button>
+<button class="btn-sm" id="addSegBtn">+ 添加时段</button>
 <span id="stt" style="font-size:.78rem;color:#64748b;margin-left:10px"></span>
 <div id="stw" style="font-size:.78rem;color:#ef4444;margin-top:4px;display:none"></div>
 <div class="fg" style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0">
@@ -131,18 +120,95 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <table class="sg-tbl"><thead><tr><th>时段</th><th>h/天</th><th>芯温C</th><th>K_T</th><th>K_V</th><th>Li (h)</th><th>年损伤</th></tr></thead><tbody id="srb"></tbody></table>
 </div></div>
 <div class="card"><h2>寿命评估</h2><div id="ma" style="font-size:.88rem"><p>-</p></div></div>
-</div></div>
+</div>
 <div style="margin-top:24px">
 <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
 <h2 style="font-size:1.1rem;font-weight:600">设计报告</h2>
 <div style="display:flex;gap:8px">
-<div class="btn-export-group"><button class="btn" onclick="exportReport('word')" id="exportCapBtn">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'cap')">▼</button><div class="export-dropdown" id="exportCapDropdown"><div onclick="exportReport('word')">Word (.doc)</div><div onclick="exportReport('pdf')">PDF</div></div></div>
+<button class="btn" onclick="genRep()">刷新报告</button>
+<button class="btn" onclick="exportWord()">导出 Word</button><button class="btn btn-p" onclick="window.print()">打印/导出 PDF</button>
 </div></div>
 <div id="rc"><h3>电解电容寿命评估报告</h3><p>请调整参数后刷新。</p></div>
+</div>
+</div>
+<script>
+(function(){try{return /*_DEFAULTS_JSON_*/}catch(e){return {}}}());
+var FF={50:.85,60:.85,120:1,1e3:1.25,1e4:1.5,1e5:1.65};
+var MG={consumer:{r:1.3,l:"消费电子"},industrial:{r:1.5,l:"工业设备"},automotive:{r:2,l:"汽车电子"},medical:{r:2.5,l:"医疗设备"}};
+function fv(v,d){return typeof v!="number"||!isFinite(v)?"-":v.toFixed(d)}
+function kvf(v,vr){if(vr<=0||v<=0)return 1;var r=v/vr;return r>=1?1:1+0.6*Math.pow(1-r,1.5)}
+var sid=0;
+function mU(){return '<select class=fu onchange=calc()><option value=1 selected>Hz</option><option value=1000>kHz</option></select>'}
+function mSeg(id,idx,dur,ta,vop,rips){
+var rr="";
+rips.forEach(function(v){rr+="<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td><td><input class=fc type=number value="+v+" min=0 step=10 style=width:80px oninput=calc()></td><td><button class=btn-sm onclick=removeRippleRow(this)>X</button></td></tr>"});
+return"<div class=seg data-id="+id+"><div><span>时段"+(idx+1)+"</span><span style=font-size:.78rem;color:#64748b> 每天 <span class=sh>"+dur+" h</span></span></div>"
++"<div class=fg3><div class=fgl><label>时长(h/天)</label><input class=sd type=number value="+dur+" min=0 max=24 step=0.5 oninput=sdChange(this);calc()></div>"
++"<div class=fgl><label>温度Ta(C)</label><input class=stp type=number value="+ta+" min=-40 max=150 oninput=calc()></div>"
++"<div class=fgl><label>电压Vop(V)</label><input class=sv type=number value="+vop+" min=0 step=1 oninput=calc()></div></div>"
++"<div class=fgl style=margin-top:6px><label>纹波电流分量</label><table class=rt><thead><tr><th>频率</th><th>电流(mA)</th><th></th></tr></thead><tbody class=rtb>"+rr+"</tbody></table>"
++"<button class=btn-sm style=margin-top:4px onclick=addRR(this)>+ 添加纹波分量</button></div>"
++"<button class=btn-sm style=margin-top:8px;color:#ef4444 onclick=rmSeg(this)>删除该时段</button></div>"}
+function sdChange(inp){inp.closest(".seg").querySelector(".sh").textContent=parseFloat(inp.value)||0;updT()}
+function updT(){var t=0;document.querySelectorAll(".sd").forEach(function(i){t+=parseFloat(i.value)||0});document.getElementById("stt").textContent="合计: "+fv(t,1)+" / 24 h";var w=document.getElementById("stw");if(t>24){w.style.display="block";w.textContent="总时长 "+fv(t,1)+" h 超 24 h"}else if(t<24){w.style.display="block";w.textContent="剩余 "+fv(24-t,1)+" h 未定义(停机)"}else w.style.display="none"}
+function addSeg(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,50,30,[100]));updT();calc()}
+function rmSeg(b){b.closest(".seg").remove();reNum();calc()}
+function reNum(){document.querySelectorAll(".seg").forEach(function(s,i){s.querySelector(".seg>:first-child>:first-child").textContent="时段"+(i+1)})}
+function addRR(b){b.closest(".seg").querySelector(".rtb").insertAdjacentHTML("beforeend","<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td><td><input class=fc type=number value=50 min=0 step=10 style=width:80px oninput=calc()></td><td><button class=btn-sm onclick=removeRippleRow(this)>X</button></td></tr>");calc()}
+function removeRippleRow(b){var tb=b.closest(".rtb");if(tb.querySelectorAll("tr").length<=1)return;b.closest("tr").remove();calc()}
+function l2r(l){try{return l.replace(/\\times/g,"\u00D7").replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g,"($1)/($2)").replace(/\\Delta/g,"\u0394").replace(/\\sum/g,"\u2211").replace(/\\left/g,"").replace(/\\right/g,"").replace(/\\text\{([^}]+)\}/g,"$1").replace(/\\cdot/g,"\u00B7").replace(/\\,/g," ").replace(/\^{([^}]+)\}/g,"^($1)").replace(/\^{([a-zA-Z0-9])}/g,"^$1").replace(/_{([^}]+)}/g,"_$1").replace(/{/g,"").replace(/}/g,"")}catch(e){return l}}
 
-</div></div></div>
+function renderLatex(){try{document.querySelectorAll('.latex').forEach(function(e){try{var w=window;if(!w.katex){e.textContent=e.getAttribute('data-l');return}w.katex.render(e.getAttribute('data-l'),e,{throwOnError:false})}catch(er){}})}catch(er){}}
+function calc(){
+if(!document.querySelectorAll(".seg").length){document.getElementById("lh").textContent="-";document.getElementById("ly").textContent="-";document.getElementById("ad").textContent="-";document.getElementById("wt").textContent="-";document.getElementById("wk").textContent="-";return}
+var l0=+document.getElementById("l0").value||2e3,tmax=+document.getElementById("tmax").value||105,vr=+document.getElementById("vrated").value||50,ir=+document.getElementById("irated").value||500,dt0=+document.getElementById("dt0").value||10,cl=+document.getElementById("cooling").value||1,wd=+document.getElementById("workdays").value||365,wt=+document.getElementById("warrantyTarget").value||5,sc=document.getElementById("scenario").value,mi=MG[sc]||MG.industrial,dmg=0,wtHs=-1/0,wtKt=1/0,sr=[];
+document.querySelectorAll(".seg").forEach(function(seg,i){var dur=+seg.querySelector(".sd").value||0,ta=+seg.querySelector(".stp").value||25,vop=+seg.querySelector(".sv").value||0,sq=0,rd=[];seg.querySelectorAll(".rtb tr").forEach(function(row){var f=(+row.querySelector(".fv").value||120)*(+row.querySelector(".fu").value||1),iop=+row.querySelector(".fc").value||0;if(iop<=0)return;var k=FF[f]||1,ec=iop/k,s=(ec/ir)*(ec/ir);sq+=s;rd.push({f:f,iop:iop,k:k,ec:ec,s:s})});var dt=Math.min(dt0*sq/cl,dt0*3),ths=ta+dt,kt=Math.pow(2,(tmax-ths)/10),kv=kvf(vop,vr),Li=l0*kt*kv,d=Li>0?dur*wd/Li:1/0;dmg+=d;if(ths>wtHs)wtHs=ths;if(kt<wtKt)wtKt=kt;sr.push({i:i+1,dur:dur,ta:ta,vop:vop,ths:ths,kt:kt,kv:kv,Li:Li,d:d,dt:dt,rd:rd})});
+var ly=dmg>0?1/dmg:1/0,lh=ly*wd*Array.from(document.querySelectorAll(".seg")).reduce(function(s,seg){return s+(+seg.querySelector(".sd").value||0)},0),margin=ly/wt,req=mi.r,ws,wc,wd2;
+if(margin>=req*1.2){ws="优秀("+fv(margin,1)+"x,需"+req+"x)";wc="g";wd2="质保期"+wt+"年,预计"+fv(ly,1)+"年,裕量充足"}
+else if(margin>=req){ws="合格("+fv(margin,1)+"x,需"+req+"x)";wc="p";wd2="质保期"+wt+"年,预计"+fv(ly,1)+"年,满足要求"}
+else if(margin>=req*0.7){ws="边缘("+fv(margin,1)+"x,需"+req+"x)";wc="c";wd2="质保期"+wt+"年,预计"+fv(ly,1)+"年,建议增加裕量"}
+else{ws="不合格("+fv(margin,1)+"x,需"+req+"x)";wc="b";wd2="质保期"+wt+"年,预计"+fv(ly,1)+"年,无法满足"}
+document.getElementById("lh").textContent=lh>=1e6?fv(lh/1e4,1)+"万":fv(lh,0);
+document.getElementById("ly").textContent=fv(ly,1);
+document.getElementById("ad").textContent=fv(dmg*100,3);
+document.getElementById("wt").textContent=fv(wtHs,1);
+document.getElementById("wk").textContent=fv(wtKt,2);
+document.getElementById("wb").innerHTML="<span class=badge "+wc+">"+ws+"</span>";
+document.getElementById("wd").textContent=wd2;
+var mb=Math.max(wt*3,ly);
+document.getElementById("wf").style.width=Math.min(100,(ly/mb)*100)+"%";
+document.getElementById("wm").style.left=Math.min(100,(wt/mb)*100)+"%";
+document.getElementById("wf").style.background=margin>=req?"#10b981":margin>=req*0.7?"#f59e0b":"#ef4444";
+document.getElementById("wtl").textContent="目标: "+wt+"年";
+document.getElementById("wml").textContent=fv(mb,0)+"年";
+var tb="";sr.forEach(function(r){tb+="<tr><td>时段"+r.i+"</td><td>"+fv(r.dur,1)+"</td><td>"+fv(r.ths,1)+"</td><td>"+fv(r.kt,2)+"</td><td>"+fv(r.kv,3)+"</td><td>"+(r.Li>=1e6?fv(r.Li/1e4,1)+"万":fv(r.Li,0))+"</td><td>"+fv(r.d*100,3)+"%</td></tr>"});document.getElementById("srb").innerHTML=tb;
+var td=sr.reduce(function(s,r){return s+r.d},0)||1,ah="<p style=margin-bottom:6px><strong>寿命预测</strong></p><p style=font-size:.85rem>预计寿命: <strong>"+fv(ly,1)+" 年</strong></p><p style=font-size:.85rem>质保期: "+wt+"年 | "+mi.l+" | 裕量: <strong>"+fv(margin,2)+"x</strong> "+(margin>=req?"✓":"✗")+"</p><p style=font-size:.85rem;color:#64748b;margin-top:4px>"+wd2+"</p><p style=font-size:.85rem;margin-top:8px><strong>各时段寿命消耗占比</strong></p><div style=display:flex;gap:4px;margin-top:4px;align-items:flex-end;flex-wrap:wrap;min-height:50px>";
+sr.forEach(function(r){var p=(r.d/td)*100,h=Math.max(20,p*2);ah+="<div style=display:flex;flex-direction:column;align-items:center;gap:2px><div style=width:32px;height:"+h+"px;background:#2563eb;border-radius:4px 4px 0 0;opacity:.75></div><span style=font-size:.68rem;color:#64748b>"+fv(p,0)+"%</span><span style=font-size:.62rem;color:#64748b>T"+r.i+"</span></div>"});ah+="</div>";document.getElementById("ma").innerHTML=ah;
+window._cd={l0:l0,vr,ir,dt0,cl,wd,wt,sc,mi,sr,dmg,lh:lh,ly,margin,ws,wd2,req};genRep()
+}
+function calcFormulas(){var d=window._cd;if(!d||!d.sr||!d.sr.length)return '';var fs='';d.sr.forEach(function(r){fs+='<p style=margin:4px 0><b>时段'+r.i+':</b> <span class=latex data-l="L_i = L_0 \\times 2^{\\frac{T_{max} - T_{hs_i}}{10}} \\times K_V"></span> = <span class=latex data-l="'+d.l0+' \\times 2^{\\frac{'+d.tmax+'-'+r.ths.toFixed(1)+'}{10}} \\times '+r.kv.toFixed(3)+'"></span> = <span class=latex data-l="'+r.Li.toFixed(0)+'\,\\text{h}"></span></p>';if(r.rd&&r.rd.length){fs+='<p style=margin:2px 0 4px 20px;font-size:.82rem;color:#555>';r.rd.forEach(function(x,i){if(i>0)fs+=' + ';fs+=x.iop+'mA@'+x.f+'Hz(K='+x.k.toFixed(2)+')'});fs+='<br><span class=latex data-l="\Delta T = \Delta T_0 \\times \sum_j \left(\\frac{I_j}{I_{rated} \\times K_{freq_j}}\\right)^2 / C"></span> = '+r.dt.toFixed(2)+'C, T_{hs}='+r.ths.toFixed(1)+'C</p>'}});fs+='<p style=margin:4px 0><b>累计:</b> <span class=latex data-l="D = \sum_i \\frac{t_i \\times days}{L_i}"></span> = ';var ft=true;d.sr.forEach(function(r){if(!ft)fs+=' + ';ft=false;fs+=r.dur.toFixed(1)+'x'+d.wd+'/'+r.Li.toFixed(0)});fs+=' = '+(d.dmg*100).toFixed(3)+'%/年, 寿命 = 1/('+d.dmg.toFixed(6)+') = '+d.ly.toFixed(1)+'年</p>';return fs}
+
+function genRep(){
+var d=window._cd;if(!d||!d.sr||!d.sr.length){document.getElementById("rc").innerHTML="<h3>电解电容寿命评估报告</h3><p>请先定义运行剖面</p>";setTimeout(renderLatex,200);return}
+var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
+var rc=document.querySelectorAll(".rtb tr").length||0,sr="";
+d.sr.forEach(function(r){var rd=r.rd.length?r.rd.map(function(x){return fv(x.iop,0)+" mA @ "+x.f+" Hz(K="+x.k.toFixed(2)+")"}).join(", "):"无纹波";sr+="<tr><td>时段"+r.i+"</td><td>"+fv(r.dur,1)+"</td><td>"+fv(r.ta,1)+"</td><td>"+fv(r.vop,1)+"</td><td>"+fv(r.dt,2)+"</td><td>"+fv(r.ths,1)+"</td><td>"+fv(r.kt,2)+"</td><td>"+fv(r.kv,3)+"</td><td>"+(r.Li>=1e6?fv(r.Li/1e4,1)+"万":fv(r.Li,0))+"</td><td>"+rd+"</td></tr>"});
+document.getElementById("rc").innerHTML="<h3>1. 项目信息</h3><table><tr><th>项目</th><th>内容</th></tr><tr><td>报告编号</td><td>EL-"+ds.replace(/\//g,"")+"-"+(1e3+Math.floor(9e3*Math.random()))+"</td></tr><tr><td>生成日期</td><td>"+ds+" "+ts+"</td></tr><tr><td>应用场景</td><td>"+d.mi.l+"</td></tr><tr><td>散热</td><td>"+document.getElementById("cooling").selectedOptions[0].text+"</td></tr><tr><td>年工作天数</td><td>"+d.wd+"</td></tr><tr><td>质保期</td><td>"+d.wt+"年</td></tr><tr><td>时段数</td><td>"+d.sr.length+"</td></tr><tr><td>纹波分量</td><td>"+rc+"</td></tr></table>"
++"<h3>2. 额定参数</h3><table><tr><th>参数</th><th>数值</th></tr><tr><td>L0</td><td>"+d.l0+" h</td></tr><tr><td>Tmax</td><td>"+d.tmax+" C</td></tr><tr><td>Vrated</td><td>"+d.vr+" V</td></tr><tr><td>Irated</td><td>"+d.ir+" mA</td></tr><tr><td>DT0</td><td>"+d.dt0+" C</td></tr></table>"
++"<h3>3. 运行剖面</h3><table><tr><th>时段</th><th>h/天</th><th>Ta C</th><th>Vop V</th><th>DT C</th><th>Ths C</th><th>KT</th><th>KV</th><th>Li h</th><th>纹波</th></tr>"+sr+"</table>"
++"<h3>4. 累积损伤</h3><table><tr><th>项目</th><th>数值</th></tr><tr><td>年损伤 D</td><td>"+fv(d.dmg*100,3)+"%</td></tr><tr><td>预计寿命</td><td>"+fv(d.ly,1)+" 年</td></tr><tr><td>质保期</td><td>"+d.wt+" 年</td></tr><tr><td>裕量</td><td>"+fv(d.margin,2)+"x</td></tr><tr><td>判定</td><td><strong>"+d.ws+"</strong></td></tr></table>"
++"<p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>结论:</strong> "+d.wd2+"</p>"
++calcFormulas()+"<h3>6. 设计建议</h3><ul style=margin:4px 0 0 20px><li>温度每降10C寿命延长一倍</li><li>"+(d.margin>=d.req?"裕量满足":"裕量不足,需改善")+"</li><li>建议高温负载试验验证</li></ul>"
++"<div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b><span>电解电容寿命计算器 v2.0</span><span>报告: "+ds+" "+ts+"</span></div>"}
+function exportWord(){var d=window._cd;if(!d||!d.sr||!d.sr.length)return;var pn=document.getElementById('projName').value,cm=document.getElementById('capModel').value,te=[];if(pn)te.push(pn);if(cm)te.push(cm);var ts=te.length?' ('+te.join(' - ')+')':'',sr='';d.sr.forEach(function(r){var rd=r.rd.length?r.rd.map(function(x){return x.iop+'mA@'+x.f+'Hz'}).join(', '):'\u65e0';sr+='<tr><td>\u65f6\u6bb5'+r.i+'</td><td>'+r.dur.toFixed(1)+'</td><td>'+r.ta.toFixed(1)+'</td><td>'+r.vop.toFixed(1)+'</td><td>'+r.dt.toFixed(2)+'</td><td>'+r.ths.toFixed(1)+'</td><td>'+r.kt.toFixed(2)+'</td><td>'+r.kv.toFixed(3)+'</td><td>'+r.Li.toFixed(0)+'</td><td>'+rd+'</td></tr>'});var fh=calcFormulas();fh=fh.replace(/<span class=latex data-l="([^"]*)"><\/span>/g,'$1');var lh=d.lh>=1e6?(d.lh/1e4).toFixed(1)+'\u4e07':d.lh.toFixed(0);var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+ts+'</title><style>body{font-family:SimSun,serif;font-size:11pt}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:3px 6px;font-size:10pt}th{background:#eee}h2{font-size:13pt;margin-top:14px}</style></head><body>';h+='<h2 style="text-align:center">\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+ts+'</h2>';h+='<p>\u62a5\u544a\u7f16\u53f7: EL-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';h+='<p>\u751f\u6210\u65e5\u671f: '+new Date().toLocaleDateString('zh-CN')+'</p>';h+='<h2>1. \u9879\u76ee\u4fe1\u606f</h2><table><tr><th>\u9879\u76ee</th><th>\u5185\u5bb9</th></tr>'+(pn?'<tr><td>\u9879\u76ee\u540d\u79f0</td><td>'+pn+'</td></tr>':'')+(cm?'<tr><td>\u7535\u5bb9\u578b\u53f7</td><td>'+cm+'</td></tr>':'')+'<tr><td>\u5e94\u7528\u573a\u666f</td><td>'+d.mi.l+'</td></tr><tr><td>\u6563\u70ed\u6761\u4ef6</td><td>'+document.getElementById('cooling').selectedOptions[0].text+'</td></tr><tr><td>\u5e74\u5de5\u4f5c\u5929\u6570</td><td>'+d.wd+'</td></tr><tr><td>\u76ee\u6807\u8d28\u4fdd\u671f</td><td>'+d.wt+'\u5e74</td></tr></table>';h+='<h2>2. \u7535\u5bb9\u5668\u989d\u5b9a\u53c2\u6570</h2><table><tr><th>\u53c2\u6570</th><th>\u6570\u503c</th></tr><tr><td>\u989d\u5b9a\u5bff\u547d L0</td><td>'+d.l0+' h</td></tr><tr><td>\u6700\u9ad8\u6e29\u5ea6 Tmax</td><td>'+d.tmax+' C</td></tr><tr><td>\u989d\u5b9a\u7535\u538b Vrated</td><td>'+d.vr+' V</td></tr><tr><td>\u989d\u5b9a\u7eb9\u6ce2 Irated</td><td>'+d.ir+' mA</td></tr><tr><td>\u6700\u5927\u82af\u6e29\u5347 DT0</td><td>'+d.dt0+' C</td></tr></table>';h+='<h2>3. \u8fd0\u884c\u5256\u9762</h2><table><tr><th>\u65f6\u6bb5</th><th>h/\u5929</th><th>Ta C</th><th>Vop V</th><th>DT C</th><th>Ths C</th><th>KT</th><th>KV</th><th>Li h</th><th>\u7eb9\u6ce2</th></tr>'+sr+'</table>';h+='<h2>4. \u7d2f\u79ef\u635f\u4f24</h2><table><tr><th>\u9879\u76ee</th><th>\u6570\u503c</th></tr><tr><td>\u5e74\u635f\u4f24 D</td><td>'+(d.dmg*100).toFixed(3)+'%</td></tr><tr><td>\u9884\u8ba1\u5bff\u547d</td><td>'+d.ly.toFixed(1)+' \u5e74 ('+lh+' h)</td></tr><tr><td>\u8d28\u4fdd\u671f\u76ee\u6807</td><td>'+d.wt+' \u5e74</td></tr><tr><td>\u5b9e\u9645\u88d5\u91cf</td><td>'+d.margin.toFixed(2)+'x</td></tr><tr><td>\u5224\u5b9a</td><td>'+d.ws+'</td></tr></table>';h+='<h2>5. \u8be6\u7ec6\u8ba1\u7b97\u8fc7\u7a0b</h2>'+fh;h+='<h2>6. \u8bbe\u8ba1\u5efa\u8bae</h2><ul><li>\u73af\u5883\u6e29\u5ea6\u6bcf\u964d\u4f4e10C\uff0c\u5bff\u547d\u7ea6\u5ef6\u957f\u4e00\u500d</li><li>'+(d.margin>=d.req?'\u88d5\u91cf\u6ee1\u8db3\u8981\u6c42':'\u88d5\u91cf\u4e0d\u8db3\uff0c\u9700\u6539\u5584\u8bbe\u8ba1')+'</li><li>\u5efa\u8bae\u6279\u91cf\u751f\u4ea7\u524d\u8fdb\u884c\u9ad8\u6e29\u8d1f\u8f7d\u8bd5\u9a8c\u9a8c\u8bc1</li></ul>';h+='<p style="margin-top:20px"><i>\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8ba1\u7b97\u5de5\u5177 v2.0 - \u62a5\u544a\u81ea\u52a8\u751f\u6210</i></p></body></html>';var b=new Blob([h],{type:'application/msword'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+(te.length?'('+te.join('-')+')':'')+'.doc';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
+
+function init(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,60,30,[250,150]));document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,1,16,40,30,[100]));document.getElementById("addSegBtn").onclick=addSeg;updT();calc()}
+window.addEventListener("DOMContentLoaded",init);
+</script>
+
+</div><!-- close #tab-capacitor -->
+
 <div id="tab-safety" class="tab-content">
-<div class="container">
 <h1 style="font-size:1.6rem;margin-bottom:4px">安规距离计算工具 <span style="font-size:.9rem;font-weight:400;color:#64748b">Creepage &amp; Clearance Calculator</span></h1>
 <p style="color:#64748b;margin-bottom:24px;font-size:.9rem">IEC 62109-1 / UL 840 爬电距离 + 电气间隙 | 适用于并网逆变器</p>
 <div class="card" style="padding:12px 20px;margin-bottom:20px"><div class="fgl"><label>项目名称</label><input type="text" id="sProjName" placeholder="选填" oninput="sCalc()"></div></div>
@@ -159,8 +225,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 </div></div>
 <div class="card"><h2>测量节点定义</h2>
 <p style="font-size:.78rem;color:#64748b;margin-bottom:8px">定义逆变器中各需要计算安规距离的节点及其电气参数</p>
-<div id="sN"></div>
-<button class="btn-add" id="addNodeBtn">+ 添加测量节点</button>
+<table class="node-tbl" id="sNt"><thead><tr><th>#</th><th>节点名称</th><th>Vrms(V)</th><th>绝缘类型</th><th>PCB走线</th><th>三防漆</th><th>电路</th><th></th></tr></thead><tbody id="sN"></tbody></table>
+<button class="btn-sm" id="addNodeBtn">+ 添加测量节点</button>
 <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;gap:14px;flex-wrap:wrap">
 
 </div>
@@ -191,8 +257,15 @@ document.querySelectorAll(".tab-btn").forEach(function(btn){
   btn.addEventListener("click", function(){
     document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});
     this.classList.add("active");
-    document.querySelectorAll(".tab-content").forEach(function(tc){tc.classList.remove("active")});
-    document.getElementById("tab-"+this.dataset.tab).classList.add("active");
+    // Force display toggle to trigger Chrome layout recalculation for hidden content
+    document.querySelectorAll(".tab-content").forEach(function(tc){tc.style.display="none"});
+    var targetId="tab-"+this.dataset.tab;
+    var target=document.getElementById(targetId);
+    target.style.display="block";
+    void(target.offsetHeight); // force reflow
+    if(this.dataset.tab==="safety"&&!document.querySelector("#sN .seg")){
+      sAddNode(); // Add safety node only when tab is first opened (visible)
+    }
   });
 });
 var FF={50:.85,60:.85,120:1,1e3:1.25,1e4:1.5,1e5:1.65};
@@ -292,6 +365,7 @@ function exportReport(mode){
   saveBlobWithDialog(b,dn);
 }
 
+// Don't add safety nodes during init - they'll be added when user clicks the tab
 function init(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,60,30,[250,150]));document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,1,16,40,30,[100]));document.getElementById("addSegBtn").onclick=addSeg;updT();calc();reNum()}
 
 // ===== 安规距离计算模块 =====
@@ -364,21 +438,18 @@ function mNode(id,idx,name,vrms,ins,pcb,coat,interp,circ){
   var io='<option value="func" '+(ins=='func'?'selected':'')+'>功能绝缘</option><option value="basic" '+(ins=='basic'?'selected':'')+'>基本绝缘</option><option value="supp" '+(ins=='supp'?'selected':'')+'>附加绝缘</option><option value="reinf" '+(ins=='reinf'?'selected':'')+'>加强绝缘</option>';
   var po='<option value="0" '+(pcb==0?'selected':'')+'>否(接线端子)</option><option value="1" '+(pcb==1?'selected':'')+'>是(PCB走线)</option>';
   var co='<option value="0" '+(coat==0?'selected':'')+'>否</option><option value="1" '+(coat==1?'selected':'')+'>Type 1 (降低PD)</option><option value="2" '+(coat==2?'selected':'')+'>Type 2/灌封 (取消爬电)</option>';
-  return '<div class=seg data-id='+id+'><div><strong>节点'+(idx+1)+': </strong><span class=sn>'+name+'</span></div><div class=fg3>'
-    +'<div class=fgl><label>节点名称</label><input class=sname type=text value="'+name+'" style=width:100px oninput=sNChange(this);sCalc()></div>'
-    +'<div class=fgl><label>工作电压Vrms (V)</label><input class=svrms type=number value='+vrms+' min=0 step=10 oninput=sCalc() style=width:90px></div>'
-    +'<div class=fgl><label>绝缘类型</label><select class=sins onchange=sCalc()>'+io+'</select></div>'
-    +'</div><div class=fg3>'
-    +'<div class=fgl><label>PCB走线</label><select class=spcb onchange=sCalc()>'+po+'</select></div>'
-    +'<div class=fgl><label>三防漆</label><select class=scoat onchange=sCalc()>'+co+'</select></div>'
-    +'<div class=fgl><label>电路</label><select class=scirc onchange=sCalc()><option value=ac '+(circ=='ac'?'selected':'')+'>AC</option><option value=dc '+(circ=='dc'?'selected':'')+'>DC(PV)</option></select></div>'
-    +'</div><div class=fg3>'
-    +'<div class=fgl><label>DC插值</label><div style=display:flex;align-items:center;gap:4px><input type=checkbox class=sinterp '+(interp?'checked':'')+' onchange=sCalc()><span class=hint style=margin-top:0>IEC 62109-1注1</span></div></div>'
-    +'<div class=fgl><label>计算冲击电压</label><span class=suimp style="padding:6px 10px;background:#f1f5f9;border-radius:6px;font-size:.85rem;color:#2563eb;font-weight:500">- kV</span></div>'
-    +'</div><button class="btn-sm" style="margin-top:12px;color:#ef4444" onclick=sRmNode(this)>删除节点</button></div>';
+  return '<tr class="seg" data-id='+id+'><td style="text-align:center;color:#94a3b8;font-size:.72rem">'+(idx+1)+'</td>'
+    +'<td><input class=sname type=text value="'+name+'" style="width:80px;border:1px solid #e2e8f0;border-radius:3px;padding:2px 4px;font-size:.78rem" oninput=sNChange(this);sCalc()></td>'
+    +'<td><input class=svrms type=number value='+vrms+' min=0 step=10 style="width:65px;border:1px solid #e2e8f0;border-radius:3px;padding:2px 4px;font-size:.78rem" oninput=sCalc()></td>'
+    +'<td><select class=sins onchange=sCalc() style="font-size:.78rem;padding:2px;border:1px solid #e2e8f0;border-radius:3px">'+io+'</select></td>'
+    +'<td><select class=spcb onchange=sCalc() style="font-size:.78rem;padding:2px;border:1px solid #e2e8f0;border-radius:3px">'+po+'</select></td>'
+    +'<td><select class=scoat onchange=sCalc() style="font-size:.78rem;padding:2px;border:1px solid #e2e8f0;border-radius:3px">'+co+'</select></td>'
+    +'<td><select class=scirc onchange=sCalc() style="font-size:.78rem;padding:2px;border:1px solid #e2e8f0;border-radius:3px"><option value=ac '+(circ=='ac'?'selected':'')+'>AC</option><option value=dc '+(circ=='dc'?'selected':'')+'>DC(PV)</option></select></td>'
+    +'<td style="text-align:center;white-space:nowrap"><button class="btn-sm" style="color:#ef4444;padding:1px 6px" onclick=sRmNode(this)>✕</button></td>'
+    +'</tr>';
 }
 
-function sNChange(inp){inp.closest(".seg").querySelector(".sn").textContent=inp.value||"节点";}
+function sNChange(inp){} // Name displayed directly in input, no separate label needed
 
 function sAddNode(){
   document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,0,"L-N",230,"basic",0,0,false,"ac"));
@@ -390,7 +461,7 @@ function sRmNode(b){b.closest(".seg").remove();sReNum();sCalc();}
 
 function sReNum(){
   document.querySelectorAll("#sN .seg").forEach(function(s,i){
-    s.querySelector(".seg>div>:first-child").textContent="节点"+(i+1)+": ";
+    s.cells[0].textContent=i+1;
   });
 }
 
@@ -419,7 +490,6 @@ function sCalc(){
     var interp=seg.querySelector(".sinterp")?seg.querySelector(".sinterp").checked:false;
     var circ=seg.querySelector('.scirc')?seg.querySelector('.scirc').value:'ac';
     var tov=sGetTov(interp,circ=='dc'?'sSysV_DC':'sSysV_AC');
-    var ue=seg.querySelector('.suimp');if(ue)ue.textContent=tov+' kV';
     var im=INS_K[ins]||1.0;
     var baseClr=sLookupClr(std=='iec'?sGetTov(interp,circ=='dc'?'sSysV_DC':'sSysV_AC')*1000:sGetTov(),pd,std,std=='iec'?interp:false);
     var clrMult=std=='iec'?1.0:im;
@@ -452,6 +522,7 @@ function sCalc(){
   sGenRep();
 }
 
+function sCalcFormulas(d){if(!d||!d.results||!d.results.length)return '';var fs='<p style=margin:4px 0;font-size:.85rem><b>计算依据:</b></p>';var std=document.getElementById('sStd').selectedOptions[0].text;fs+='<ul style=margin:2px 0 2px 20px;font-size:.82rem;color:#555>'+(std.includes('IEC')?'<li>标准: IEC 60664-1</li>':'<li>标准: UL 840</li>')+'<li>电气间隙: 基于冲击电压'+document.getElementById('sOvc').value.toUpperCase()+'类过电压,海拔系数'+d.altk+'</li>'+'<li>爬电距离: PD '+d.pd+', 材料组别'+document.getElementById('sMg').selectedOptions[0].text+'</li>';var insK={func:1,basic:1,supp:1,reinf:2};d.results.forEach(function(r){var k=insK[r.ins]||1;if(k>1)fs+='<li>'+r.name+': '+r.insL+'绝缘x'+k+'</li>'});return fs+='</ul>'}
 function sGenRep(){
   var d=window._sd;
   if(!d||!d.results||!d.results.length){
@@ -490,126 +561,11 @@ function sExportReport(mode){
   h+='<p>生成日期: '+new Date().toLocaleDateString('zh-CN')+'</p>';
   h+='<h2>1. 项目信息</h2><table><tr><th>项目</th><th>内容</th></tr>'+(pn?'<tr><td>项目名称</td><td>'+pn+'</td></tr>':'')+'<tr><td>标准</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr></table>';
   h+='<h2>2. 基础参数</h2><table><tr><th>参数</th><th>值</th></tr><tr><td>污染等级</td><td>PD '+d.pd+'</td></tr><tr><td>材料组别</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr><tr><td>海拔</td><td>'+d.alt+'m</td></tr></table>';
-  h+='<h2>3. 各节点安规距离判定</h2><table><tr><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr>'+sr+'</table>';
   h+='<p style="margin-top:20px"><i>安规距离计算工具 v1.0 - 报告自动生成</i></p></body></html>';
   var b=new Blob([h],{type:'application/msword'});
   var dn='安规距离评估报告'+(te.length?'('+te.join('-')+')':'')+'.doc';
   saveBlobWithDialog(b,dn);
 }
-
-function sCalcFormulas(){
-  var d=window._sd;
-  if(!d||!d.results||!d.results.length)return '';
-  var h='';
-  d.results.forEach(function(r){
-    h+='<p style=margin:6px 0><b>'+r.name+':</b><br>';
-    h+='&nbsp;&nbsp;电气间隙 = 查冲击电压表(Uimp='+sGetTov()+'kV, PD'+d.pd+')';
-    h+=' × 海拔'+d.altk+' × 绝缘'+r.im+' = '+r.reqClr+'mm<br>';
-    h+='&nbsp;&nbsp;爬电距离: ';
-    if(r.pcb&&d.pd<=2) h+='PCB走线+PD'+d.pd+' → PWB列';
-    else if(r.pcb) h+='PCB走线+PD3 → PD3列(按CTI)';
-    else h+='常规绝缘 → PD'+d.pd+'列(按CTI)';
-    if(r.coat==1) h+=', Type1涂层: PD降1级';
-    if(r.coat==2) h+=', Type2涂层: 取消爬电';
-    h+=' × 绝缘倍率'+r.im+' = '+r.reqCrp+'mm</p>';
-  });
-  return h;
-}
-
-// Override init to add safety initialization
-(function(){
-  var origInit=init;
-  init=function(){
-    if(origInit)origInit();
-    // Init safety - add default nodes
-    document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,0,"L-N",230,"basic",0,0,false,"ac"));
-    document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,1,"L-PE",230,325,sGetTov(),"basic",0,0));
-    document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,2,"DC+-PE",800,800,sGetTov(),"reinf",0,0));
-    document.getElementById("addNodeBtn").onclick=sAddNode;
-    sCalc();
-  };
-})();
-init();
-
-(function(){
-  try{
-    var x=new XMLHttpRequest();
-    x.open("GET","/api/defaults",false);
-    x.send();
-    var d=JSON.parse(x.responseText);
-    if(!d||!d.capacitor)return;
-    var c=d.capacitor;
-    ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget"].forEach(function(id){
-      var el=document.getElementById(id);
-      if(el&&c[id]!==undefined)el.value=c[id];
-    });
-    if(c.cooling)document.getElementById("cooling").value=c.cooling;
-    if(c.scenario)document.getElementById("scenario").value=c.scenario;
-    if(c.segments&&c.segments.length){
-      document.getElementById("sc").innerHTML="";sid=0;
-      c.segments.forEach(function(sg){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,sg.dur||8,sg.ta||60,sg.vop||30,sg.rips||[]))});reNum();
-    }
-    var s=d.safety;
-    if(s){
-      ["sStd","sPd","sMg","sAlt","sOvc","sSysV_AC","sSysV_DC"].forEach(function(id){
-        var el=document.getElementById(id);
-        if(el&&s[id]!==undefined)el.value=s[id];
-      });
-      if(s.nodes&&s.nodes.length){
-        document.getElementById("sN").innerHTML="";snid=0;
-        s.nodes.forEach(function(n){document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,0,n.name||"",n.vrms||0,n.ins||"basic",n.pcb||0,n.coat||0,n.interp||false,n.circ||"ac"))});sReNum();sReNum();
-      }
-    }
-    updT();calc();sCalc();
-  }catch(e){}
-})();
-
-// ---- Load defaults ----
-setTimeout(function(){
-  try{
-    var x=new XMLHttpRequest();x.open("GET","/api/defaults",false);x.send();
-    var d=JSON.parse(x.responseText);if(!d||!d.capacitor)return;
-    var c=d.capacitor;
-    ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget"].forEach(function(id){
-      var el=document.getElementById(id);if(el&&c[id]!==undefined)el.value=c[id];
-    });
-    if(c.cooling)document.getElementById("cooling").value=c.cooling;
-    if(c.scenario)document.getElementById("scenario").value=c.scenario;
-    if(c.segments&&c.segments.length){
-      document.getElementById("sc").innerHTML="";sid=0;
-      c.segments.forEach(function(sg){
-        var r=sg.rips||[];if(r.length&&typeof r[0]==="object")r=r.map(function(v){return v.current||0});
-        document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,sg.dur||8,sg.ta||60,sg.vop||30,r));reNum();
-      });
-      // Apply frequency from defaults
-      var e=document.querySelectorAll("#tab-capacitor .seg");
-      c.segments.forEach(function(sg,si){
-        if(sg.rips&&sg.rips.length&&typeof sg.rips[0]==="object"){
-          var s=e[si];if(s){
-            s.querySelectorAll(".rtb tr").forEach(function(row,ri){
-              var rp=sg.rips[ri];
-              if(rp&&rp.freq)row.querySelector(".fv").value=rp.freq;
-              if(rp&&rp.unit)row.querySelector(".fu").value=rp.unit==="kHz"?1000:1;
-            });
-          }
-        }
-      });
-    }
-    var s=d.safety;
-    if(s){
-      ["sStd","sPd","sMg","sAlt","sOvc","sSysV_AC","sSysV_DC"].forEach(function(id){
-        var el=document.getElementById(id);if(el&&s[id]!==undefined)el.value=s[id];
-      });
-      if(s.nodes&&s.nodes.length){
-        document.getElementById("sN").innerHTML="";snid=0;
-        s.nodes.forEach(function(n){document.getElementById("sN").insertAdjacentHTML("beforeend",mNode(snid++,0,n.name||"",n.vrms||0,n.ins||"basic",n.pcb||0,n.coat||0,n.interp||false,n.circ||"ac"))});sReNum();sReNum();
-      }
-    }
-    updT();calc();sCalc();
-  }catch(e){}
-},200);
-
 </script>
-
-
-
+</body>
+</html>

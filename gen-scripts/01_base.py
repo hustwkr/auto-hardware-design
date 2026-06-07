@@ -1,6 +1,5 @@
 import sys
 sys.stdout.reconfigure(encoding="utf-8")
-sys.stdout.reconfigure(encoding="utf-8")
 
 
 # Start fresh
@@ -71,6 +70,9 @@ for c in css:
     lines.append(c)
 
 lines.append('</style>')
+lines.append('<link rel="icon" type="image/png" href="/hwlogo.png">')
+lines.append('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">')
+lines.append('<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>')
 lines.append('</head>')
 lines.append('<body>')
 lines.append('<div class="container">')
@@ -138,12 +140,9 @@ lines.append('</div></div>')
 
 # Assessment
 lines.append('<div class="card"><h2>寿命评估</h2><div id="ma" style="font-size:.88rem"><p>-</p></div></div>')
-lines.append('</div></div>')
+lines.append('</div>')  # close right column div
 
-lines.append('</div>')  # close tab-capacitor
-
-# Safety module HTML and JS - will be added by gen-scripts/10_safety.py
-# Report section
+# Report section (inside tab-capacitor)
 lines.append('<div style="margin-top:24px">')
 lines.append('<div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">')
 lines.append('<h2 style="font-size:1.1rem;font-weight:600">设计报告</h2>')
@@ -152,12 +151,15 @@ lines.append('<button class="btn" onclick="genRep()">刷新报告</button>')
 lines.append('<button class="btn btn-p" onclick="window.print()">打印/导出 PDF</button>')
 lines.append('</div></div>')
 lines.append('<div id="rc"><h3>电解电容寿命评估报告</h3><p>请调整参数后刷新。</p></div>')
-lines.append('</div></div>')
+lines.append('</div>')  # close report wrapper
+
+# Close tab-capacitor (contains capacitor content + report)
+lines.append('</div>')  # close </div id="tab-capacitor">
 
 # ===== JAVASCRIPT =====
 lines.append('<script>')
-
-# Constants
+# Runtime defaults placeholder — server.js replaces with actual JSON; wrapped in IIFE for valid JS syntax
+lines.append('(function(){try{return /*_DEFAULTS_JSON_*/}catch(e){return {}}}());')
 lines.append('var FF={50:.85,60:.85,120:1,1e3:1.25,1e4:1.5,1e5:1.65},FO=[50,60,120,1e3,1e4,1e5];')
 lines.append('var MG={consumer:{r:1.3,l:"消费电子"},industrial:{r:1.5,l:"工业设备"},automotive:{r:2,l:"汽车电子"},medical:{r:2.5,l:"医疗设备"}};')
 lines.append('function fv(v,d){return typeof v!="number"||!isFinite(v)?"-":v.toFixed(d)}')
@@ -225,7 +227,7 @@ lines.append('var td=sr.reduce(function(s,r){return s+r.d},0)||1,ah="<p style=ma
 lines.append('sr.forEach(function(r){var p=(r.d/td)*100,h=Math.max(20,p*2);ah+="<div style=display:flex;flex-direction:column;align-items:center;gap:2px><div style=width:32px;height:"+h+"px;background:#2563eb;border-radius:4px 4px 0 0;opacity:.75></div><span style=font-size:.68rem;color:#64748b>"+fv(p,0)+"%</span><span style=font-size:.62rem;color:#64748b>T"+r.i+"</span></div>"});ah+="</div>";document.getElementById("ma").innerHTML=ah;')
 
 # Store data for report
-lines.append('window._cd={l0:tmax,vr,ir,dt0,cl,wd,wt,sc,mi,sr,dmg,lh:mh||lh,ly,margin,ws,wd2,req};genRep()')
+lines.append('window._cd={l0:l0,vr,ir,dt0,cl,wd,wt,sc,mi,sr,dmg,lh:lh,ly,margin,ws,wd2,req};genRep()')
 lines.append('}')
 
 # Report generator
@@ -244,6 +246,7 @@ lines.append('+"<div style=margin-top:20px;padding-top:16px;border-top:1px solid
 lines.append('function init(){document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,0,8,60,30,[250,150]));document.getElementById("sc").insertAdjacentHTML("beforeend",mSeg(sid++,1,16,40,30,[100]));document.getElementById("addSegBtn").onclick=addSeg;updT();calc()}')
 lines.append('window.addEventListener("DOMContentLoaded",init);')
 lines.append('</script>')
+# Closing tags - safety module (10_safety.py) injects before </body>
 lines.append('</body>')
 lines.append('</html>')
 

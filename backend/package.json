@@ -1,6 +1,12 @@
 {
-  "name": "ahd-admin",
-  "version": "1.0.0",
+  "name": "auto-hardware-design",
+  "version": "2.0.0",
   "private": true,
-  "scripts": { "start": "node server.js" }
+  "description": "Auto Hardware Design Tool - electrolytic capacitor lifetime & safety distance calculators",
+  "scripts": {
+    "start": "node backend/server.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
 }
