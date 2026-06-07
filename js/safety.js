@@ -62,39 +62,74 @@
     var sysVAC = +document.getElementById('sSysV_AC').value || 300;
     var sysVDC = +document.getElementById('sSysV_DC').value || 600;
 
-    // Compute TOV (Temporary Overvoltage) per IEC 62109-1 Table 12
-    function tovFor(ovcNum, v){
-      // Base lookup: OVC → impulse voltage for given system voltage range
-      var tbl = {
-        1: {[50]:6,[100]:8,[130]:12,[240]:17,[300]:22,[400]:26,[500]:34,[690]:42},
-        2: {[50]:8,[100]:12,[130]:17,[240]:22,[300]:26,[400]:34,[500]:42,[690]:50},
-        3: {[50]:12,[100]:17,[130]:22,[240]:26,[300]:34,[400]:42,[500]:50,[690]:60},
-        4: {[50]:17,[100]:22,[130]:26,[240]:34,[300]:42,[400]:50,[500]:60,[690]:80}
-      };
-      var t = tbl[ovcNum] || tbl[2];
-      // Find the nearest voltage bracket (round up)
-      var keys = Object.keys(t).map(Number).sort(function(a,b){return a-b});
-      for(var i=0;i<keys.length;i++){ if(v<=keys[i]) return t[keys[i]]; }
-      return t[keys[keys.length-1]] || 50; // cap at max bracket
+    /* ── Impulse withstand voltage per IEC 62109-1 Table 12 ──── */
+    /* Columns: [sysV_rms_max, OVC_I, OVC_II, OVC_III, OVC_IV] — values in kV */
+    var IMPULSE_TBL = [
+      [50,   0.33,  0.5,   0.8,   1.5],
+      [100,  0.5,   0.8,   1.5,   2.5],
+      [150,  0.8,   1.5,   2.5,   4.0],
+      [300,  1.5,   2.5,   4.0,   6.0],
+      [600,  1.5,   2.5,   4.0,   6.0],
+      [1000, 2.5,   4.0,   6.0,   8.0]
+    ];
+
+    function impulseFor(ovcNum, sysV){
+      // ovcNum: 1-4 (OVC I-IV)
+      // sysV: system voltage in V rms (or V dc equivalent)
+      // Returns impulse withstand voltage in kV from Table 12 columns 2-5
+      var ov = Math.min(ovcNum || 2, 4);
+      for(var i=0; i<IMPULSE_TBL.length; i++){
+        if(sysV <= IMPULSE_TBL[i][0]) return IMPULSE_TBL[i][ov];
+      }
+      // Exceeds max row — return the last entry (1000V+ bracket)
+      return IMPULSE_TBL[IMPULSE_TBL.length-1][ov];
     }
 
-    var tovAC = tovFor(ovc_AC, sysVAC);
-    var tovDC = tovFor(ovc_DC, sysVDC);
+    /* ── Temporary overvoltage per IEC 62109-1 Table 12 column 6 ──── */
+    /* [sysV_rms_max, TOV_peak / TOV_rms] — only applies to mains circuits */
+    var TOV_TBL = [
+      [50,   1770, 1250],
+      [100,  1840, 1300],
+      [150,  1910, 1350],
+      [300,  2120, 1500],
+      [600,  2550, 1800],
+      [1000, 3110, 2200]
+    ];
 
-    // Display impulse voltage info in #sImpulseInfo
+    function tovFor(sysV){
+      // Returns temporary overvoltage as { peak: Vpeak, rms: Vrms }
+      for(var i=0; i<TOV_TBL.length; i++){
+        if(sysV <= TOV_TBL[i][0]) return { peak: TOV_TBL[i][1], rms: TOV_TBL[i][2] };
+      }
+      var last = TOV_TBL[TOV_TBL.length-1];
+      return { peak: last[1], rms: last[2] };
+    }
+
+    // Compute impulse withstand voltage (kV) for AC and DC sides
+    var impAC = impulseFor(ovc_AC, sysVAC);
+    var impDC = impulseFor(ovc_DC, sysVDC);
+
+    /* PV circuit rule: minimum 2.5 kV impulse per IEC 62109-1 §7.3.7.1.2b */
+    if(impDC < 2.5) impDC = 2.5;
+
+    // Display impulse + TOV info in #sImpulseInfo
     (function(){
       var el = document.getElementById("sImpulseInfo");
       if(!el) return;
       el.style.display = "block";
       var ovcLabel = function(n){return {1:'I',2:'II',3:'III',4:'IV'}[n]||'II';};
+      // TOV only applies to mains (AC) circuits per Table 12 Note 3
+      var tovAC_info = tovFor(sysVAC);
       el.innerHTML =
         '<div style="display:flex;gap:16px;flex-wrap:wrap;padding:8px 12px;background:#f0f4ff;border-radius:6px">' +
         '<div><span style="font-weight:600;color:#1e293b">AC侧冲击电压:</span> ' +
-        '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+tovAC+' kV</span> ' +
+        '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+impAC+' kV</span> ' +
         '<span style="color:#64748b">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
         '<div><span style="font-weight:600;color:#1e293b">DC侧冲击电压:</span> ' +
-        '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+tovDC+' kV</span> ' +
+        '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+impDC+' kV</span> ' +
         '<span style="color:#64748b">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span></div>' +
+        '<div><span style="font-weight:600;color:#1e293b">AC侧暂态过电压:</span> ' +
+        '<span style="color:#7c3aed;font-size:.85rem">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span></div>' +
         '</div>';
     })();
 
@@ -111,10 +146,10 @@
       });
     });
 
-    // Call pure model calculation
+    // Call pure model calculation — pass impulse voltage (kV) for clearance lookup
     var result = SM.calcSafety({
       pd:pd, mgGroup:mg, alt:alt, standard:std,
-      tovAC:tovAC, tovDC:tovDC,
+      impAC:impAC, impDC:impDC,
       sysVAC:sysVAC, sysVDC:sysVDC, nodes:nodeArr
     });
     if(!result) return;
@@ -133,9 +168,9 @@
     document.getElementById("sMa").innerHTML=ah;
 
     // Store for report/export
-    var ovc_AC = document.getElementById('sOvc_AC').value;
-    var ovc_DC = document.getElementById('sOvc_DC').value;
-    window._sd={results:result.results,pd:pd,mg:mg,alt:alt,altk:altk,tovAC:tovAC,tovDC:tovDC,ovc_AC:ovc_AC,ovc_DC:ovc_DC};
+    var ovc_AC_val = document.getElementById('sOvc_AC').value;
+    var ovc_DC_val = document.getElementById('sOvc_DC').value;
+    window._sd={results:result.results,pd:pd,mg:mg,alt:alt,altk:altk,impAC:impAC,impDC:impDC,ovc_AC:ovc_AC_val,ovc_DC:ovc_DC_val};
     sGenRep();
   }
 
@@ -146,7 +181,7 @@
     var std=document.getElementById('sStd').selectedOptions[0].text;
     var ovcAC = document.getElementById('sOvc_AC')?document.getElementById('sOvc_AC').value.toUpperCase():'II';
     var ovcDC = document.getElementById('sOvc_DC')?document.getElementById('sOvc_DC').value.toUpperCase():'II';
-    fs+='<ul style=margin:2px 0 2px 20px;font-size:.82rem;color:#555>'+(std.includes('IEC')?'<li>标准: IEC 60664-1</li>':'<li>标准: UL 840</li>')+'<li>AC侧冲击电压: OVC '+ovcAC+', '+d.tovAC+' kV | DC侧: OVC '+ovcDC+', '+d.tovDC+' kV</li>'+'<li>海拔系数: '+d.altk+'</li>'+'<li>爬电距离: PD '+d.pd+', 材料组别'+document.getElementById('sMg').selectedOptions[0].text+'</li>';
+    fs+='<ul style=margin:2px 0 2px 20px;font-size:.82rem;color:#555>'+(std.includes('IEC')?'<li>标准: IEC 60664-1 / Table 13</li>':'<li>标准: UL 840</li>')+'<li>AC侧冲击电压: OVC '+ovcAC+', '+d.impAC+' kV | DC侧: OVC '+ovcDC+', '+d.impDC+' kV</li>'+'<li>海拔系数: '+d.altk+'</li>'+'<li>爬电距离: PD '+d.pd+', 材料组别'+document.getElementById('sMg').selectedOptions[0].text+'</li>';
     d.results.forEach(function(r){var k=SM.INS_K[r.ins]||1;if(k>1)fs+='<li>'+r.name+': '+r.insL+'绝缘x'+k+'</li>'});
     return fs+='</ul>';
   }
@@ -168,8 +203,8 @@
         +"<tr><td>污染等级</td><td>PD "+d.pd+"</td></tr>"
         +"<tr><td>材料组别</td><td>"+document.getElementById('sMg').selectedOptions[0].text+"</td></tr>"
         +"<tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr>"
-        +"<tr><td>AC侧过电压类别</td><td>OVC "+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+" (冲击电压 "+(d.tovAC||'-')+' kV)'+"</td></tr>"
-        +"<tr><td>DC侧过电压类别</td><td>OVC "+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+" (冲击电压 "+(d.tovDC||'-')+' kV)'+"</td></tr>"
+        +"<tr><td>AC侧过电压类别</td><td>OVC "+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+" (冲击电压 "+(d.impAC||'-')+' kV)'+"</td></tr>"
+        +"<tr><td>DC侧过电压类别</td><td>OVC "+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+" (冲击电压 "+(d.impDC||'-')+' kV)'+"</td></tr>"
         +"<tr><td>AC系统电压</td><td>"+document.getElementById('sSysV_AC').value+' V'+'</td></tr>'
         +"<tr><td>DC系统电压</td><td>"+document.getElementById('sSysV_DC').value+' V'+'</td></tr>'
         +"</table>"
@@ -201,8 +236,8 @@
       +'<tr><td>污染等级</td><td>PD '+d.pd+'</td></tr>'
       +'<tr><td>材料组别</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr>'
       +'<tr><td>海拔</td><td>'+d.alt+'m (系数 '+d.altk+')</td></tr>'
-      +'<tr><td>AC侧过电压类别</td><td>OVC '+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+' ('+d.tovAC+' kV)</td></tr>'
-      +'<tr><td>DC侧过电压类别</td><td>OVC '+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+' ('+d.tovDC+' kV)</td></tr>'
+      +'<tr><td>AC侧过电压类别</td><td>OVC '+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+' ('+d.impAC+' kV)</td></tr>'
+      +'<tr><td>DC侧过电压类别</td><td>OVC '+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+' ('+d.impDC+' kV)</td></tr>'
       +'</table>';
     h+='<p style="margin-top:20px"><i>安规距离计算工具 v1.0 - 报告自动生成</i></p></body></html>';
     var b=new Blob([h],{type:'application/msword'});var dn='安规距离评估报告'+(te.length?'('+te.join('-')+')':'')+'.doc';saveBlobWithDialog(b,dn);

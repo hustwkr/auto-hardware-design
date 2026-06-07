@@ -86,11 +86,17 @@
     [6300,63,100,100,125,25,100,110,125,125]
   ];
 
-  /* ── TOV Table [SysV, OVC-I, OVC-II, OVC-III, OVC-IV] (kV) ─ */
-  var TOV_TBL = [
+  /* ── Impulse withstand voltage per IEC 62109-1 Table 12 [sysV, OVC-I..IV] (kV) ─ */
+  var IMPULSE_TBL = [
     [50,0.33,0.5,0.8,1.5],[100,0.5,0.8,1.5,2.5],
     [150,0.8,1.5,2.5,4.0],[300,1.5,2.5,4.0,6.0],
-    [600,2.5,4.0,6.0,8.0],[1000,4.0,6.0,8.0,12.0]
+    [600,1.5,2.5,4.0,6.0],[1000,2.5,4.0,6.0,8.0]
+  ];
+
+  /* ── Temporary overvoltage per Table 12 col 6 [sysV, Vpeak, Vrms] — mains only ─ */
+  var TOV_TBL = [
+    [50,1770,1250],[100,1840,1300],[150,1910,1350],
+    [300,2120,1500],[600,2550,1800],[1000,3110,2200]
   ];
 
   /* ── Altitude correction factor ─────────────── */
@@ -109,21 +115,30 @@
   /* Pure lookup functions (no DOM)               */
   /* ════════════════════════════════════════════ */
 
-  function lookupTov(sysV, ovcClass, interp) {
+  function lookupImpulse(sysV, ovcClass, interp) {
     // sysV: AC system voltage in V (e.g. 300)
     // ovcClass: 1-4 for OVC I-IV
-    // interp: true for linear interpolation
+    // interp: true for linear interpolation between rows
     var ov = ovcClass || 2;
-    for (var i = 0; i < TOV_TBL.length; i++) {
-      if (sysV == TOV_TBL[i][0]) return TOV_TBL[i][ov];
-      if (sysV < TOV_TBL[i][0]) {
-        if (!interp || i == 0) return TOV_TBL[i][ov];
-        var x0 = TOV_TBL[i-1][0], x1 = TOV_TBL[i][0];
-        var y0 = TOV_TBL[i-1][ov], y1 = TOV_TBL[i][ov];
+    for (var i = 0; i < IMPULSE_TBL.length; i++) {
+      if (sysV == IMPULSE_TBL[i][0]) return IMPULSE_TBL[i][ov];
+      if (sysV < IMPULSE_TBL[i][0]) {
+        if (!interp || i == 0) return IMPULSE_TBL[i][ov];
+        var x0 = IMPULSE_TBL[i-1][0], x1 = IMPULSE_TBL[i][0];
+        var y0 = IMPULSE_TBL[i-1][ov], y1 = IMPULSE_TBL[i][ov];
         return Math.round((y0 + (sysV - x0) / (x1 - x0) * (y1 - y0)) * 100) / 100;
       }
     }
-    return TOV_TBL[TOV_TBL.length - 1][ov];
+    return IMPULSE_TBL[IMPULSE_TBL.length - 1][ov];
+  }
+
+  function lookupTov(sysV) {
+    // Returns {peak, rms} from Table 12 col 6 — only for mains circuits
+    for (var i = 0; i < TOV_TBL.length; i++) {
+      if (sysV <= TOV_TBL[i][0]) return { peak: TOV_TBL[i][1], rms: TOV_TBL[i][2] };
+    }
+    var last = TOV_TBL[TOV_TBL.length - 1];
+    return { peak: last[1], rms: last[2] };
   }
 
   function lookupClr(impulseV, pd, standard, interp) {
@@ -169,7 +184,7 @@
   }
 
   /* ── Per-node calculation (pure) ─────────────── */
-  function calcNode(node, pd, mgGroup, alt, standard, tovAC, tovDC) {
+  function calcNode(node, pd, mgGroup, alt, standard, impAC, impDC) {
     // node: { name, vrms, ins, pcb, coat, circ }
     var vrms = node.vrms || 0;
     var ins  = node.ins  || 'basic';
@@ -177,16 +192,16 @@
     var coat = node.coat || 0;
     var circ = node.circ || 'ac';
 
-    // Determine TOV (temporary overvoltage) in kV
-    var tovKV = circ === 'dc' ? tovDC : tovAC;
+    // Determine impulse withstand voltage (kV) from Table 12
+    var impKV = circ === 'dc' ? impDC : impAC;
 
-    // Clearance calculation
+    // Clearance calculation — based on impulse voltage per IEC 60664-1 Table A.1
     var im = INS_K[ins] || 1.0;
     var baseClr, clrMult;
 
     if (standard === 'iec') {
-      // IEC: clearance based on impulse voltage = TOV * 1000
-      var impV = tovKV * 1000;
+      // IEC: clearance from Table 13 using impulse voltage (kV → V)
+      var impV = impKV * 1000;
       if (ins === 'reinf') {
         // Reinforced: double the basic insulation clearance
         baseClr = lookupClr(impV, pd, standard, true);
@@ -196,8 +211,8 @@
         clrMult = 1.0;
       }
     } else {
-      // UL: clearance based on TOV in kVRMS
-      baseClr = lookupClr(tovKV * 1000, pd, standard, false);
+      // UL: clearance based on impulse voltage in kV
+      baseClr = lookupClr(impKV * 1000, pd, standard, false);
       clrMult = im;
     }
 
@@ -234,23 +249,26 @@
     var sysVDC   = params.sysVDC || 600;
     var nodes    = params.nodes || [];
 
-    // TOV (kV) — accept from caller or compute via lookupTov as fallback
-    var tovAC = typeof params.tovAC === 'number' ? params.tovAC : lookupTov(sysVAC, params.ovcClass||2, true);
-    var tovDC = typeof params.tovDC === 'number' ? params.tovDC : lookupTov(sysVDC, params.ovcClass||2, true);
+    // Impulse withstand voltage (kV) — accept from caller or compute via lookupImpulse as fallback
+    var impAC = typeof params.impAC === 'number' ? params.impAC : lookupImpulse(sysVAC, params.ovcClass||2, true);
+    var impDC = typeof params.impDC === 'number' ? params.impDC : lookupImpulse(sysVDC, params.ovcClass||2, true);
+
+    /* PV circuit rule: min 2.5 kV per §7.3.7.1.2b */
+    if(impDC < 2.5) impDC = 2.5;
 
     if (!nodes.length) return null;
 
     var altk = ALT_K[alt] || 1.0;
 
     var results = nodes.map(function (node) {
-      return calcNode(node, pd, mgGroup, alt, standard, tovAC, tovDC);
+      return calcNode(node, pd, mgGroup, alt, standard, impAC, impDC);
     });
 
     return {
       results: results,
       pd: pd, mgGroup: mgGroup, alt: alt, altk: altk,
       standard: standard,
-      sysVAC: sysVAC, sysVDC: sysVDC, tovAC: tovAC, tovDC: tovDC
+      sysVAC: sysVAC, sysVDC: sysVDC, impAC: impAC, impDC: impDC
     };
   }
 
@@ -260,11 +278,13 @@
     CLR_TBL_UL: CLR_TBL_UL,
     CRP_IEC: CRP_IEC,
     CRP_UL: CRP_UL,
+    IMPULSE_TBL: IMPULSE_TBL,
     TOV_TBL: TOV_TBL,
     ALT_K: ALT_K,
     INS_K: INS_K,
     MG_I: MG_I,
     INS_LABELS: INS_LABELS,
+    lookupImpulse: lookupImpulse,
     lookupTov: lookupTov,
     lookupClr: lookupClr,
     lookupCrp: lookupCrp,
