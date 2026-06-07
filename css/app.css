@@ -230,9 +230,9 @@ table.data-tbl tbody tr:hover {
 .sg-tbl tbody tr:hover { background: #fafbfd; }
 
 /* Node table (safety tab) */
-.node-tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-bottom: var(--space-xs); }
-.node-tbl th, .node-tbl td { padding: 4px 5px; border: 1px solid var(--color-border); text-align: left; vertical-align: middle; }
-.node-tbl thead th { background: #f8fafc; font-weight: 500; font-size: var(--fs-xs); color: var(--color-text-soft); }
+.node-tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-bottom: var(--space-xs); table-layout: auto; }
+.node-tbl th, .node-tbl td { padding: 3px 4px; border: 1px solid var(--color-border); text-align: left; vertical-align: middle; white-space: nowrap; }
+.node-tbl thead th { background: #f8fafc; font-weight: 500; font-size: var(--fs-xs); color: var(--color-text-soft); padding: 4px 6px; }
 
 /* ============================================================
    Buttons
