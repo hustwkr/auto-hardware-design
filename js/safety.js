@@ -11,11 +11,12 @@
   var snid = 0;
 
   /* ── Node markup (DOM-only) ─────────────── */
-  function mNode(id,idx,name,vrms,ins,pcb,coat,interp,circ){
-    ins=ins||'basic';pcb=pcb||0;coat=coat||0;interp=interp||false;circ=circ||'ac';
+  function mNode(id,idx,name,vrms,ins,pcb,coat,interp,circ,toGnd){
+    ins=ins||'basic';pcb=pcb||0;coat=coat||0;interp=interp||false;circ=circ||'ac';toGnd=!!toGnd;
     var io='<option value="func" '+(ins=='func'?'selected':'')+'>功能绝缘</option><option value="basic" '+(ins=='basic'?'selected':'')+'>基本绝缘</option><option value="supp" '+(ins=='supp'?'selected':'')+'>附加绝缘</option><option value="reinf" '+(ins=='reinf'?'selected':'')+'>加强绝缘</option>';
     var po='<option value="0" '+(pcb==0?'selected':'')+'>否(接线端子)</option><option value="1" '+(pcb==1?'selected':'')+'>是(PCB走线)</option>';
     var co='<option value="0" '+(coat==0?'selected':'')+'>否</option><option value="1" '+(coat==1?'selected':'')+'>Type 1 (降低PD)</option><option value="2" '+(coat==2?'selected':'')+'>Type 2/灌封 (取消爬电)</option>';
+    var go='<option value="0" '+(!toGnd?'selected':'')+'>否(线间)</option><option value="1" '+(toGnd?'selected':'')+'>是(对地)</option>';
     return '<tr class="seg" data-id='+id+'>'
       +'<td style="text-align:center;color:#94a3b8;font-size:.72rem">'+(idx+1)+'</td>'
       +'<td><input class=sname type=text value="'+name+'" style="width:80px;border:1px solid #e2e8f0;border-radius:3px;padding:2px 4px;font-size:.78rem" oninput=sNChange(this);sCalc()></td>'
@@ -24,6 +25,7 @@
       +'<td><select class=spcb onchange=sCalc() style="font-size:.78rem;padding:2px;border:1px solid #e2e8f0;border-radius:3px">'+po+'</select></td>'
       +'<td><select class=scoat onchange=sCalc() style="font-size:.78rem;padding:2px;border:1px solid #e2e8f0;border-radius:3px">'+co+'</select></td>'
       +'<td><select class=scirc onchange=sCalc() style="font-size:.78rem;padding:2px;border:1px solid #e2e8f0;border-radius:3px"><option value=ac '+(circ=='ac'?'selected':'')+'>AC</option><option value=dc '+(circ=='dc'?'selected':'')+'>DC(PV)</option></select></td>'
+      +'<td><select class=stoGnd onchange=sCalc() style="font-size:.78rem;padding:2px;border:1px solid #e2e8f0;border-radius:3px">'+go+'</select></td>'
       +'<td style="text-align:center;white-space:nowrap"><button class="btn-sm" style="color:#ef4444;padding:1px 6px" onclick=sRmNode(this)>✕</button></td>'
       +'</tr>';
   }
@@ -139,7 +141,8 @@
         ins:  seg.querySelector(".sins").value || "basic",
         pcb:  +seg.querySelector(".spcb").value || 0,
         coat: +seg.querySelector(".scoat").value || 0,
-        circ: seg.querySelector('.scirc')?seg.querySelector('.scirc').value:'ac'
+        circ: seg.querySelector('.scirc')?seg.querySelector('.scirc').value:'ac',
+        toGnd: seg.querySelector('.stoGnd')?+seg.querySelector('.stoGnd').value||0:1
       });
     });
 
@@ -245,7 +248,7 @@
     if(defaultNodes && defaultNodes.length){
       // Load nodes from defaults.json
       defaultNodes.forEach(function(n,i){
-        document.getElementById("sN").insertAdjacentHTML("beforeend", mNode(snid++,i,n.name,n.vrms,n.ins,n.pcb,n.coat,n.interp||false,n.circ||'ac'));
+        document.getElementById("sN").insertAdjacentHTML("beforeend", mNode(snid++,i,n.name,n.vrms,n.ins,n.pcb,n.coat,n.interp||false,n.circ||'ac',n.toGnd));
       });
     } else {
       // Fallback: single default node

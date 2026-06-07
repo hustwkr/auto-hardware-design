@@ -57,7 +57,8 @@
         "pcb": 0,
         "coat": 0,
         "circ": "ac",
-        "interp": false
+        "interp": false,
+        "toGnd": 0
       },
       {
         "name": "L-PE",
@@ -66,7 +67,8 @@
         "pcb": 0,
         "coat": 0,
         "circ": "ac",
-        "interp": false
+        "interp": false,
+        "toGnd": 1
       },
       {
         "name": "DC+-PE",
@@ -75,7 +77,8 @@
         "pcb": 0,
         "coat": 0,
         "circ": "dc",
-        "interp": false
+        "interp": false,
+        "toGnd": 1
       }
     ]
   }
