@@ -1,92 +1,449 @@
-/* ===== Reset & Base ===== */
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f7fa;color:#1e293b;padding:12px}
-.container{max-width:740px;margin:0 auto}
-.layout{display:block}
+/* ============================================================
+   Design Tokens
+   ============================================================ */
+:root {
+  /* Colors */
+  --color-bg:        #f1f5f9;
+  --color-surface:   #ffffff;
+  --color-text:      #1e293b;
+  --color-text-mid:  #475569;
+  --color-text-soft: #64748b;
+  --color-border:    #e2e8f0;
+  --color-border-lt: #f1f5f9;
+  --color-primary:   #2563eb;
+  --color-primary-bg:#eff6ff;
+  --color-success:   #10b981;
+  --color-warning:   #f59e0b;
+  --color-danger:    #ef4444;
 
-/* ===== Cards & Grids ===== */
-.card h2{font-size:1rem;font-weight:600;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e2e8f0}
-.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
-.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 14px}
-.fgl{display:flex;flex-direction:column}
-.fgl.full{grid-column:1/-1}
-.fgl label{font-size:.78rem;font-weight:500;color:#64748b;margin-bottom:1px}
-.fgl input,.fgl select{padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:.88rem;background:#fff}
-.fgl input:focus,.fgl select:focus{border-color:#2563eb;outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-.hint{font-size:.72rem;color:#64748b;margin-top:1px}
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px -1px rgba(0,0,0,.06);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.1);
 
-/* ===== Segments (capacitor) ===== */
-.seg{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px 14px;margin-bottom:10px}
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
 
-/* ===== Tables ===== */
-.rt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:4px}
-.rt th,.rt td{text-align:left;padding:4px 6px;border:1px solid #e2e8f0}
-.rt th{background:#f1f5f9;font-weight:500;font-size:.76rem}
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+  --fs-xs:   .72rem;
+  --fs-sm:   .8rem;
+  --fs-base: .88rem;
+  --fs-md:   .95rem;
+  --fs-lg:   1.05rem;
+  --fs-xl:   1.35rem;
 
-/* ===== Buttons ===== */
-.btn-sm{padding:2px 8px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;cursor:pointer;font-size:.78rem}
-.btn-sm:hover{background:#f1f5f9}
-.btn{padding:8px 16px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;font-size:.85rem}
-.btn-p{background:#2563eb;color:#fff;border-color:#2563eb}
+  /* Spacing */
+  --space-xs: 6px;
+  --space-sm: 10px;
+  --space-md: 16px;
+  --space-lg: 24px;
+}
 
-/* ===== Results ===== */
-.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.ri{padding:10px 12px;background:#f8fafc;border-radius:6px}
-.ri .rl{font-size:.73rem;color:#64748b}
-.ri .rv{font-size:1.15rem;font-weight:600;margin-top:1px}
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ===== Safety Grid Table ===== */
-.sg-tbl{width:100%;border-collapse:collapse;font-size:.8rem}
-.sg-tbl th,.sg-tbl td{text-align:left;padding:4px 8px;border:1px solid #e2e8f0}
-.sg-tbl th{background:#f1f5f9;font-size:.76rem}
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  padding: var(--space-md) var(--space-sm);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
 
-/* ===== Node Table (safety) ===== */
-.node-tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:4px}
-.node-tbl th,.node-tbl td{padding:3px 5px;border:1px solid #e2e8f0;text-align:left;vertical-align:middle}
-.node-tbl th{background:#f1f5f9;font-weight:500;font-size:.74rem;color:#64748b}
+.container { max-width: 740px; margin: 0 auto; }
 
-/* ===== Badges ===== */
-.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.78rem;font-weight:500}
-.badge.g{background:#d1fae5;color:#065f46}
-.badge.c{background:#fef3c7;color:#92400e}
-.badge.b{background:#fee2e2;color:#991b1b}
-.badge.p{background:#dbeafe;color:#1e40af}
+/* ============================================================
+   Page Header (H1 + subtitle)
+   ============================================================ */
+h1.page-title, .tab-content > h1 {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
 
-/* ===== Warranty Bar ===== */
-.wb{margin:10px 0;height:18px;background:#e2e8f0;border-radius:9px;overflow:hidden;position:relative}
-.wf{height:100%;border-radius:9px;transition:width .3s}
-.wm{position:absolute;top:0;height:100%;border-right:2px dashed #ef4444;z-index:2}
+.tab-content > p {
+  color: var(--color-text-soft);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--space-lg);
+  line-height: 1.6;
+}
 
-/* ===== Report Container ===== */
-#rc{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:24px 28px;font-size:.88rem}
-#rc h3{font-size:1.05rem;margin:16px 0 8px}
-#rc h3:first-child{margin-top:0}
-#rc table{width:100%;border-collapse:collapse;margin:8px 0}
-#rc th,#rc td{text-align:left;padding:6px 10px;border:1px solid #e2e8f0;font-size:.85rem}
-#rc th{background:#f8fafc;font-weight:600}
+/* ============================================================
+   Tab Navigation
+   ============================================================ */
+.tab-nav {
+  display: flex;
+  gap: 0;
+  background: var(--color-surface);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  padding: 6px 6px 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
 
-/* ===== Print ===== */
-@media print{body{padding:0;background:#fff}._np{display:none!important}.layout{display:block}.card{break-inside:avoid}}
+.tab-btn {
+  flex: none;
+  padding: 10px 22px;
+  border: none;
+  background: transparent;
+  font-size: var(--fs-base);
+  font-weight: 500;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: all .15s ease;
+  position: relative;
+}
 
-/* ===== Tab Navigation ===== */
-.tab-nav{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:24px;background:#fff;border-radius:8px 8px 0 0;padding:0 4px;position:sticky;top:0;z-index:50}
-.tab-btn{padding:10px 24px;border:none;background:transparent;font-size:.9rem;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
-.tab-btn:hover{color:#1e293b;background:#f8fafc}
-.tab-btn.active{color:#2563eb;border-bottom-color:#2563eb;background:#f0f4ff}
-.tab-content{display:none}
-.tab-content.active{display:block}
+.tab-btn:hover {
+  background: var(--color-border-lt);
+  color: var(--color-text-mid);
+}
 
-/* ===== Info Popup ===== */
-.info-popup{display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:10px 14px;font-size:.78rem;color:#475569;line-height:1.5;box-shadow:0 4px 12px rgba(0,0,0,.12);max-width:360px;margin-top:4px}
-.info-popup.show{display:block}
+.tab-btn.active {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  font-weight: 600;
+}
 
-/* ===== Export Dropdown (safety) ===== */
-.btn-export-group{position:relative;display:inline-flex;align-items:center}
-.btn-export-arrow{padding:8px 8px;border:1px solid #e2e8f0;border-radius:0 6px 6px 0;background:#fff;cursor:pointer;font-size:.75rem;margin-left:-1px}
-.export-dropdown{display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:4px 0;min-width:140px;box-shadow:0 4px 12px rgba(0,0,0,.12)}
-.export-dropdown.show{display:block}
-.export-dropdown div{padding:6px 14px;font-size:.85rem;cursor:pointer;color:#1e293b}
-.export-dropdown div:hover{background:#f1f5f9}
+.tab-content   { display: none; }
+.tab-content.active { display: block; }
 
-/* ===== Misc ===== */
-.ncell{display:inline-flex;align-items:center;gap:3px}
+/* ============================================================
+   Cards — the visual container for every section
+   ============================================================ */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) 20px;
+  margin-bottom: var(--space-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.card h2 {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ============================================================
+   Form Grids & Fields
+   ============================================================ */
+.fg  { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm) var(--space-md); }
+.fg3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-sm) var(--space-md); }
+
+.fgl          { display: flex; flex-direction: column; }
+.fgl.full     { grid-column: 1 / -1; }
+.fgl label    { font-size: var(--fs-xs); font-weight: 500; color: var(--color-text-soft); margin-bottom: 2px; }
+
+.fgl input,
+.fgl select {
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-base);
+  background: #fff;
+  color: var(--color-text);
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.fgl input:focus,
+.fgl select:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+.hint { font-size: var(--fs-xs); color: var(--color-text-soft); margin-top: 1px; }
+
+/* ============================================================
+   Segments (capacitor operating profiles)
+   ============================================================ */
+.seg {
+  background: #fafbfd;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: var(--space-sm);
+}
+
+.seg > :first-child {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+/* ============================================================
+   Tables — report, results, ripple, nodes
+   ============================================================ */
+table.data-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+  margin: var(--space-xs) 0;
+}
+
+table.data-tbl th,
+table.data-tbl td {
+  text-align: left;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+table.data-tbl thead th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: var(--color-text-mid);
+  font-size: var(--fs-xs);
+  text-transform: none;
+  letter-spacing: .01em;
+}
+
+table.data-tbl tbody tr:hover {
+  background: #fafbfd;
+}
+
+/* Ripple table (inside segments) */
+.rt { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-top: 4px; }
+.rt th, .rt td { text-align: left; padding: 4px 6px; border: 1px solid var(--color-border); }
+.rt thead th { background: #f8fafc; font-weight: 500; font-size: var(--fs-xs); color: var(--color-text-soft); }
+
+/* Results grid table */
+.sg-tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-top: 6px; }
+.sg-tbl th, .sg-tbl td { text-align: left; padding: 6px 10px; border: 1px solid var(--color-border); }
+.sg-tbl thead th { background: #f8fafc; font-weight: 600; color: var(--color-text-mid); font-size: var(--fs-xs); }
+.sg-tbl tbody tr:hover { background: #fafbfd; }
+
+/* Node table (safety tab) */
+.node-tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-bottom: var(--space-xs); }
+.node-tbl th, .node-tbl td { padding: 4px 5px; border: 1px solid var(--color-border); text-align: left; vertical-align: middle; }
+.node-tbl thead th { background: #f8fafc; font-weight: 500; font-size: var(--fs-xs); color: var(--color-text-soft); }
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.btn-sm {
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: var(--fs-xs);
+  color: var(--color-text-mid);
+  transition: all .15s ease;
+}
+
+.btn-sm:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+.btn {
+  padding: 8px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: var(--fs-base);
+  color: var(--color-text-mid);
+  font-weight: 500;
+  transition: all .15s ease;
+}
+
+.btn:hover { border-color: #cbd5e1; background: #f8fafc; }
+
+.btn-p {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.btn-p:hover { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+
+/* Danger button variant */
+.btn-danger { color: var(--color-danger) !important; }
+.btn-danger:hover { background: #fef2f2 !important; border-color: #fecaca !important; }
+
+/* ============================================================
+   Result Cards (KPI grid)
+   ============================================================ */
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
+
+.ri {
+  padding: 12px 14px;
+  background: #fafbfd;
+  border: 1px solid var(--color-border-lt);
+  border-radius: var(--radius-sm);
+}
+
+.ri .rl { font-size: var(--fs-xs); color: var(--color-text-soft); margin-bottom: 2px; }
+.ri .rv { font-size: 1.2rem; font-weight: 700; color: var(--color-text); }
+
+/* ============================================================
+   Badges (warranty status)
+   ============================================================ */
+.badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: var(--fs-xs); font-weight: 600; letter-spacing: .02em; }
+.badge.g { background: #d1fae5; color: #065f46; }
+.badge.p { background: #dbeafe; color: #1e40af; }
+.badge.c { background: #fef3c7; color: #92400e; }
+.badge.b { background: #fee2e2; color: #991b1b; }
+
+/* ============================================================
+   Warranty Bar
+   ============================================================ */
+.wb { margin: 10px 0; height: 18px; background: var(--color-border-lt); border-radius: 999px; overflow: hidden; position: relative; }
+.wf { height: 100%; border-radius: 999px; transition: width .3s ease; }
+.wm { position: absolute; top: 0; height: 100%; border-right: 2px dashed var(--color-danger); z-index: 2; }
+
+/* ============================================================
+   Report Container (#rc, #sRc) — the "gold standard" styling
+   ============================================================ */
+#rc, #sRc {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 24px 28px;
+  font-size: var(--fs-base);
+  line-height: 1.65;
+  box-shadow: var(--shadow-sm);
+}
+
+#rc h3, #sRc h3 {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 20px 0 10px;
+}
+
+#rc h3:first-child, #sRc h3:first-child { margin-top: 0; }
+
+#rc table, #sRc table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-sm) 0;
+}
+
+#rc th, #sRc th,
+#rc td, #sRc td {
+  text-align: left;
+  padding: 7px 12px;
+  border: 1px solid var(--color-border);
+  font-size: var(--fs-sm);
+}
+
+#rc thead th, #sRc thead th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: var(--color-text-mid);
+}
+
+#rc tbody tr:hover, #sRc tbody tr:hover {
+  background: #fafbfd;
+}
+
+/* ============================================================
+   Section Headers (report buttons row)
+   ============================================================ */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.section-header h2, .section-header > h2 {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ============================================================
+   Info Popup & Help Icon
+   ============================================================ */
+.info-icon { /* inline styles preserved in HTML — enhanced here for consistency */ }
+
+.info-popup {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: var(--fs-xs);
+  color: var(--color-text-mid);
+  line-height: 1.6;
+  box-shadow: var(--shadow-lg);
+  max-width: 380px;
+  margin-top: 4px;
+}
+
+.info-popup.show { display: block; }
+
+/* ============================================================
+   Export Dropdown (safety tab)
+   ============================================================ */
+.btn-export-group { position: relative; display: inline-flex; align-items: center; }
+.btn-export-arrow { padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: #fff; cursor: pointer; font-size: var(--fs-xs); margin-left: -1px; transition: background .15s; }
+.btn-export-arrow:hover { background: #f8fafc; }
+
+.export-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 0;
+  min-width: 150px;
+  box-shadow: var(--shadow-lg);
+}
+
+.export-dropdown.show { display: block; }
+.export-dropdown div { padding: 8px 16px; font-size: var(--fs-sm); cursor: pointer; color: var(--color-text-mid); transition: background .15s; }
+.export-dropdown div:hover { background: #f8fafc; }
+
+/* ============================================================
+   Layout (two-column → single on narrow screens)
+   ============================================================ */
+.layout { display: block; }
+
+@media (min-width: 760px) {
+  /* Keep single column for readability — user set max-width 740px */
+}
+
+/* ============================================================
+   Misc Utilities
+   ============================================================ */
+.ncell { display: inline-flex; align-items: center; gap: 3px; }
+
+/* Hide from print */
+._np { /* kept in HTML, controlled here for print */ }
+
+/* ============================================================
+   Print Styles
+   ============================================================ */
+@media print {
+  body              { padding: 0; background: #fff; }
+  .tab-nav           { display: none !important; }
+  ._np               { display: none !important; }
+  .layout            { display: block; }
+  .card              { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+  #rc, #sRc          { box-shadow: none; }
+}
