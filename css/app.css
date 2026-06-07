@@ -1,0 +1,92 @@
+/* ===== Reset & Base ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f7fa;color:#1e293b;padding:12px}
+.container{max-width:740px;margin:0 auto}
+.layout{display:block}
+
+/* ===== Cards & Grids ===== */
+.card h2{font-size:1rem;font-weight:600;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e2e8f0}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 14px}
+.fgl{display:flex;flex-direction:column}
+.fgl.full{grid-column:1/-1}
+.fgl label{font-size:.78rem;font-weight:500;color:#64748b;margin-bottom:1px}
+.fgl input,.fgl select{padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:.88rem;background:#fff}
+.fgl input:focus,.fgl select:focus{border-color:#2563eb;outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.hint{font-size:.72rem;color:#64748b;margin-top:1px}
+
+/* ===== Segments (capacitor) ===== */
+.seg{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px 14px;margin-bottom:10px}
+
+/* ===== Tables ===== */
+.rt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:4px}
+.rt th,.rt td{text-align:left;padding:4px 6px;border:1px solid #e2e8f0}
+.rt th{background:#f1f5f9;font-weight:500;font-size:.76rem}
+
+/* ===== Buttons ===== */
+.btn-sm{padding:2px 8px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;cursor:pointer;font-size:.78rem}
+.btn-sm:hover{background:#f1f5f9}
+.btn{padding:8px 16px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;font-size:.85rem}
+.btn-p{background:#2563eb;color:#fff;border-color:#2563eb}
+
+/* ===== Results ===== */
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ri{padding:10px 12px;background:#f8fafc;border-radius:6px}
+.ri .rl{font-size:.73rem;color:#64748b}
+.ri .rv{font-size:1.15rem;font-weight:600;margin-top:1px}
+
+/* ===== Safety Grid Table ===== */
+.sg-tbl{width:100%;border-collapse:collapse;font-size:.8rem}
+.sg-tbl th,.sg-tbl td{text-align:left;padding:4px 8px;border:1px solid #e2e8f0}
+.sg-tbl th{background:#f1f5f9;font-size:.76rem}
+
+/* ===== Node Table (safety) ===== */
+.node-tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:4px}
+.node-tbl th,.node-tbl td{padding:3px 5px;border:1px solid #e2e8f0;text-align:left;vertical-align:middle}
+.node-tbl th{background:#f1f5f9;font-weight:500;font-size:.74rem;color:#64748b}
+
+/* ===== Badges ===== */
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.78rem;font-weight:500}
+.badge.g{background:#d1fae5;color:#065f46}
+.badge.c{background:#fef3c7;color:#92400e}
+.badge.b{background:#fee2e2;color:#991b1b}
+.badge.p{background:#dbeafe;color:#1e40af}
+
+/* ===== Warranty Bar ===== */
+.wb{margin:10px 0;height:18px;background:#e2e8f0;border-radius:9px;overflow:hidden;position:relative}
+.wf{height:100%;border-radius:9px;transition:width .3s}
+.wm{position:absolute;top:0;height:100%;border-right:2px dashed #ef4444;z-index:2}
+
+/* ===== Report Container ===== */
+#rc{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:24px 28px;font-size:.88rem}
+#rc h3{font-size:1.05rem;margin:16px 0 8px}
+#rc h3:first-child{margin-top:0}
+#rc table{width:100%;border-collapse:collapse;margin:8px 0}
+#rc th,#rc td{text-align:left;padding:6px 10px;border:1px solid #e2e8f0;font-size:.85rem}
+#rc th{background:#f8fafc;font-weight:600}
+
+/* ===== Print ===== */
+@media print{body{padding:0;background:#fff}._np{display:none!important}.layout{display:block}.card{break-inside:avoid}}
+
+/* ===== Tab Navigation ===== */
+.tab-nav{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:24px;background:#fff;border-radius:8px 8px 0 0;padding:0 4px;position:sticky;top:0;z-index:50}
+.tab-btn{padding:10px 24px;border:none;background:transparent;font-size:.9rem;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
+.tab-btn:hover{color:#1e293b;background:#f8fafc}
+.tab-btn.active{color:#2563eb;border-bottom-color:#2563eb;background:#f0f4ff}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ===== Info Popup ===== */
+.info-popup{display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:10px 14px;font-size:.78rem;color:#475569;line-height:1.5;box-shadow:0 4px 12px rgba(0,0,0,.12);max-width:360px;margin-top:4px}
+.info-popup.show{display:block}
+
+/* ===== Export Dropdown (safety) ===== */
+.btn-export-group{position:relative;display:inline-flex;align-items:center}
+.btn-export-arrow{padding:8px 8px;border:1px solid #e2e8f0;border-radius:0 6px 6px 0;background:#fff;cursor:pointer;font-size:.75rem;margin-left:-1px}
+.export-dropdown{display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:4px 0;min-width:140px;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.export-dropdown.show{display:block}
+.export-dropdown div{padding:6px 14px;font-size:.85rem;cursor:pointer;color:#1e293b}
+.export-dropdown div:hover{background:#f1f5f9}
+
+/* ===== Misc ===== */
+.ncell{display:inline-flex;align-items:center;gap:3px}

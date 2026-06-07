@@ -271,17 +271,8 @@ http.createServer(async function (req, res) {
     return;
   }
 
-  // ── Main page (inject defaults JSON) ─────────────────
-  if (p === "/" || p === "/index.html") {
-    const fp = path.join(ROOT, "index.html");
-    try {
-      let html = fs.readFileSync(fp, "utf-8");
-      html = html.replace("/*_DEFAULTS_JSON_*/", JSON.stringify(loadDefaults()));
-      res.writeHead(200, { "Content-Type": "text/html;charset=utf-8", "Cache-Control": "no-cache,no-store,must-revalidate" });
-      res.end(html);
-    } catch (_) { serveFile(res, fp); }
-    return;
-  }
+  // ── Main page (static) ───────────────────
+  if (p === "/" || p === "/index.html") { serveFile(res, path.join(ROOT, "index.html")); return; }
 
   // ── Fallback: static file ────────────────────────────
   const sp = p === "/" ? "index.html" : p;
