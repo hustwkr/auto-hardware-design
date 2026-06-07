@@ -183,9 +183,98 @@
     return last[6 + mi];
   }
 
+  /* ── Impulse voltage levels for "one step higher" (reinforced) ─── */
+  var IMPULSE_LEVELS = [0.33, 0.5, 0.8, 1.5, 2.5, 4.0, 6.0, 8.0];
+
+  /* ── Next higher impulse level for reinforced insulation ─── */
+  function nextImpulseLevel(impKV) {
+    // impKV: impulse withstand voltage in kV
+    // Returns the next standard impulse level (kV), or same value if already max
+    var v = impKV;
+    for (var i = 0; i < IMPULSE_LEVELS.length; i++) {
+      if (IMPULSE_LEVELS[i] > v) return IMPULSE_LEVELS[i];
+    }
+    return v; // Already at or above the highest level
+  }
+
+  /* ── Table 13 lookup — IEC clearance from peak voltage & PD ─── */
+  function clrFromPeak(peakV, pd) {
+    // peakV: in Volts (e.g. impulse Vpeak, TOV Vpeak, working Vpeak)
+    return lookupClr(peakV, pd || 2, 'iec', true);
+  }
+
+  /* ── Clearance calculation per IEC 62109-1 §7.3.7 / Table 14 ─── */
+  function calcClearance(vrms, impKV, tovPeakV, isMains, insType, pd) {
+    // Parameters:
+    //   vrms     — working RMS voltage (V)
+    //   impKV    — impulse withstand voltage from Table 12 (kV)
+    //   tovPeakV — temporary overvoltage peak from Table 12 col 6 (V), null if N/A
+    //   isMains  — true for AC mains circuits, false for DC/PV/internal
+    //   insType  — 'func' | 'basic' | 'supp' | 'reinf'
+    //   pd       — pollution degree 1-3
+
+    var impPeak = impKV * 1000;            // kV → V
+    var wrkPeak = vrms * Math.sqrt(2);     // working voltage peak
+
+    if (insType === 'reinf') {
+      /* ── REINFORCED INSULATION ───────────────────────────── */
+      // IEC 60664-1 / IEC 62109-1: use the MOST STRINGENT of three criteria:
+      //   (a) Table 13 with impulse voltage stepped up one level
+      //   (b) 1.6 × working voltage peak → Table 13
+      //   (c) 1.6 × TOV peak → Table 13 (mains circuits only)
+
+      var impNext = nextImpulseLevel(impKV);          // step up one level (kV)
+      var clrA    = clrFromPeak(impNext * 1000, pd);  // criterion (a): stepped-up impulse
+
+      var clrB    = clrFromPeak(wrkPeak * 1.6, pd);   // criterion (b): 1.6× working peak
+
+      var reqClr;
+      if (isMains && tovPeakV) {
+        var clrC  = clrFromPeak(tovPeakV * 1.6, pd);  // criterion (c): 1.6× TOV
+        reqClr    = Math.max(clrA, clrB, clrC);       // most stringent of all three
+      } else {
+        reqClr    = Math.max(clrA, clrB);              // only (a) and (b) for non-mains
+      }
+      return reqClr;
+
+    } else if (insType === 'func') {
+      /* ── FUNCTIONAL INSULATION ───────────────────────────── */
+      // OVC I: based on working voltage peak
+      // OVC II-IV: based on impulse voltage
+      // Since per-node OVC is not tracked, we use the more conservative approach:
+      // for mains circuits → max(impulse, working peak) covers both cases
+
+      var clrImp = clrFromPeak(impPeak, pd);
+      if (isMains) {
+        var wrkClr = clrFromPeak(wrkPeak, pd);
+        return Math.max(clrImp, wrkClr);
+      }
+      return clrImp; // non-mains: impulse voltage
+
+    } else {
+      /* ── BASIC / SUPPLEMENTARY INSULATION ────────────────── */
+      if (isMains) {
+        // Mains circuits: most stringent of impulse, TOV peak, working voltage peak
+        var cImp   = clrFromPeak(impPeak, pd);
+        var cWk    = clrFromPeak(wrkPeak, pd);
+        if (tovPeakV) {
+          var cTov  = clrFromPeak(tovPeakV, pd);
+          return Math.max(cImp, cWk, cTov);
+        }
+        return Math.max(cImp, cWk);
+      } else {
+        // Non-mains (PV/DC): most stringent of impulse or working voltage recurring peak
+        var cI = clrFromPeak(impPeak, pd);
+        var cW = clrFromPeak(wrkPeak, pd);
+        return Math.max(cI, cW);
+      }
+    }
+  }
+
   /* ── Per-node calculation (pure) ─────────────── */
-  function calcNode(node, pd, mgGroup, alt, standard, impAC, impDC) {
+  function calcNode(node, pd, mgGroup, alt, standard, impAC, impDC, sysVAC) {
     // node: { name, vrms, ins, pcb, coat, circ, toGnd }
+    // sysVAC: AC system voltage for TOV lookup (optional, V rms)
     var vrms = node.vrms || 0;
     var ins  = node.ins  || 'basic';
     var pcb  = !!node.pcb;
@@ -195,46 +284,43 @@
 
     // Determine impulse withstand voltage (kV) from Table 12
     var impKV = circ === 'dc' ? impDC : impAC;
+    var isMains = (circ === 'ac');
 
     /* ── IEC 62109-1 §7.3.7: Insulation type enforcement ─── */
     // Between live parts and accessible conductive parts (PE/enclosure):
     // reinforced insulation is MANDATORY — basic/functional alone is NOT compliant.
-    // Therefore toGnd=true forces clrMult=2.0 and crpMult=2.0 regardless of selected ins type.
-    var im = INS_K[ins] || 1.0;
     var forcedReinforced = false;
-    if (toGnd && im < 2.0) {
-      // toGnd requires reinforced insulation per IEC 62109-1 §7.3.7
-      // Apply reinforced multiplier even if user selected basic/functional
-      im = 2.0;
+    if (toGnd && ins !== 'reinf') {
       forcedReinforced = true;
     }
 
-    var baseClr, clrMult;
+    // Effective insulation type for clearance calculation
+    var effIns = (ins === 'reinf' || toGnd) ? 'reinf' : ins;
 
+    /* ── Clearance distances ───────────────────── */
+    var reqClr;
     if (standard === 'iec') {
-      // IEC: clearance from Table 13 using impulse voltage (kV → V)
-      var impV = impKV * 1000;
-      if (ins === 'reinf' || toGnd) {
-        // Reinforced: double the basic insulation clearance
-        baseClr = lookupClr(impV, pd, standard, true);
-        clrMult = 2.0;
-      } else {
-        baseClr = lookupClr(impV, pd, standard, true);
-        clrMult = 1.0;
+      // sysVAC: AC system voltage for TOV lookup (from calcSafety)
+      var tovPeak = null;
+      if (isMains && sysVAC) {
+        var tovInfo = lookupTov(sysVAC);
+        tovPeak = tovInfo ? tovInfo.peak : null;
       }
+
+      reqClr = calcClearance(vrms, impKV, tovPeak, isMains, effIns, pd);
     } else {
-      // UL: clearance based on impulse voltage in kV
-      baseClr = lookupClr(impKV * 1000, pd, standard, false);
-      clrMult = im;
+      // UL: simplified approach — impulse voltage based with insulation multiplier
+      var im = INS_K[effIns] || 1.0;
+      reqClr = lookupClr(impKV * 1000, pd, standard, false) * im;
     }
 
     var altk = ALT_K[alt] || 1.0;
-    var reqClr = Math.round(baseClr * altk * clrMult * 10) / 10;
+    reqClr = Math.round(reqClr * altk * 10) / 10;
 
-    // Creepage calculation
+    // Creepage calculation — reinforced doubles the basic creepage per IEC 60664-1 Table A.2
     var localPd = pd;
     if (coat === 1) localPd = Math.max(1, localPd - 1);
-    var crpMult = im; // toGnd forces im=2.0 above
+    var crpMult = (effIns === 'reinf') ? 2.0 : 1.0;
     var reqCrp = lookupCrp(vrms, localPd, mgGroup, standard, pcb ? 1 : 0);
     if (coat === 2) reqCrp = 0; // Coating cancels creepage requirement
     reqCrp = Math.round(reqCrp * crpMult * 10) / 10;
@@ -244,7 +330,7 @@
       vrms: vrms,
       ins: ins,
       insL: INS_LABELS[ins] || ins,
-      im: crpMult,
+      effIns: effIns,
       pcb: pcb ? 1 : 0,
       coat: coat,
       toGnd: toGnd,
@@ -276,7 +362,7 @@
     var altk = ALT_K[alt] || 1.0;
 
     var results = nodes.map(function (node) {
-      return calcNode(node, pd, mgGroup, alt, standard, impAC, impDC);
+      return calcNode(node, pd, mgGroup, alt, standard, impAC, impDC, sysVAC);
     });
 
     return {
@@ -299,10 +385,14 @@
     INS_K: INS_K,
     MG_I: MG_I,
     INS_LABELS: INS_LABELS,
+    IMPULSE_LEVELS: IMPULSE_LEVELS,
     lookupImpulse: lookupImpulse,
     lookupTov: lookupTov,
     lookupClr: lookupClr,
     lookupCrp: lookupCrp,
+    nextImpulseLevel: nextImpulseLevel,
+    clrFromPeak: clrFromPeak,
+    calcClearance: calcClearance,
     calcNode: calcNode,
     calcSafety: calcSafety
   };

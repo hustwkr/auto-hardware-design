@@ -167,9 +167,10 @@
     var ah="<p style=margin-bottom:6px><strong>安规距离计算结果</strong></p>";
     ah+="<p style=font-size:.85rem>标准: "+document.getElementById("sStd").selectedOptions[0].text+" | PD: "+pd+" | 材料: "+document.getElementById("sMg").selectedOptions[0].text+" | 海拔: "+alt+"m(系数"+altk+")</p>";
     ah+="<p style=font-size:.82rem;color:#64748b>注:</p><ul style=font-size:.82rem;color:#64748b;margin:2px 0 0 16px;line-height:1.7>";
-    ah+='<li>电气间隙已乘海拔系数和绝缘倍率</li>';
+    ah+='<li>电气间隙(IEC): 取冲击电压、暂态过电压(TOV)、工作电压峰值三者查表后最严苛值，再乘海拔系数</li>';
+    ah+='<li>加强绝缘(IEC): 取三项中最严 — (a)冲击电压升一档 (b)1.6×工作峰值 (c)1.6×TOV峰值(仅电网电路)</li>';
     ah+='<li>爬电距离已乘绝缘倍率，非PCB走线按污染等级选取</li>';
-    ah+='<li style="color:#2563eb;font-weight:500">⊕ = 对地节点（连接PE/外壳），IEC 62109-1 §7.3.7 强制要求加强绝缘，电气间隙和爬电距离均×2</li>';
+    ah+='<li style="color:#2563eb;font-weight:500">⊕ = 对地节点（连接PE/外壳），IEC 62109-1 §7.3.7 强制要求加强绝缘</li>';
     ah+='<li style="color:#f59e0b;font-weight:500">⚠ = 用户选择了非加强绝缘但对地连接，系统已自动按加强绝缘计算</li>';
     ah+='</ul>';
     document.getElementById("sMa").innerHTML=ah;
