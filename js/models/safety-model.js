@@ -230,17 +230,17 @@
     var mgGroup  = params.mgGroup || 'ii';
     var alt      = params.alt || 2000;
     var standard = params.standard || 'iec';
-    var ovcClass = params.ovcClass || 2;
     var sysVAC   = params.sysVAC || 300;
     var sysVDC   = params.sysVDC || 600;
     var nodes    = params.nodes || [];
 
+    // TOV (kV) — accept from caller or compute via lookupTov as fallback
+    var tovAC = typeof params.tovAC === 'number' ? params.tovAC : lookupTov(sysVAC, params.ovcClass||2, true);
+    var tovDC = typeof params.tovDC === 'number' ? params.tovDC : lookupTov(sysVDC, params.ovcClass||2, true);
+
     if (!nodes.length) return null;
 
     var altk = ALT_K[alt] || 1.0;
-    // TOV in kV for AC and DC systems
-    var tovAC = lookupTov(sysVAC, ovcClass, true);
-    var tovDC = lookupTov(sysVDC, ovcClass, true);
 
     var results = nodes.map(function (node) {
       return calcNode(node, pd, mgGroup, alt, standard, tovAC, tovDC);
@@ -249,7 +249,7 @@
     return {
       results: results,
       pd: pd, mgGroup: mgGroup, alt: alt, altk: altk,
-      standard: standard, ovcClass: ovcClass,
+      standard: standard,
       sysVAC: sysVAC, sysVDC: sysVDC, tovAC: tovAC, tovDC: tovDC
     };
   }

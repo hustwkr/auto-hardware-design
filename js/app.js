@@ -68,7 +68,7 @@
     /* Safety defaults */
     var s=d.safety;if(s&&typeof s==='object'){
       setValSelect('sStd',s.sStd);setValSelect('sPd',s.sPd+'');setValSelect('sMg',s.sMg);
-      setValSelect('sAlt',s.sAlt+'');setValSelect('sOvc',s.sOvc);
+      setValSelect('sAlt',s.sAlt+'');setValSelect('sOvc_AC',s.sOvc_AC||'ii');setValSelect('sOvc_DC',s.sOvc_DC||'ii');
       setVal('sSysV_AC',s.sSysV_AC+'');setVal('sSysV_DC',s.sSysV_DC+'');
     }
   }

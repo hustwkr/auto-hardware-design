@@ -57,9 +57,46 @@
     var mg  = document.getElementById("sMg").value||"ii";
     var alt = +document.getElementById("sAlt").value||2000;
     var std = document.getElementById("sStd").value||"iec";
-    var ovc = {i:1,ii:2,iii:3,iv:4}[document.getElementById('sOvc').value||'ii'] || 2;
+    var ovc_AC = {i:1,ii:2,iii:3,iv:4}[document.getElementById('sOvc_AC').value||'ii'] || 2;
+    var ovc_DC = {i:1,ii:2,iii:3,iv:4}[document.getElementById('sOvc_DC').value||'ii'] || 2;
     var sysVAC = +document.getElementById('sSysV_AC').value || 300;
     var sysVDC = +document.getElementById('sSysV_DC').value || 600;
+
+    // Compute TOV (Temporary Overvoltage) per IEC 62109-1 Table 12
+    function tovFor(ovcNum, v){
+      // Base lookup: OVC → impulse voltage for given system voltage range
+      var tbl = {
+        1: {[50]:6,[100]:8,[130]:12,[240]:17,[300]:22,[400]:26,[500]:34,[690]:42},
+        2: {[50]:8,[100]:12,[130]:17,[240]:22,[300]:26,[400]:34,[500]:42,[690]:50},
+        3: {[50]:12,[100]:17,[130]:22,[240]:26,[300]:34,[400]:42,[500]:50,[690]:60},
+        4: {[50]:17,[100]:22,[130]:26,[240]:34,[300]:42,[400]:50,[500]:60,[690]:80}
+      };
+      var t = tbl[ovcNum] || tbl[2];
+      // Find the nearest voltage bracket (round up)
+      var keys = Object.keys(t).map(Number).sort(function(a,b){return a-b});
+      for(var i=0;i<keys.length;i++){ if(v<=keys[i]) return t[keys[i]]; }
+      return t[keys[keys.length-1]] || 50; // cap at max bracket
+    }
+
+    var tovAC = tovFor(ovc_AC, sysVAC);
+    var tovDC = tovFor(ovc_DC, sysVDC);
+
+    // Display impulse voltage info in #sImpulseInfo
+    (function(){
+      var el = document.getElementById("sImpulseInfo");
+      if(!el) return;
+      el.style.display = "block";
+      var ovcLabel = function(n){return {1:'I',2:'II',3:'III',4:'IV'}[n]||'II';};
+      el.innerHTML =
+        '<div style="display:flex;gap:16px;flex-wrap:wrap;padding:8px 12px;background:#f0f4ff;border-radius:6px">' +
+        '<div><span style="font-weight:600;color:#1e293b">AC侧冲击电压:</span> ' +
+        '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+tovAC+' kV</span> ' +
+        '<span style="color:#64748b">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
+        '<div><span style="font-weight:600;color:#1e293b">DC侧冲击电压:</span> ' +
+        '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+tovDC+' kV</span> ' +
+        '<span style="color:#64748b">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span></div>' +
+        '</div>';
+    })();
 
     // Build nodes array for model
     var nodeArr=[];
@@ -76,7 +113,8 @@
 
     // Call pure model calculation
     var result = SM.calcSafety({
-      pd:pd, mgGroup:mg, alt:alt, standard:std, ovcClass:ovc,
+      pd:pd, mgGroup:mg, alt:alt, standard:std,
+      tovAC:tovAC, tovDC:tovDC,
       sysVAC:sysVAC, sysVDC:sysVDC, nodes:nodeArr
     });
     if(!result) return;
@@ -95,7 +133,9 @@
     document.getElementById("sMa").innerHTML=ah;
 
     // Store for report/export
-    window._sd={results:result.results,pd:pd,mg:mg,alt:alt,altk:altk};
+    var ovc_AC = document.getElementById('sOvc_AC').value;
+    var ovc_DC = document.getElementById('sOvc_DC').value;
+    window._sd={results:result.results,pd:pd,mg:mg,alt:alt,altk:altk,tovAC:tovAC,tovDC:tovDC,ovc_AC:ovc_AC,ovc_DC:ovc_DC};
     sGenRep();
   }
 
@@ -104,7 +144,9 @@
     if(!d||!d.results||!d.results.length)return '';
     var fs='<p style=margin:4px 0;font-size:.85rem><b>计算依据:</b></p>';
     var std=document.getElementById('sStd').selectedOptions[0].text;
-    fs+='<ul style=margin:2px 0 2px 20px;font-size:.82rem;color:#555>'+(std.includes('IEC')?'<li>标准: IEC 60664-1</li>':'<li>标准: UL 840</li>')+'<li>电气间隙: 基于冲击电压'+document.getElementById('sOvc').value.toUpperCase()+'类过电压,海拔系数'+d.altk+'</li>'+'<li>爬电距离: PD '+d.pd+', 材料组别'+document.getElementById('sMg').selectedOptions[0].text+'</li>';
+    var ovcAC = document.getElementById('sOvc_AC')?document.getElementById('sOvc_AC').value.toUpperCase():'II';
+    var ovcDC = document.getElementById('sOvc_DC')?document.getElementById('sOvc_DC').value.toUpperCase():'II';
+    fs+='<ul style=margin:2px 0 2px 20px;font-size:.82rem;color:#555>'+(std.includes('IEC')?'<li>标准: IEC 60664-1</li>':'<li>标准: UL 840</li>')+'<li>AC侧冲击电压: OVC '+ovcAC+', '+d.tovAC+' kV | DC侧: OVC '+ovcDC+', '+d.tovDC+' kV</li>'+'<li>海拔系数: '+d.altk+'</li>'+'<li>爬电距离: PD '+d.pd+', 材料组别'+document.getElementById('sMg').selectedOptions[0].text+'</li>';
     d.results.forEach(function(r){var k=SM.INS_K[r.ins]||1;if(k>1)fs+='<li>'+r.name+': '+r.insL+'绝缘x'+k+'</li>'});
     return fs+='</ul>';
   }
@@ -125,7 +167,12 @@
         +"<tr><td>标准</td><td>"+document.getElementById('sStd').selectedOptions[0].text+"</td></tr>"
         +"<tr><td>污染等级</td><td>PD "+d.pd+"</td></tr>"
         +"<tr><td>材料组别</td><td>"+document.getElementById('sMg').selectedOptions[0].text+"</td></tr>"
-        +"<tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr></table>"
+        +"<tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr>"
+        +"<tr><td>AC侧过电压类别</td><td>OVC "+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+" (冲击电压 "+(d.tovAC||'-')+' kV)'+"</td></tr>"
+        +"<tr><td>DC侧过电压类别</td><td>OVC "+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+" (冲击电压 "+(d.tovDC||'-')+' kV)'+"</td></tr>"
+        +"<tr><td>AC系统电压</td><td>"+document.getElementById('sSysV_AC').value+' V'+'</td></tr>'
+        +"<tr><td>DC系统电压</td><td>"+document.getElementById('sSysV_DC').value+' V'+'</td></tr>'
+        +"</table>"
       +"<h3>3. 各节点所需安规距离</h3><table><tr><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr>"+sr+"</table>"
       +sCalcFormulas()
       +"<h3>4. 设计建议</h3><ul style=margin:4px 0 0 20px>"
@@ -150,7 +197,13 @@
     h+='<p>报告编号: SA-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
     h+='<p>生成日期: '+new Date().toLocaleDateString('zh-CN')+'</p>';
     h+='<h2>1. 项目信息</h2><table><tr><th>项目</th><th>内容</th></tr>'+(pn?'<tr><td>项目名称</td><td>'+pn+'</td></tr>':'')+'<tr><td>标准</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr></table>';
-    h+='<h2>2. 基础参数</h2><table><tr><th>参数</th><th>值</th></tr><tr><td>污染等级</td><td>PD '+d.pd+'</td></tr><tr><td>材料组别</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr><tr><td>海拔</td><td>'+d.alt+'m</td></tr></table>';
+    h+='<h2>2. 基础参数</h2><table><tr><th>参数</th><th>值</th></tr>'
+      +'<tr><td>污染等级</td><td>PD '+d.pd+'</td></tr>'
+      +'<tr><td>材料组别</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr>'
+      +'<tr><td>海拔</td><td>'+d.alt+'m (系数 '+d.altk+')</td></tr>'
+      +'<tr><td>AC侧过电压类别</td><td>OVC '+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+' ('+d.tovAC+' kV)</td></tr>'
+      +'<tr><td>DC侧过电压类别</td><td>OVC '+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+' ('+d.tovDC+' kV)</td></tr>'
+      +'</table>';
     h+='<p style="margin-top:20px"><i>安规距离计算工具 v1.0 - 报告自动生成</i></p></body></html>';
     var b=new Blob([h],{type:'application/msword'});var dn='安规距离评估报告'+(te.length?'('+te.join('-')+')':'')+'.doc';saveBlobWithDialog(b,dn);
   }
@@ -184,7 +237,7 @@
   });
   document.addEventListener('change', function(e){
     var t=e.target;
-    if(t.id && ['sStd','sPd','sMg','sAlt','sOvc'].includes(t.id)){sCalc()}
+    if(t.id && ['sStd','sPd','sMg','sAlt','sOvc_AC','sOvc_DC'].includes(t.id)){sCalc()}
   });
 
   global.initSafety = initSafety;
