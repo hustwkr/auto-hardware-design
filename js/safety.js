@@ -112,16 +112,14 @@
     /* PV circuit rule: minimum 2.5 kV impulse per IEC 62109-1 §7.3.7.1.2b */
     if(impDC < 2.5) impDC = 2.5;
 
-    // Display impulse + TOV info in #sImpulseInfo
+    // Display impulse + TOV info in #sImpulseInfo (dedicated "冲击电压/暂态过电压" card)
     (function(){
       var el = document.getElementById("sImpulseInfo");
       if(!el) return;
-      el.style.display = "block";
       var ovcLabel = function(n){return {1:'I',2:'II',3:'III',4:'IV'}[n]||'II';};
       // TOV only applies to mains (AC) circuits per Table 12 Note 3
       var tovAC_info = tovFor(sysVAC);
       el.innerHTML =
-        '<div style="display:flex;gap:16px;flex-wrap:wrap;padding:8px 12px;background:#f0f4ff;border-radius:6px">' +
         '<div><span style="font-weight:600;color:#1e293b">AC侧冲击电压:</span> ' +
         '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+impAC+' kV</span> ' +
         '<span style="color:#64748b">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
@@ -129,8 +127,7 @@
         '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+impDC+' kV</span> ' +
         '<span style="color:#64748b">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span></div>' +
         '<div><span style="font-weight:600;color:#1e293b">AC侧暂态过电压:</span> ' +
-        '<span style="color:#7c3aed;font-size:.85rem">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span></div>' +
-        '</div>';
+        '<span style="color:#7c3aed;font-size:.85rem">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span></div>';
     })();
 
     // Build nodes array for model
