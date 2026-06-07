@@ -75,6 +75,62 @@ def run_script(script_path, input_content):
         return None
 
 
+def validate_html(content):
+    """Post-build validation — check HTML structural integrity."""
+    errors = []
+    
+    # Required top-level structure
+    if "<!DOCTYPE html>" not in content:
+        errors.append("Missing <!DOCTYPE html>")
+    if "<html" not in content or "</html>" not in content:
+        errors.append("Missing <html>...</html>")
+    if "<head>" not in content or "</head>" not in content:
+        errors.append("Missing <head>...</head>")
+    if "<body>" not in content or "</body>" not in content:
+        errors.append("Missing <body>...</body>")
+    
+    # Required elements for capacitor module
+    if "tab-capacitor" not in content:
+        errors.append("Missing capacitor tab container (#tab-capacitor)")
+    if 'data-tab="capacitor"' not in content and "电解电容寿命计算" not in content:
+        errors.append("Missing capacitor tab button")
+    
+    # Required elements for safety module (injected by 10_safety.py)
+    if "tab-safety" not in content and "安规距离" not in content:
+        errors.append("Missing safety distance calculator module (check 10_safety.py)")
+    
+    # KaTeX references
+    if "katex" not in content.lower():
+        errors.append("Missing KaTeX CDN reference")
+    
+    # Script tags
+    script_count = content.count("<script>") + content.count("<script ")
+    script_close = content.count("</script>")
+    if script_count != script_close:
+        errors.append(f"Mismatched <script> tags: {script_count} open vs {script_close} close")
+    
+    # Style tags
+    style_open = content.count("<style>") + content.count("<style ")
+    style_close = content.count("</style>")
+    if style_open != style_close:
+        errors.append(f"Mismatched <style> tags: {style_open} open vs {style_close} close")
+    
+    # Tab navigation (should have both tabs)
+    tab_nav_count = content.count("tab-nav")
+    if tab_nav_count < 1:
+        errors.append("Missing tab navigation (.tab-nav)")
+    
+    # Report section
+    if 'id="rc"' not in content:
+        errors.append("Missing report container (#rc)")
+    
+    # Defaults injection marker (used by backend)
+    if "/*_DEFAULTS_JSON_*/" not in content:
+        errors.append("Missing /*_DEFAULTS_JSON_*/ marker for backend defaults injection")
+    
+    return errors
+
+
 def main():
     scripts = discover_scripts()
     
@@ -158,6 +214,16 @@ def main():
         
         print(f"\n{'=' * 50}")
         print(f"Build OK -> {OUTPUT} ({len(content):,} bytes)")
+    
+    # ── Post-build validation ────────────────────────
+    print("\nValidating output...")
+    errors = validate_html(content)
+    if errors:
+        for e in errors:
+            print(f"  [WARN] {e}")
+        print(f"\nBuild completed with {len(errors)} warning(s)")
+    else:
+        print("  All checks passed ✓")
 
 
 if __name__ == "__main__":
