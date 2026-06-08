@@ -125,8 +125,8 @@ h1.page-title, .tab-content > h1 {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: var(--space-md) 20px;
-  margin-bottom: var(--space-sm);
+  padding: 10px 14px;
+  margin-bottom: 8px;
   box-shadow: var(--shadow-sm);
 }
 
@@ -134,8 +134,8 @@ h1.page-title, .tab-content > h1 {
   font-size: var(--fs-base);
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: var(--space-sm);
-  padding-bottom: var(--space-xs);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -145,13 +145,23 @@ h1.page-title, .tab-content > h1 {
 .fg  { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm) var(--space-md); }
 .fg3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-sm) var(--space-md); }
 
+/* Stacked (legacy) field group */
 .fgl          { display: flex; flex-direction: column; }
 .fgl.full     { grid-column: 1 / -1; }
 .fgl label    { font-size: var(--fs-xs); font-weight: 500; color: var(--color-text-soft); margin-bottom: 2px; }
 
+/* Inline (compact) field group — label + input on same row */
+.fgi          { display: flex; align-items: center; gap: 6px; }
+.fgi label    { font-size: var(--fs-xs); font-weight: 500; color: var(--color-text-soft); white-space: nowrap; min-width: 0; }
+
+/* Compact param grid — 2-col, inline fields */
+.param-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+
 .fgl input,
-.fgl select {
-  padding: 7px 10px;
+.fgl select,
+.fgi input,
+.fgi select {
+  padding: 5px 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-size: var(--fs-base);
@@ -160,8 +170,18 @@ h1.page-title, .tab-content > h1 {
   transition: border-color .15s, box-shadow .15s;
 }
 
+.fgi input,
+.fgi select {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  font-size: var(--fs-sm);
+}
+
 .fgl input:focus,
-.fgl select:focus {
+.fgl select:focus,
+.fgi input:focus,
+.fgi select:focus {
   border-color: var(--color-primary);
   outline: none;
   box-shadow: 0 0 0 3px rgba(37,99,235,.12);
@@ -170,22 +190,42 @@ h1.page-title, .tab-content > h1 {
 .hint { font-size: var(--fs-xs); color: var(--color-text-soft); margin-top: 1px; }
 
 /* ============================================================
-   Segments (capacitor operating profiles)
+   Segments (capacitor operating profiles) — compact layout
    ============================================================ */
 .seg {
   background: #fafbfd;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  margin-bottom: var(--space-sm);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  margin-bottom: 5px;
 }
 
-.seg > :first-child {
-  font-size: var(--fs-base);
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: var(--space-xs);
+/* Segment header row — compact single line */
+.seg-head {
+  display: flex; align-items: center; gap: 4px;
+  font-size: var(--fs-sm); font-weight: 600; color: var(--color-text);
+  margin-bottom: 3px;
 }
+
+.seg-head .sh { color: #64748b; font-weight: 400; }
+
+/* Segment body — inline fields row */
+.seg-body { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.seg-body input[type=number] {
+  width: 52px; padding: 3px 4px; font-size: var(--fs-xs);
+  border: 1px solid var(--color-border); border-radius: 4px; text-align: right;
+}
+
+.seg-body label { font-size: .68rem; color: #94a3b8; }
+
+/* Ripple table (inside segments) — compact */
+.rt { width: 100%; border-collapse: collapse; font-size: var(--fs-xs); margin-top: 3px; }
+.rt th, .rt td { text-align: left; padding: 2px 4px; border: 1px solid var(--color-border); }
+.rt thead th { background: #f8fafc; font-weight: 500; font-size: .68rem; color: var(--color-text-soft); }
+
+/* Ripple inline field group */
+.ripgroup { display: flex; align-items: center; gap: 2px; }
 
 /* ============================================================
    Tables — report, results, ripple, nodes

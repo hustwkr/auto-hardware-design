@@ -19,22 +19,21 @@
   function mSeg(id,idx,dur,ta,vop,rips){
     var rr="";
     rips.forEach(function(v){
-      rr+="<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td>"
-        +"<td><input class=fc type=number value="+v+" min=0 step=10 style=width:80px oninput=calc()></td>"
-        +"<td><button class=btn-sm onclick=removeRippleRow(this)>X</button></td></tr>";
+      rr+="<tr><td class=ripgroup><input class=fv type=number value=120 style=width:55px oninput=calc()>"+mU()+"</td>"
+        +"<td><input class=fc type=number value="+v+" min=0 step=10 style=width:65px oninput=calc()></td>"
+        +"<td><button class=btn-sm onclick=removeRippleRow(this)>&times;</button></td></tr>";
     });
     return "<div class=seg data-id="+id+">"
-      +"<div><span>时段"+(idx+1)+"</span><span style=font-size:.78rem;color:#64748b> 每天 <span class=sh>"+dur+" h</span></span></div>"
-      +"<div class=fg3>"
-        +"<div class=fgl><label>时长(h/天)</label><input class=sd type=number value="+dur+" min=0 max=24 step=0.5 oninput=sdChange(this);calc()></div>"
-        +"<div class=fgl><label>温度Ta(C)</label><input class=stp type=number value="+ta+" min=-40 max=150 oninput=calc()></div>"
-        +"<div class=fgl><label>电压Vop(V)</label><input class=sv type=number value="+vop+" min=0 step=1 oninput=calc()></div>"
+      +"<div class=seg-head><span>时段"+(idx+1)+"</span><span style='font-size:.72rem;color:#94a3b8;font-weight:400'>每天 <span class=sh>"+dur+"</span> h</span>"
+        +"<button class=btn-sm style=margin-left:auto;color:#ef4444;padding:1px 6px;font-size:.65rem onclick=rmSeg(this)>&times;删除</button></div>"
+      +"<div class=seg-body>"
+        +"<label>h/天</label><input class=sd type=number value="+dur+" min=0 max=24 step=0.5 oninput=sdChange(this);calc()>"
+        +"<label>Ta(C)</label><input class=stp type=number value="+ta+" min=-40 max=150 oninput=calc()>"
+        +"<label>Vop(V)</label><input class=sv type=number value="+vop+" min=0 step=1 oninput=calc()>"
       +"</div>"
-      +"<div class=fgl style=margin-top:6px><label>纹波电流分量</label>"
-        +"<table class=rt><thead><tr><th>频率</th><th>电流(mA)</th><th></th></tr></thead>"
+      +"<table class=rt><thead><tr><th>频率</th><th>电流(mA)</th><th></th></tr></thead>"
         +"<tbody class=rtb>"+rr+"</tbody></table>"
-        +"<button class=btn-sm style=margin-top:4px onclick=addRR(this)>+ 添加纹波分量</button></div>"
-      +"<button class=btn-sm style=margin-top:8px;color:#ef4444 onclick=rmSeg(this)>删除该时段</button>"
+      +"<button class=btn-sm style=margin-top:3px onclick=addRR(this)>+ 纹波分量</button>"
     +"</div>";
   }
 
@@ -69,9 +68,9 @@
 
   function addRR(b){
     b.closest(".seg").querySelector(".rtb").insertAdjacentHTML("beforeend",
-      "<tr><td><input class=fv type=number value=120 style=width:65px oninput=calc()>"+mU()+"</td>"
-      +"<td><input class=fc type=number value=50 min=0 step=10 style=width:80px oninput=calc()></td>"
-      +"<td><button class=btn-sm onclick=removeRippleRow(this)>X</button></td></tr>");
+      "<tr><td class=ripgroup><input class=fv type=number value=120 style=width:55px oninput=calc()>"+mU()+"</td>"
+      +"<td><input class=fc type=number value=50 min=0 step=10 style=width:65px oninput=calc()></td>"
+      +"<td><button class=btn-sm onclick=removeRippleRow(this)>&times;</button></td></tr>");
     calc();
   }
 

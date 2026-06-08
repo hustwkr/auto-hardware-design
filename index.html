@@ -23,36 +23,37 @@
 <!-- Tab: Capacitor Lifetime                  -->
 <!-- ════════════════════════════════════════ -->
 <div id="tab-capacitor" class="tab-content active">
-<h1 style="font-size:1.6rem;margin-bottom:4px">电解电容寿命计算工具 <span style="font-size:.9rem;font-weight:400;color:#64748b">Electrolytic Capacitor Lifetime Calculator</span></h1>
-<p style="color:#64748b;margin-bottom:24px;font-size:.9rem">Arrhenius + Miner 累积损伤 + 多段运行剖面 + 多频率纹波叠加 + 质保期判定</p>
+<h1 style="font-size:1.4rem;margin-bottom:2px">电解电容寿命计算工具 <span style="font-size:.82rem;font-weight:400;color:#64748b">Electrolytic Capacitor Lifetime Calculator</span></h1>
+<p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35">Arrhenius + Miner 累积损伤 + 多段运行剖面 + 多频率纹波叠加 + 质保期判定</p>
 
-<div class="card" style="padding:12px 20px;margin-bottom:20px"><div class="fg"><div class="fgl"><label>项目名称</label><input type="text" id="projName" placeholder="选填"></div><div class="fgl"><label>电容型号</label><input type="text" id="capModel" placeholder="选填"></div></div></div>
+<div class="card"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><h2 style="margin:0;border:none;padding:0;font-size:.82rem">额定参数 &amp; 项目信息</h2></div><div class="param-grid">
+    <div class="fgi"><label>项目</label><input type="text" id="projName" placeholder="选填"></div>
+    <div class="fgi"><label>型号</label><input type="text" id="capModel" placeholder="选填"></div>
+    <div class="fgi"><label>L0(h)</label><input type="number" id="l0" value="2000" min="100" step="100"></div>
+    <div class="fgi"><label>Tmax(C)</label><input type="number" id="tmax" value="105" min="60" max="150"></div>
+    <div class="fgi"><label>Vrated(V)</label><input type="number" id="vrated" value="50" min="1" step="1"></div>
+    <div class="fgi"><label>Irated(mA)</label><input type="number" id="irated" value="500" min="1" step="10"></div>
+    <div class="fgi"><label>DT0(C)</label><input type="number" id="dt0" value="10" min="1" max="30" step="1"></div>
+    <div class="fgi"><label>C(uF)</label><input type="number" id="cap" value="470" min="1" step="1"></div>
+  </div></div>
 
 <div class="layout">
 <!-- Left column: inputs -->
 <div>
-  <div class="card"><h2>电容器额定参数</h2><div class="fg">
-    <div class="fgl"><label>额定寿命 L0 (h)</label><input type="number" id="l0" value="2000" min="100" step="100"><span class="hint">1000-10000 h</span></div>
-    <div class="fgl"><label>最高额定温度 Tmax (C)</label><input type="number" id="tmax" value="105" min="60" max="150"><span class="hint">85 / 105 / 125</span></div>
-    <div class="fgl"><label>额定电压 Vrated (V)</label><input type="number" id="vrated" value="50" min="1" step="1"></div>
-    <div class="fgl"><label>额定纹波电流 Irated (mA)</label><input type="number" id="irated" value="500" min="1" step="10"><span class="hint">@ 120Hz, Tmax</span></div>
-    <div class="fgl"><label>最大芯温升 DT0 (C)</label><input type="number" id="dt0" value="10" min="1" max="30" step="1"><span class="hint">标准10 / 长寿命5</span></div>
-    <div class="fgl"><label>标称电容量 (uF)</label><input type="number" id="cap" value="470" min="1" step="1"></div>
-  </div></div>
-
-  <div class="card"><h2>运行剖面 <span style="font-size:.78rem;font-weight:400;color:#64748b">(多段工况 + 多频率纹波)</span></h2>
-    <p style="font-size:.78rem;color:#64748b;margin-bottom:8px">各时段可添加多组不同频率纹波分量, 总温升按各频率 (I/K_freq)^2 平方和叠加</p>
+  <div class="card"><h2>运行剖面</h2>
+    <p style="font-size:.72rem;color:#64748b;margin-bottom:5px;line-height:1.3">多段工况 + 多频率纹波叠加，总温升按各频率 (I/K_freq)² 平方和计算</p>
     <div id="sc"></div>
     <button class="btn-sm" id="addSegBtn">+ 添加时段</button>
-    <span id="stt" style="font-size:.78rem;color:#64748b;margin-left:10px"></span>
-    <div id="stw" style="font-size:.78rem;color:#ef4444;margin-top:4px;display:none"></div>
-    <div class="fg" style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0">
-      <div class="fgl"><label>散热条件</label><select id="cooling"><option value="1.0" selected>自然对流</option><option value="1.15">强制风冷 (1-2 m/s)</option><option value="1.30">强制风冷 (>2 m/s)</option></select></div>
-      <div class="fgl"><label>年工作天数</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"></div>
-      <div class="fgl"><label>目标质保期 (年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
-      <div class="fgl"><label>应用场景</label><select id="scenario"><option value="consumer">消费电子 (1.3x)</option><option value="industrial" selected>工业设备 (1.5x)</option><option value="automotive">汽车电子 (2.0x)</option><option value="medical">医疗设备 (2.5x)</option></select></div>
-    </div>
+    <span id="stt" style="font-size:.72rem;color:#64748b;margin-left:10px"></span>
+    <div id="stw" style="font-size:.72rem;color:#ef4444;margin-top:3px;display:none"></div>
   </div>
+
+  <div class="card"><h2>环境与质保</h2><div class="param-grid">
+      <div class="fgi"><label>散热条件</label><select id="cooling"><option value="1.0" selected>自然对流</option><option value="1.15">强制风冷 1-2m/s</option><option value="1.30">强制风冷 &gt;2m/s</option></select></div>
+      <div class="fgi"><label>工作天/年</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"></div>
+      <div class="fgi"><label>质保期(年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
+      <div class="fgi"><label>场景</label><select id="scenario"><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select></div>
+    </div></div>
 </div>
 
 <!-- Right column: results -->
