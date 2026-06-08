@@ -13,8 +13,8 @@
   function toggleExportDropdown(e,tab){e.stopPropagation();var d=document.getElementById('export'+tab.charAt(0).toUpperCase()+tab.slice(1)+'Dropdown');d.classList.toggle('show')}
   document.addEventListener('click',function(){document.querySelectorAll('.export-dropdown,.info-popup').forEach(function(d){d.classList.remove('show')})});
 
-  /* ── Info popup toggle ─────────────────── */
-  function toggleInfo(e){e.stopPropagation();var box=document.getElementById('acVoltageInfo');if(box)box.classList.toggle('show')}
+  /* ── Info popup toggle (generic) ───────── */
+  function toggleInfo(e){e.stopPropagation();var icon=e.currentTarget;var popup=icon.nextElementSibling;if(popup&&popup.classList.contains('info-popup')){document.querySelectorAll('.info-popup.show').forEach(function(d){if(d!==popup)d.classList.remove('show')});popup.classList.toggle('show')}}
   window.toggleInfo = toggleInfo;
   window.toggleExportDropdown = toggleExportDropdown;
 
