@@ -46,7 +46,8 @@
     "sPd": "2",
     "sMg": "ii",
     "sAlt": "3000",
-    "sOvc": "ii",
+    "sIsolation": "isolated",
+    "sOvc_AC": "ii",
     "sSysV_AC": "300",
     "sSysV_DC": "600",
     "nodes": [

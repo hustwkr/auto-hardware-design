@@ -186,18 +186,18 @@
     var fs='';
     d.sr.forEach(function(r){
       fs+='<p style=margin:4px 0><b>时段'+r.i+':</b> <span class=latex data-l="L_i = L_0 \\times 2^{\\frac{T_{max} - T_{hs_i}}{10}} \\times K_V"></span>'
-        +' = <span class=latex data-l="'+d.l0+' \\times 2^{\\frac('+d.tmax+'-'+r.ths.toFixed(1)+'){10}} \\times '+r.kv.toFixed(3)+'"></span>'
+        +' = <span class=latex data-l="'+d.l0+' \\times 2^{\\frac{('+d.tmax+'-'+r.ths.toFixed(1)+')}{10}} \\times '+r.kv.toFixed(3)+'"></span>'
         +' = <span class=latex data-l="'+r.Li.toFixed(0)+'\\,\\text{h}"></span></p>';
       if(r.rd&&r.rd.length){
         fs+='<p style=margin:2px 0 4px 20px;font-size:.82rem;color:#555>';
         r.rd.forEach(function(x,i){if(i>0)fs+=' + ';fs+=x.iop+'mA@'+x.f+'Hz(K='+x.k.toFixed(2)+')'});
-        fs+='<br><span class=latex data-l="\\Delta T = \\Delta T_0 \\times \\sum_j \\left(\\\\frac{I_j}{I_{rated} \\times K_{freq_j}}\\\\right)^2 / C"></span> = '+r.dt.toFixed(2)+'C, T_{hs}='+r.ths.toFixed(1)+'C</p>';
+        fs+='<br><span class=latex data-l="\\Delta T = \\Delta T_0 \\times \\sum_j \\left(\\frac{I_j}{I_{rated} \\times K_{freq_j}}\\right)^2 / C"></span> = '+r.dt.toFixed(2)+'C, <span class=latex data-l="T_{hs}='+r.ths.toFixed(1)+ '\\text{°C}"></span></p>';
       }
     });
     fs+='<p style=margin:4px 0><b>累计:</b> <span class=latex data-l="D = \\sum_i \\frac{t_i \\times days}{L_i}"></span> = ';
     var ft=true;
     d.sr.forEach(function(r){if(!ft)fs+=' + ';ft=false;fs+=r.dur.toFixed(1)+'x'+d.wd+'/'+r.Li.toFixed(0)});
-    fs+=' = '+(d.dmg*100).toFixed(3)+'%/\\u5E74, \\u5BFF\\u547D = 1/('+d.dmg.toFixed(6)+') = '+d.ly.toFixed(1)+'\\u5E74</p>';
+    fs+=' = '+(d.dmg*100).toFixed(3)+'%/年, 寿命 = 1/('+d.dmg.toFixed(6)+') = '+d.ly.toFixed(1)+'年</p>';
     return fs;
   }
 
@@ -276,7 +276,7 @@
     var b=new Blob([h],{type:'application/msword'});var dn='\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+(te.length?'('+te.join('-')+')':'')+'.doc';saveBlobWithDialog(b,dn);
   }
 
-  /* ── Init ──────────────────────────────── */
+  /* ── Init ──────────────────────── */
   function initCapacitor(){
     document.getElementById("sc").insertAdjacentHTML("beforeend", mSeg(sid++,0,8,60,30,[250,150]));
     document.getElementById("sc").insertAdjacentHTML("beforeend", mSeg(sid++,1,16,40,30,[100]));
@@ -284,11 +284,24 @@
     updT(); calc();
   }
 
+  /* ── Load segments from defaults.json (called by app.js applyDefaults) ─── */
+  function loadSegmentsFromDefaults(segments){
+    if(!Array.isArray(segments)||!segments.length)return false;
+    var sc=document.getElementById('sc');if(sc)sc.innerHTML='';
+    segments.forEach(function(sg,idx){
+      var r=sg.rips||[];
+      if(r.length&&typeof r[0]==='object')r=r.map(function(v){return v.current||0});
+      sc.insertAdjacentHTML('beforeend',mSeg(sid++,idx,sg.dur||8,sg.ta||60,sg.vop||30,r));
+    });
+    updT();calc();
+    return true;
+  }
+
   /* ── Expose to global scope (for inline handlers) ── */
   var expose = [
     'fv','mU','mSeg','sdChange','updT','addSeg','rmSeg','reNum',
     'addRR','removeRippleRow','l2r','renderLatex','calc','calcFormulas',
-    'genRep','exportWord'
+    'genRep','exportWord','loadSegmentsFromDefaults'
   ];
   expose.forEach(function(n){global[n] = global[n] || eval('('+n+')')});
 

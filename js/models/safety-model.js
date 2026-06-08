@@ -197,6 +197,21 @@
     return v; // Already at or above the highest level
   }
 
+  /* ── Previous lower impulse level for within-circuit OVC reduction ─── */
+  function prevImpLevel(impKV) {
+    // impKV: impulse withstand voltage in kV
+    // Returns the previous standard impulse level (kV), or same value if already minimum
+    var v = impKV;
+    for (var i = IMPULSE_LEVELS.length - 1; i >= 0; i--) {
+      if(IMPULSE_LEVELS[i] < v) return IMPULSE_LEVELS[i];
+    }
+    // If exact match, find previous level
+    for (var i = IMPULSE_LEVELS.length - 1; i > 0; i--) {
+      if(IMPULSE_LEVELS[i] === v) return IMPULSE_LEVELS[i-1];
+    }
+    return v; // Already at or below the lowest level
+  }
+
   /* ── Table 13 lookup — IEC clearance from peak voltage & PD ─── */
   function clrFromPeak(peakV, pd) {
     // peakV: in Volts (e.g. impulse Vpeak, TOV Vpeak, working Vpeak)
@@ -286,6 +301,14 @@
     var impKV = circ === 'dc' ? impDC : impAC;
     var isMains = (circ === 'ac');
 
+    /* ── Within-circuit OVC reduction per IEC 62109-1 §7.3.7 ─── */
+    // The OVC determined above applies to circuit-to-earth insulation.
+    // For functional insulation WITHIN each circuit (line-to-line, DC+ to DC-),
+    // the overvoltage category is reduced by one level → lower impulse voltage.
+    if (!toGnd) {
+      impKV = prevImpLevel(impKV);
+    }
+
     /* ── IEC 62109-1 §7.3.7: Insulation type enforcement ─── */
     // Between live parts and accessible conductive parts (PE/enclosure):
     // reinforced insulation is MANDATORY — basic/functional alone is NOT compliant.
@@ -297,12 +320,13 @@
     // Effective insulation type for clearance calculation
     var effIns = (ins === 'reinf' || toGnd) ? 'reinf' : ins;
 
-    /* ── Clearance distances ───────────────────── */
+    /* ── Clearance distances ─────────────── */
     var reqClr;
     if (standard === 'iec') {
       // sysVAC: AC system voltage for TOV lookup (from calcSafety)
       var tovPeak = null;
-      if (isMains && sysVAC) {
+      /* TOV only applies to circuit-to-earth insulation — within-circuit nodes skip it */
+      if (isMains && sysVAC && toGnd) {
         var tovInfo = lookupTov(sysVAC);
         tovPeak = tovInfo ? tovInfo.peak : null;
       }
@@ -391,6 +415,7 @@
     lookupClr: lookupClr,
     lookupCrp: lookupCrp,
     nextImpulseLevel: nextImpulseLevel,
+    prevImpLevel: prevImpLevel,
     clrFromPeak: clrFromPeak,
     calcClearance: calcClearance,
     calcNode: calcNode,

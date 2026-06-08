@@ -34,7 +34,7 @@
       void(target.offsetHeight); // force reflow
 
       // Lazy-init tab content on first visit
-      if(this.dataset.tab==="safety"&&!document.querySelector("#sN .seg")){
+      if(this.dataset.tab==="safety"&&!document.querySelector("#sN [data-id]")){
         var defaultNodes = _defaults && _defaults.safety && Array.isArray(_defaults.safety.nodes) ? _defaults.safety.nodes : null;
         if(typeof initSafety==='function')initSafety(defaultNodes);
       }
@@ -63,13 +63,28 @@
       setVal('dt0',c.dt0);setVal('workdays',c.workdays);setVal('warrantyTarget',c.warrantyTarget);
       if(c.cooling)document.getElementById('cooling').value=c.cooling;
       if(c.scenario)document.getElementById('scenario').value=c.scenario;
+
+      /* Load segments from defaults — replaces initCapacitor placeholders */
+      if(Array.isArray(c.segments)&&c.segments.length){
+        if(typeof loadSegmentsFromDefaults==='function'){
+          loadSegmentsFromDefaults(c.segments);
+        }
+      }
     }
 
     /* Safety defaults */
     var s=d.safety;if(s&&typeof s==='object'){
       setValSelect('sStd',s.sStd);setValSelect('sPd',s.sPd+'');setValSelect('sMg',s.sMg);
-      setValSelect('sAlt',s.sAlt+'');setValSelect('sOvc_AC',s.sOvc_AC||'ii');setValSelect('sOvc_DC',s.sOvc_DC||'ii');
+      setValSelect('sAlt',s.sAlt+'');setValSelect('sIsolation',s.sIsolation||'isolated');
+      setValSelect('sOvc_AC',s.sOvc_AC||'ii');/* sOvc_DC auto-derived in safety.js */
       setVal('sSysV_AC',s.sSysV_AC+'');setVal('sSysV_DC',s.sSysV_DC+'');
+
+      /* Load safety nodes from defaults — replaces initSafety fallback */
+      if(Array.isArray(s.nodes)&&s.nodes.length){
+        if(typeof loadNodesFromDefaults==='function'){
+          loadNodesFromDefaults(s.nodes);
+        }
+      }
     }
   }
 
