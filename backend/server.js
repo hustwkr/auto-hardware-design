@@ -74,11 +74,11 @@ function createDefaults() {
       scenario: "industrial",
       segments: [
         { dur: 6, ta: 75, vop: 400, rips: [
-          { freq: 120, unit: "Hz", current: 800 },
-          { freq: 2,   unit: "kHz", current: 500 }
+          { freq: 120, current: 800 },
+          { freq: 2000, current: 500 }
         ]},
         { dur: 18, ta: 40, vop: 400, rips: [
-          { freq: 120, unit: "Hz", current: 100 }
+          { freq: 120, current: 100 }
         ]}
       ]
     },

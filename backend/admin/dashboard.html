@@ -136,12 +136,14 @@ function renderSegments(segs){
     h+="<div class=\"fgl\"><label>电压Vop(V)</label><input class=\"sv\" type=number value=\""+(sg.vop||30)+"\" min=0 step=1></div></div>";
     h+="<div style=\"margin-top:6px\"><label style=\"font-size:.75rem;color:#64748b\">纹波电流:</label>";
     (sg.rips||[]).forEach(function(r,j){
-      var freq=r.freq||r.f||120,unit=r.unit||"Hz",cur=(r.current!==undefined?r.current:r);
-      if(typeof r==="number"){freq=120;unit="Hz";cur=r}
-      h+="<div class=\"rip-row\"><input class=\"rf\" type=number value=\""+freq+"\" style=width:65px>";
-      h+="<select class=\"ru\"><option value=\"Hz\""+(unit==="Hz"?" selected":"")+">Hz</option><option value=\"kHz\""+(unit==="kHz"?" selected":"")+">kHz</option></select>";
-      h+="<input class=\"rc\" type=number value=\""+cur+"\" min=0 style=width:70px><span style=\"font-size:.78rem;color:#64748b\">mA</span>";
-      h+="<button onclick=\"removeRip("+i+","+j+")\">\u2715</button></div>";
+      var freq=r.freq||r.f||120,cur=(r.current!==undefined?r.current:r);
+      if(typeof r==="number"){freq=120;cur=r}
+      // Convert kHz values for backward compat
+      if(r.unit==="kHz") freq=freq*1000;
+      h+="<div class=\"rip-row\"><input class=\"rf\" type=number value=\"" +freq+ "\" style=width:65px>"
+        "<span style=\"font-size:.7rem;color:#94a3b8;margin-left:2px\">Hz</span>"
+        "<input class=\"rc\" type=number value=\"" +cur+ "\" min=0 style=width:70px><span style=\"font-size:.78rem;color:#64748b\">mA</span>"
+        "<button onclick=\"removeRip("+i+","+j+")\">\\u2715</button></div>";
     });
     h+="<button class=\"btn-sm\" onclick=\"addRip("+i+")\" style=\"margin-top:4px\">+ 纹波</button></div></div>";
   });
@@ -155,7 +157,7 @@ function collectSegments(){
       ta:+(card.querySelector(".st").value)||0,
       vop:+(card.querySelector(".sv").value)||0,
       rips:Array.from(card.querySelectorAll(".rip-row")).map(function(row){
-        return{freq:+(row.querySelector(".rf").value)||120,unit:row.querySelector(".ru").value,current:+(row.querySelector(".rc").value)||0};
+        return{freq:+(row.querySelector(".rf").value)||120,current:+(row.querySelector(".rc").value)||0};
       })
     });
   });
@@ -167,7 +169,7 @@ function addSeg(){
   h+="<div class=\"fg\"><div class=\"fgl\"><label>时长(h/天)</label><input class=\"sd\" type=number value=\"8\" min=0 max=24 step=0.5></div>";
   h+="<div class=\"fgl\"><label>温度Ta(C)</label><input class=\"st\" type=number value=\"50\" min=-40 max=150></div>";
   h+="<div class=\"fgl\"><label>电压Vop(V)</label><input class=\"sv\" type=number value=\"30\" min=0 step=1></div></div>";
-  h+="<div style=\"margin-top:6px\"><label style=\"font-size:.75rem;color:#64748b\">纹波电流:</label><div class=\"rip-row\"><input class=\"rf\" type=number value=\"120\" style=width:65px><select class=\"ru\"><option value=\"Hz\" selected>Hz</option><option value=\"kHz\">kHz</option></select><input class=\"rc\" type=number value=\"100\" min=0 style=width:70px><span style=\"font-size:.78rem;color:#64748b\">mA</span><button onclick=\"removeRip("+n+",0)\">\u2715</button></div>";
+  h+="<div style=\"margin-top:6px\"><label style=\"font-size:.75rem;color:#64748b\">纹波电流:</label><div class=\"rip-row\"><input class=\"rf\" type=number value=\"120\" style=width:65px><span style=\"font-size:.7rem;color:#94a3b8;margin-left:2px\">Hz</span><input class=\"rc\" type=number value=\"100\" min=0 style=width:70px><span style=\"font-size:.78rem;color:#64748b\">mA</span><button onclick=\"removeRip("+n+",0)\">\\u2715</button></div>";
   h+="<button class=\"btn-sm\" onclick=\"addRip("+n+")\" style=\"margin-top:4px\">+ 纹波</button></div></div>";
   document.getElementById("segEditor").insertAdjacentHTML("beforeend",h);
 }
@@ -179,7 +181,7 @@ function removeSeg(i){
 }
 function addRip(i){
   var card=document.querySelectorAll("#segEditor .seg-card")[i],n=card.querySelectorAll(".rip-row").length;
-  var h="<div class=\"rip-row\"><input class=\"rf\" type=number value=\"120\" style=width:65px><select class=\"ru\"><option value=\"Hz\" selected>Hz</option><option value=\"kHz\">kHz</option></select><input class=\"rc\" type=number value=\"100\" min=0 style=width:70px><span style=\"font-size:.78rem;color:#64748b\">mA</span><button onclick=\"removeRip("+i+","+n+")\">\u2715</button></div>";
+  var h="<div class=\"rip-row\"><input class=\"rf\" type=number value=\"120\" style=width:65px><span style=\"font-size:.7rem;color:#94a3b8;margin-left:2px\">Hz</span><input class=\"rc\" type=number value=\"100\" min=0 style=width:70px><span style=\"font-size:.78rem;color:#64748b\">mA</span><button onclick=\"removeRip("+i+","+n+")\">\\u2715</button></div>";
   card.insertAdjacentHTML("beforeend",h);
 }
 function removeRip(i,j){

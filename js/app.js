@@ -14,7 +14,7 @@
   document.addEventListener('click',function(){document.querySelectorAll('.export-dropdown,.info-popup').forEach(function(d){d.classList.remove('show')})});
 
   /* ── Info popup toggle (generic) ───────── */
-  function toggleInfo(e){e.stopPropagation();var icon=e.currentTarget;var popup=icon.nextElementSibling;if(popup&&popup.classList.contains('info-popup')){document.querySelectorAll('.info-popup.show').forEach(function(d){if(d!==popup)d.classList.remove('show')});popup.classList.toggle('show')}}
+  function toggleInfo(e){e.stopPropagation();var icon=e.currentTarget;var fgi=icon.closest('.fgi');if(!fgi)return;var popup=fgi.querySelector(':scope > .info-popup');if(popup){document.querySelectorAll('.info-popup.show').forEach(function(d){if(d!==popup)d.classList.remove('show')});popup.classList.toggle('show')}}
   window.toggleInfo = toggleInfo;
   window.toggleExportDropdown = toggleExportDropdown;
 

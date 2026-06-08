@@ -14,26 +14,26 @@
   var sid = 0;
 
   /* ── Segment markup ────────────────────── */
-  function mU(){return '<select class=fu onchange=calc()><option value=1 selected>Hz</option><option value=1000>kHz</option></select>'}
+  function mU(){return '<span style="font-size:.7rem;color:#94a3b8;margin-left:2px">Hz</span>'}
 
   function mSeg(id,idx,dur,ta,vop,rips){
     var rr="";
     rips.forEach(function(v){
-      rr+="<tr><td class=ripgroup><input class=fv type=number value=120 style=width:55px oninput=calc()>"+mU()+"</td>"
-        +"<td><input class=fc type=number value="+v+" min=0 step=10 style=width:65px oninput=calc()></td>"
+      rr+="<tr><td class=ripgroup><input class=fv type=number value=120 style=width:55px oninput=calc()>" +mU()+ "</td>"
+        +"<td><input class=fc type=number value=" +v+ " min=0 step=10 style=width:65px oninput=calc()><span style=\"font-size:.7rem;color:#94a3b8;margin-left:2px\">mA</span></td>"
         +"<td><button class=btn-sm onclick=removeRippleRow(this)>&times;</button></td></tr>";
     });
     return "<div class=seg data-id="+id+">"
       +"<div class=seg-head><span>时段"+(idx+1)+"</span><span style='font-size:.72rem;color:#94a3b8;font-weight:400'>每天 <span class=sh>"+dur+"</span> h</span>"
         +"<button class=btn-sm style=margin-left:auto;color:#ef4444;padding:1px 6px;font-size:.65rem onclick=rmSeg(this)>&times;删除</button></div>"
       +"<div class=seg-body>"
-        +"<label>h/天</label><input class=sd type=number value="+dur+" min=0 max=24 step=0.5 oninput=sdChange(this);calc()>"
-        +"<label>Ta(C)</label><input class=stp type=number value="+ta+" min=-40 max=150 oninput=calc()>"
-        +"<label>Vop(V)</label><input class=sv type=number value="+vop+" min=0 step=1 oninput=calc()>"
+        +"<label>时长(h)：</label><input class=sd type=number value="+dur+" min=0 max=24 step=0.5 oninput=sdChange(this);calc()>"
+        +"<label>环温(℃)：</label><input class=stp type=number value="+ta+" min=-40 max=150 oninput=calc()>"
+        +"<label>电压(V)：</label><input class=sv type=number value="+vop+" min=0 step=1 oninput=calc()>"
       +"</div>"
-      +"<table class=rt><thead><tr><th>频率</th><th>电流(mA)</th><th></th></tr></thead>"
+      +"<table class=rt><thead><tr><th>频率(Hz)</th><th>电流(mA)</th><th></th></tr></thead>"
         +"<tbody class=rtb>"+rr+"</tbody></table>"
-      +"<button class=btn-sm style=margin-top:3px onclick=addRR(this)>+ 纹波分量</button>"
+      +"<button class=btn-sm onclick=addRR(this)>+ 纹波分量</button>"
     +"</div>";
   }
 
@@ -68,9 +68,9 @@
 
   function addRR(b){
     b.closest(".seg").querySelector(".rtb").insertAdjacentHTML("beforeend",
-      "<tr><td class=ripgroup><input class=fv type=number value=120 style=width:55px oninput=calc()>"+mU()+"</td>"
-      +"<td><input class=fc type=number value=50 min=0 step=10 style=width:65px oninput=calc()></td>"
-      +"<td><button class=btn-sm onclick=removeRippleRow(this)>&times;</button></td></tr>");
+      "<tr><td class=ripgroup><input class=fv type=number value=120 style=width:55px oninput=calc()>" +mU()+ "</td>"
+        +"<td><input class=fc type=number value=50 min=0 step=10 style=width:65px oninput=calc()><span style=\"font-size:.7rem;color:#94a3b8;margin-left:2px\">mA</span></td>"
+        +"<td><button class=btn-sm onclick=removeRippleRow(this)>&times;</button></td></tr>");
     calc();
   }
 
@@ -131,7 +131,7 @@
           vop=+seg.querySelector(".sv").value||0,
           rips=[];
       seg.querySelectorAll(".rtb tr").forEach(function(row){
-        var f=(+row.querySelector(".fv").value||120)*(+row.querySelector(".fu").value||1),
+        var f=(+row.querySelector(".fv").value||120),
             iop=+row.querySelector(".fc").value||0;
         if(iop>0) rips.push({freq:f, current:iop});
       });
@@ -164,13 +164,13 @@
 
     // Summary bar chart
     var td=result.sr.reduce(function(s,r){return s+r.d},0)||1,
-        ah="<p style=margin-bottom:6px><strong>寿命预测</strong></p>"
-      +"<p style=font-size:.85rem>预计寿命: <strong>"+fv(result.ly,1)+" 年</strong></p>"
-      +"<p style=font-size:.85rem>质保期: "+wt+"年 | "+result.mi.l+" | 裕量: <strong>"+fv(result.margin,2)+"x</strong> "+(result.margin>=result.req?"✓":"✗")+"</p>"
-      +"<p style=font-size:.85rem;color:#64748b;margin-top:4px>"+result.wd2+"</p>"
-      +"<p style=font-size:.85rem;margin-top:8px><strong>各时段寿命消耗占比</strong></p>"
-      +"<div style=display:flex;gap:4px;margin-top:4px;align-items:flex-end;flex-wrap:wrap;min-height:50px>";
-    result.sr.forEach(function(r){var p=(r.d/td)*100,h=Math.max(20,p*2);ah+="<div style=display:flex;flex-direction:column;align-items:center;gap:2px><div style=width:32px;height:"+h+"px;background:#2563eb;border-radius:4px 4px 0 0;opacity:.75></div><span style=font-size:.68rem;color:#64748b>"+fv(p,0)+"%</span><span style=font-size:.62rem;color:#64748b>T"+r.i+"</span></div>"});
+        ah="<p style=margin-bottom:4px><strong>寿命预测</strong></p>"
+      +"<p style=font-size:.82rem>预计寿命: <strong>"+fv(result.ly,1)+" 年</strong></p>"
+      +"<p style=font-size:.82rem>质保期: "+wt+"年 | "+result.mi.l+" | 裕量: <strong>"+fv(result.margin,2)+"x</strong> "+(result.margin>=result.req?"✓":"✗")+"</p>"
+      +"<p style=font-size:.82rem;color:#64748b;margin-top:3px>"+result.wd2+"</p>"
+      +"<p style=font-size:.82rem;margin-top:6px><strong>各时段寿命消耗占比</strong></p>"
+      +"<div style=display:flex;gap:3px;margin-top:3px;align-items:flex-end;flex-wrap:wrap;min-height:40px>";
+    result.sr.forEach(function(r){var p=(r.d/td)*100,h=Math.max(16,p*2);ah+="<div style=display:flex;flex-direction:column;align-items:center;gap:1px><div style=width:28px;height:"+h+"px;background:#2563eb;border-radius:3px 3px 0 0;opacity:.75></div><span style=font-size:.64rem;color:#64748b>"+fv(p,0)+"%</span><span style=font-size:.6rem;color:#64748b>T"+r.i+"</span></div>"});
     ah+="</div>";
     document.getElementById("ma").innerHTML=ah;
 
@@ -184,16 +184,16 @@
     var d=window._cd;if(!d||!d.sr||!d.sr.length)return '';
     var fs='';
     d.sr.forEach(function(r){
-      fs+='<p style=margin:4px 0><b>时段'+r.i+':</b> <span class=latex data-l="L_i = L_0 \\times 2^{\\frac{T_{max} - T_{hs_i}}{10}} \\times K_V"></span>'
+      fs+='<p style=margin:3px 0><b>时段'+r.i+':</b> <span class=latex data-l="L_i = L_0 \\times 2^{\\frac{T_{max} - T_{hs_i}}{10}} \\times K_V"></span>'
         +' = <span class=latex data-l="'+d.l0+' \\times 2^{\\frac{('+d.tmax+'-'+r.ths.toFixed(1)+')}{10}} \\times '+r.kv.toFixed(3)+'"></span>'
         +' = <span class=latex data-l="'+r.Li.toFixed(0)+'\\,\\text{h}"></span></p>';
       if(r.rd&&r.rd.length){
-        fs+='<p style=margin:2px 0 4px 20px;font-size:.82rem;color:#555>';
+        fs+='<p style=margin:2px 0 3px 16px;font-size:.8rem;color:#555>';
         r.rd.forEach(function(x,i){if(i>0)fs+=' + ';fs+=x.iop+'mA@'+x.f+'Hz(K='+x.k.toFixed(2)+')'});
         fs+='<br><span class=latex data-l="\\Delta T = \\Delta T_0 \\times \\sum_j \\left(\\frac{I_j}{I_{rated} \\times K_{freq_j}}\\right)^2 / C"></span> = '+r.dt.toFixed(2)+'C, <span class=latex data-l="T_{hs}='+r.ths.toFixed(1)+ '\\text{°C}"></span></p>';
       }
     });
-    fs+='<p style=margin:4px 0><b>累计:</b> <span class=latex data-l="D = \\sum_i \\frac{t_i \\times days}{L_i}"></span> = ';
+    fs+='<p style=margin:3px 0><b>累计:</b> <span class=latex data-l="D = \\sum_i \\frac{t_i \\times days}{L_i}"></span> = ';
     var ft=true;
     d.sr.forEach(function(r){if(!ft)fs+=' + ';ft=false;fs+=r.dur.toFixed(1)+'x'+d.wd+'/'+r.Li.toFixed(0)});
     fs+=' = '+(d.dmg*100).toFixed(3)+'%/年, 寿命 = 1/('+d.dmg.toFixed(6)+') = '+d.ly.toFixed(1)+'年</p>';
@@ -241,13 +241,13 @@
         +"<tr><td>质保期</td><td>"+d.wt+" 年</td></tr>"
         +"<tr><td>裕量</td><td>"+fv(d.margin,2)+"x</td></tr>"
         +"<tr><td>判定</td><td><strong>"+d.ws+"</strong></td></tr></table>"
-      +"<p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>结论:</strong> "+d.wd2+"</p>"
+      +"<p style=margin:6px 0;padding:6px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>结论:</strong> "+d.wd2+"</p>"
       +calcFormulas()
-      +"<h3>6. 设计建议</h3><ul style=margin:4px 0 0 20px>"
+      +"<h3>6. 设计建议</h3><ul style=margin:3px 0 0 18px>"
         +"<li>温度每降10C寿命延长一倍</li>"
         +"<li>"+(d.margin>=d.req?"裕量满足":"裕量不足,需改善")+"</li>"
         +"<li>建议高温负载试验验证</li></ul>"
-      +"<div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b>"
+      +"<div style=margin-top:14px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.8rem;color:#64748b>"
         +"<span>电解电容寿命计算器 v2.0</span><span>报告: "+ds+" "+ts+"</span></div>";
 
     setTimeout(renderLatex,200);

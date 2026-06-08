@@ -18,7 +18,7 @@
     var po='<option value="0" '+(pcb==0?'selected':'')+'>否(端子)</option><option value="1" '+(pcb==1?'selected':'')+'>是(PCB)</option>';
     var co='<option value="0" '+(coat==0?'selected':'')+'>无</option><option value="1" '+(coat==1?'selected':'')+'>Type 1 (降PD)</option><option value="2" '+(coat==2?'selected':'')+'>Type 2/灌封</option>';
     var go='<option value="0" '+(!toGnd?'selected':'')+'>否(线间)</option><option value="1" '+(toGnd?'selected':'')+'>是(对地)</option>';
-    return '<tr class="seg" data-id='+id+'>'
+    return '<tr data-id='+id+'>'
       +'<td style="text-align:center;color:#94a3b8;font-size:.72rem">'+(idx+1)+'</td>'
       +'<td><input class=sname type=text value="'+name+'" style="width:80px;border:1px solid #e2e8f0;border-radius:3px;padding:2px 4px;font-size:.78rem"></td>'
       +'<td><select class=stoGnd style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+go+'</select></td>'

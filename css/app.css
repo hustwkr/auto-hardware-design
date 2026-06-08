@@ -71,7 +71,7 @@ h1.page-title, .tab-content > h1 {
 .tab-content > p {
   color: var(--color-text-soft);
   font-size: var(--fs-sm);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-md);
   line-height: 1.6;
 }
 
@@ -125,8 +125,8 @@ h1.page-title, .tab-content > h1 {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
-  margin-bottom: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
   box-shadow: var(--shadow-sm);
 }
 
@@ -134,8 +134,8 @@ h1.page-title, .tab-content > h1 {
   font-size: var(--fs-base);
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 6px;
-  padding-bottom: 4px;
+  margin-bottom: 4px;
+  padding-bottom: 3px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -153,9 +153,15 @@ h1.page-title, .tab-content > h1 {
 /* Inline (compact) field group — label + input on same row */
 .fgi          { display: flex; align-items: center; gap: 6px; }
 .fgi label    { font-size: var(--fs-xs); font-weight: 500; color: var(--color-text-soft); white-space: nowrap; min-width: 0; }
+.fgi label::after { content: "："; }
+
+/* Unit label after inputs — compact gray text */
+.unit { font-size: .7rem; color: #94a3b8; white-space: nowrap; margin-left: 2px; }
 
 /* Compact param grid — 2-col, inline fields */
-.param-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+.param-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 28px; }
+/* Align inputs in same column: fix label width */
+.param-grid .fgi label { min-width: 110px; }
 
 .fgl input,
 .fgl select,
@@ -172,7 +178,7 @@ h1.page-title, .tab-content > h1 {
 
 .fgi input,
 .fgi select {
-  flex: 1;
+  width: 120px;
   min-width: 0;
   padding: 4px 6px;
   font-size: var(--fs-sm);
@@ -190,15 +196,28 @@ h1.page-title, .tab-content > h1 {
 .hint { font-size: var(--fs-xs); color: var(--color-text-soft); margin-top: 1px; }
 
 /* ============================================================
-   Segments (capacitor operating profiles) — compact layout
+   Segments (capacitor operating profiles) — two-column grid
    ============================================================ */
+#sc {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
 .seg {
+  display: flex;
+  flex-direction: column;
   background: #fafbfd;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 6px 8px;
-  margin-bottom: 5px;
 }
+
+/* Ripple table keeps natural height; "+ 纹波分量" button pushed down, narrow & left */
+.seg > button:last-child { margin-top: auto; width: fit-content; }
+
+/* Ripple table delete buttons — red × */
+.rt .btn-sm { color: #ef4444; }
 
 /* Segment header row — compact single line */
 .seg-head {
@@ -224,8 +243,8 @@ h1.page-title, .tab-content > h1 {
 .rt th, .rt td { text-align: left; padding: 2px 4px; border: 1px solid var(--color-border); }
 .rt thead th { background: #f8fafc; font-weight: 500; font-size: .68rem; color: var(--color-text-soft); }
 
-/* Ripple inline field group */
-.ripgroup { display: flex; align-items: center; gap: 2px; }
+/* Ripple inline field group — display:flex only when NOT a <td> (table cells must stay table-cell) */
+.ripgroup:not(td) { display: flex; align-items: center; gap: 2px; }
 
 /* ============================================================
    Tables — report, results, ripple, nodes
@@ -264,8 +283,8 @@ table.data-tbl tbody tr:hover {
 .rt thead th { background: #f8fafc; font-weight: 500; font-size: var(--fs-xs); color: var(--color-text-soft); }
 
 /* Results grid table */
-.sg-tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-top: 6px; }
-.sg-tbl th, .sg-tbl td { text-align: left; padding: 6px 10px; border: 1px solid var(--color-border); }
+.sg-tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-top: 4px; }
+.sg-tbl th, .sg-tbl td { text-align: left; padding: 4px 8px; border: 1px solid var(--color-border); }
 .sg-tbl thead th { background: #f8fafc; font-weight: 600; color: var(--color-text-mid); font-size: var(--fs-xs); }
 .sg-tbl tbody tr:hover { background: #fafbfd; }
 
@@ -291,7 +310,7 @@ table.data-tbl tbody tr:hover {
 .btn-sm:hover { background: #f8fafc; border-color: #cbd5e1; }
 
 .btn {
-  padding: 8px 18px;
+  padding: 6px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -319,17 +338,17 @@ table.data-tbl tbody tr:hover {
 /* ============================================================
    Result Cards (KPI grid)
    ============================================================ */
-.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 
 .ri {
-  padding: 12px 14px;
+  padding: 8px 10px;
   background: #fafbfd;
   border: 1px solid var(--color-border-lt);
   border-radius: var(--radius-sm);
 }
 
-.ri .rl { font-size: var(--fs-xs); color: var(--color-text-soft); margin-bottom: 2px; }
-.ri .rv { font-size: 1.2rem; font-weight: 700; color: var(--color-text); }
+.ri .rl { font-size: var(--fs-xs); color: var(--color-text-soft); margin-bottom: 1px; }
+.ri .rv { font-size: 1.1rem; font-weight: 700; color: var(--color-text); }
 
 /* ============================================================
    Badges (warranty status)
@@ -343,7 +362,7 @@ table.data-tbl tbody tr:hover {
 /* ============================================================
    Warranty Bar
    ============================================================ */
-.wb { margin: 10px 0; height: 18px; background: var(--color-border-lt); border-radius: 999px; overflow: hidden; position: relative; }
+.wb { margin: 8px 0; height: 14px; background: var(--color-border-lt); border-radius: 999px; overflow: hidden; position: relative; }
 .wf { height: 100%; border-radius: 999px; transition: width .3s ease; }
 .wm { position: absolute; top: 0; height: 100%; border-right: 2px dashed var(--color-danger); z-index: 2; }
 
@@ -354,9 +373,9 @@ table.data-tbl tbody tr:hover {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 24px 28px;
+  padding: 16px 20px;
   font-size: var(--fs-base);
-  line-height: 1.65;
+  line-height: 1.55;
   box-shadow: var(--shadow-sm);
 }
 
@@ -364,7 +383,7 @@ table.data-tbl tbody tr:hover {
   font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--color-text);
-  margin: 20px 0 10px;
+  margin: 14px 0 6px;
 }
 
 #rc h3:first-child, #sRc h3:first-child { margin-top: 0; }
@@ -372,13 +391,13 @@ table.data-tbl tbody tr:hover {
 #rc table, #sRc table {
   width: 100%;
   border-collapse: collapse;
-  margin: var(--space-sm) 0;
+  margin: 6px 0;
 }
 
 #rc th, #sRc th,
 #rc td, #sRc td {
   text-align: left;
-  padding: 7px 12px;
+  padding: 5px 8px;
   border: 1px solid var(--color-border);
   font-size: var(--fs-sm);
 }

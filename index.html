@@ -26,15 +26,15 @@
 <h1 style="font-size:1.4rem;margin-bottom:2px">电解电容寿命计算工具 <span style="font-size:.82rem;font-weight:400;color:#64748b">Electrolytic Capacitor Lifetime Calculator</span></h1>
 <p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35">Arrhenius + Miner 累积损伤 + 多段运行剖面 + 多频率纹波叠加 + 质保期判定</p>
 
-<div class="card"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><h2 style="margin:0;border:none;padding:0;font-size:.82rem">额定参数 &amp; 项目信息</h2></div><div class="param-grid">
-    <div class="fgi"><label>项目</label><input type="text" id="projName" placeholder="选填"></div>
-    <div class="fgi"><label>型号</label><input type="text" id="capModel" placeholder="选填"></div>
-    <div class="fgi"><label>L0(h)</label><input type="number" id="l0" value="2000" min="100" step="100"></div>
-    <div class="fgi"><label>Tmax(C)</label><input type="number" id="tmax" value="105" min="60" max="150"></div>
-    <div class="fgi"><label>Vrated(V)</label><input type="number" id="vrated" value="50" min="1" step="1"></div>
-    <div class="fgi"><label>Irated(mA)</label><input type="number" id="irated" value="500" min="1" step="10"></div>
-    <div class="fgi" style="position:relative"><label>DT0(C)</label><input type="number" id="dt0" value="10" min="1" max="30" step="1"><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.6rem;font-weight:700;cursor:pointer;margin-left:4px;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:260px"><strong>最大芯温升 ΔT₀</strong><br>电容在额定纹波电流 Irated 下，芯部相对于外壳的最大允许温升。决定纹波发热计算基准。<br><br><strong>如何选取：</strong><br>• <b>标准型</b>：ΔT₀ = 10°C（大多数常规品）<br>• <b>长寿命型</b>：ΔT₀ = 5~6°C（低ESR设计，芯温更低，寿命更长）<br>• 具体数值以制造商数据手册为准</div></div>
-    <div class="fgi"><label>C(uF)</label><input type="number" id="cap" value="470" min="1" step="1"></div>
+<div class="card"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><h2 style="margin:0;border:none;padding:0;font-size:.82rem">基本信息&器件参数</h2></div><div class="param-grid">
+    <div class="fgi"><label>项目名称</label><input type="text" id="projName" placeholder="选填"></div>
+    <div class="fgi"><label>器件型号</label><input type="text" id="capModel" placeholder="选填"></div>
+    <div class="fgi"><label>额定寿命(h)</label><input type="number" id="l0" value="2000" min="100" step="100"><span class="unit">h</span></div>
+    <div class="fgi"><label>最高温度(C)</label><input type="number" id="tmax" value="105" min="60" max="150"><span class="unit">°C</span></div>
+    <div class="fgi"><label>额定电压(V)</label><input type="number" id="vrated" value="50" min="1" step="1"><span class="unit">V</span></div>
+    <div class="fgi"><label>额定纹波电流(mA)</label><input type="number" id="irated" value="500" min="1" step="10"><span class="unit">mA</span></div>
+    <div class="fgi" style="position:relative"><label>最大芯温升(C) <span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><input type="number" id="dt0" value="10" min="1" max="30" step="1"><span class="unit">°C</span><div class="info-popup" style="width:260px"><strong>最大芯温升 ΔT₀</strong><br>电容在额定纹波电流 Irated 下，芯部相对于外壳的最大允许温升。决定纹波发热计算基准。<br><br><strong>如何选取：</strong><br>• <b>标准型</b>：ΔT₀ = 10°C（大多数常规品）<br>• <b>长寿命型</b>：ΔT₀ = 5~6°C（低ESR设计，芯温更低，寿命更长）<br>• 具体数值以制造商数据手册为准</div></div>
+    <div class="fgi"><label>电容量(uF)</label><input type="number" id="cap" value="470" min="1" step="1"><span class="unit">μF</span></div>
   </div></div>
 
 <div class="layout">
@@ -50,7 +50,7 @@
 
   <div class="card"><h2>环境与质保</h2><div class="param-grid">
       <div class="fgi"><label>散热条件</label><select id="cooling"><option value="1.0" selected>自然对流</option><option value="1.15">强制风冷 1-2m/s</option><option value="1.30">强制风冷 &gt;2m/s</option></select></div>
-      <div class="fgi"><label>工作天/年</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"></div>
+      <div class="fgi"><label>每年工作天数</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"><span class="unit">天</span></div>
       <div class="fgi"><label>质保期(年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
       <div class="fgi"><label>场景</label><select id="scenario"><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select></div>
     </div></div>
@@ -66,13 +66,13 @@
     <div class="ri"><div class="rl">最恶劣时段芯温</div><div class="rv"><span id="wt">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px">C</span></div></div>
     <div class="ri"><div class="rl">最恶劣时段 K_T</div><div class="rv"><span id="wk">-</span></div></div>
   </div>
-  <div style="margin-top:14px"><h3 style="font-size:.88rem;font-weight:600;margin-bottom:8px">质保期裕量</h3>
-    <div style="display:flex;justify-content:space-between;font-size:.82rem;color:#64748b"><span id="wd">-</span></div>
-    <div class="wb" style="margin-top:8px"><div class="wf" id="wf" style="width:0;background:#10b981"></div><div class="wm" id="wm" style="left:0"></div></div>
-    <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#64748b"><span>0 年</span><span id="wtl">目标: - 年</span><span id="wml">-</span></div>
+  <div style="margin-top:10px"><h3 style="font-size:.85rem;font-weight:600;margin-bottom:5px">质保期裕量</h3>
+    <div style="display:flex;justify-content:space-between;font-size:.78rem;color:#64748b"><span id="wd">-</span></div>
+    <div class="wb" style="margin-top:6px"><div class="wf" id="wf" style="width:0;background:#10b981"></div><div class="wm" id="wm" style="left:0"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#64748b"><span>0 年</span><span id="wtl">目标: - 年</span><span id="wml">-</span></div>
   </div>
-  <div style="margin-top:14px"><h3 style="font-size:.88rem;font-weight:600;margin-bottom:6px">各时段寿命消耗</h3>
-    <table class="sg-tbl"><thead><tr><th>时段</th><th>h/天</th><th>芯温C</th><th>K_T</th><th>K_V</th><th>Li (h)</th><th>年损伤</th></tr></thead><tbody id="srb"></tbody></table>
+  <div style="margin-top:10px"><h3 style="font-size:.85rem;font-weight:600;margin-bottom:4px">各时段寿命消耗</h3>
+    <table class="sg-tbl"><thead><tr><th>时段</th><th>时长(h)</th><th>芯温C</th><th>K_T</th><th>K_V</th><th>Li (h)</th><th>年损伤</th></tr></thead><tbody id="srb"></tbody></table>
   </div>
   </div>
   <div class="card"><h2>寿命评估</h2><div id="ma" style="font-size:.88rem"><p>-</p></div></div>
@@ -80,8 +80,8 @@
 </div><!-- /layout -->
 
 <!-- Report section -->
-<div style="margin-top:24px">
-  <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+<div style="margin-top:16px">
+  <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
     <h2 style="font-size:1.1rem;font-weight:600">设计报告</h2>
     <div style="display:flex;gap:8px">
       <button class="btn" onclick="genRep()">刷新报告</button>

@@ -17,12 +17,10 @@
         "rips": [
           {
             "freq": 120,
-            "unit": "Hz",
             "current": 800
           },
           {
-            "freq": 2,
-            "unit": "kHz",
+            "freq": 2000,
             "current": 500
           }
         ]
@@ -34,7 +32,6 @@
         "rips": [
           {
             "freq": 120,
-            "unit": "Hz",
             "current": 100
           }
         ]
