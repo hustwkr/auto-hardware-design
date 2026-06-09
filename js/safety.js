@@ -39,7 +39,7 @@
     sCalc();
   }
 
-  function sRmNode(b){b.closest(".seg").remove();sReNum();sCalc();}
+  function sRmNode(b){b.closest("tr[data-id]").remove();sReNum();sCalc()};
 
   function sReNum(){
     document.querySelectorAll("#sN .seg").forEach(function(s,i){s.cells[0].textContent=i+1;});

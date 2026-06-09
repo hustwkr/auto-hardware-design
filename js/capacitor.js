@@ -58,7 +58,7 @@
     updT(); calc();
   }
 
-  function rmSeg(b){b.closest(".seg").remove();reNum();calc()}
+  function rmSeg(b){b.closest(".seg").remove();reNum();updT();calc()}
 
   function reNum(){
     document.querySelectorAll("#sc .seg").forEach(function(s,i){
@@ -182,23 +182,46 @@
   /* ── Formula rendering (uses model data) ─── */
   function calcFormulas(){
     var d=window._cd;if(!d||!d.sr||!d.sr.length)return '';
+    var ir=d.irated;
     var fs='';
     d.sr.forEach(function(r){
-      fs+='<p style=margin:3px 0><b>时段'+r.i+':</b> <span class=latex data-l="L_i = L_0 \\times 2^{\\frac{T_{max} - T_{hs_i}}{10}} \\times K_V"></span>'
-        +' = <span class=latex data-l="'+d.l0+' \\times 2^{\\frac{('+d.tmax+'-'+r.ths.toFixed(1)+')}{10}} \\times '+r.kv.toFixed(3)+'"></span>'
-        +' = <span class=latex data-l="'+r.Li.toFixed(0)+'\\,\\text{h}"></span></p>';
+      fs+='<p style="margin:4px 0 2px 0"><b>时段'+r.i+' — ① 温升计算</b></p>';
       if(r.rd&&r.rd.length){
-        fs+='<p style=margin:2px 0 3px 16px;font-size:.8rem;color:#555>';
-        r.rd.forEach(function(x,i){if(i>0)fs+=' + ';fs+=x.iop+'mA@'+x.f+'Hz(K='+x.k.toFixed(2)+')'});
-        fs+='<br><span class=latex data-l="\\Delta T = \\Delta T_0 \\times \\sum_j \\left(\\frac{I_j}{I_{rated} \\times K_{freq_j}}\\right)^2 / C"></span> = '+r.dt.toFixed(2)+'C, <span class=latex data-l="T_{hs}='+r.ths.toFixed(1)+ '\\text{°C}"></span></p>';
+        fs+='<p style="margin:1px 0 1px 8px;font-size:.85rem;color:#444">';
+        fs+='<span class=latex data-l="\\Delta T_i = \\Delta T_0 \\times \\sum_j \\left(\\frac{I_{op,j}}{I_{rated} \\cdot K_{freq,j}}\\right)^2"></span></p>';
+        fs+='<p style="margin:1px 0 3px 8px;font-size:.85rem;color:#666">=';
+        fs+='<span class=latex data-l="'+d.dt0+' \\times (';
+        r.rd.forEach(function(x,j){if(j>0)fs+=' + ';fs+='<span class=latex data-l="(\\frac{'+x.iop+'}{'+ir+' \\cdot '+x.k.toFixed(2)+'})^2"></span>'});
+        fs+=')</span></p>';
+        fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#333">=';
+        fs+='<span class=latex data-l="\\Delta T_'+r.i+' = '+r.dt.toFixed(2)+' \\text{°C}"></span></p>';
+      } else {
+        fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#666">无纹波输入, ΔT = 0°C</p>';
       }
+      fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#333">';
+      fs+='T<sub>hs,'+r.i+'</sub> = T_a + \\Delta T = '+r.ta.toFixed(1)+' + '+(r.dt>0?r.dt.toFixed(2):'0')+' = '+r.ths.toFixed(1)+'°C</p>';
+
+      fs+='<p style="margin:4px 0 2px 0"><b>时段'+r.i+' — ② 寿命计算</b></p>';
+      fs+='<p style="margin:1px 0 1px 8px;font-size:.85rem;color:#444">';
+      fs+='<span class=latex data-l="L_i = L_0 \\cdot 2^{\\frac{T_{max} - T_{hs,i}}{10}} \\cdot K_V"></span></p>';
+      fs+='<p style="margin:1px 0 3px 8px;font-size:.85rem;color:#666">=';
+      fs+='<span class=latex data-l="L_'+r.i+' = '+d.l0+' \\cdot 2^{\\frac{'+d.tmax+' - '+r.ths.toFixed(1)+'}{10}} \\cdot '+r.kv.toFixed(3)+'</span></p>';
+      fs+='<p style="margin:1px 0 6px 8px;font-size:.85rem;color:#333">=';
+      fs+='<span class=latex data-l="L_'+r.i+' = '+r.Li.toFixed(0)+' \\text{h}"></span></p>';
     });
-    fs+='<p style=margin:3px 0><b>累计:</b> <span class=latex data-l="D = \\sum_i \\frac{t_i \\times days}{L_i}"></span> = ';
+
+    fs+='<p style="margin:6px 0 2px 0"><b>累计损伤 (Miner准则)</b></p>';
+    fs+='<p style="margin:1px 0 1px 8px;font-size:.85rem;color:#444">';
+    fs+='<span class=latex data-l="D = \\sum_i \\frac{t_i \\cdot N_{days}}{L_i}"></span></p>';
+    fs+='<p style="margin:1px 0 3px 8px;font-size:.85rem;color:#666">=';
     var ft=true;
-    d.sr.forEach(function(r){if(!ft)fs+=' + ';ft=false;fs+=r.dur.toFixed(1)+'x'+d.wd+'/'+r.Li.toFixed(0)});
-    fs+=' = '+(d.dmg*100).toFixed(3)+'%/年, 寿命 = 1/('+d.dmg.toFixed(6)+') = '+d.ly.toFixed(1)+'年</p>';
+    d.sr.forEach(function(r){if(!ft)fs+=' + ';ft=false;fs+='<span class=latex data-l="\\frac{'+r.dur.toFixed(1)+' \\cdot '+d.wd+'}{'+r.Li.toFixed(0)+'}"></span>'});
+    fs+='</p>';
+    fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#333">=';
+    fs+='<span class=latex data-l="D = '+(d.dmg*100).toFixed(3)+'\\% / \\text{年}, \\quad \\text{寿命} = 1/'+d.dmg.toFixed(6)+' = '+d.ly.toFixed(1)+' \\text{年}"></span></p>';
     return fs;
   }
+
 
   /* ── Report generation (DOM-only) ───────── */
   function genRep(){
@@ -220,33 +243,45 @@
 
     document.getElementById("rc").innerHTML=
       "<h3>1. 项目信息</h3><table><tr><th>项目</th><th>内容</th></tr>"
-        +"<tr><td>报告编号</td><td>EL-"+ds.replace(/\//g,"")+"-" +(1e3+Math.floor(9e3*Math.random()))+"</td></tr>"
-        +"<tr><td>生成日期</td><td>"+ds+" "+ts+"</td></tr>"
+        +"<tr><td>项目名称</td><td>"+(document.getElementById("projName").value||"未填写")+"</td></tr>"
+
+        +"<tr><td>器件型号</td><td>"+(document.getElementById("capModel").value||"未填写")+"</td></tr>"
         +"<tr><td>应用场景</td><td>"+d.mi.l+"</td></tr>"
         +"<tr><td>散热</td><td>"+document.getElementById("cooling").selectedOptions[0].text+"</td></tr>"
         +"<tr><td>年工作天数</td><td>"+d.wd+"</td></tr>"
         +"<tr><td>质保期</td><td>"+d.wt+"年</td></tr>"
         +"<tr><td>时段数</td><td>"+d.sr.length+"</td></tr>"
         +"<tr><td>纹波分量</td><td>"+rc+"</td></tr></table>"
-      +"<h3>2. 额定参数</h3><table><tr><th>参数</th><th>数值</th></tr>"
-        +"<tr><td>L0</td><td>"+d.l0+" h</td></tr>"
-        +"<tr><td>Tmax</td><td>"+d.tmax+" C</td></tr>"
-        +"<tr><td>Vrated</td><td>"+(d.vr||d.vrated)+" V</td></tr>"
-        +"<tr><td>Irated</td><td>"+(d.ir||d.irated)+" mA</td></tr>"
-        +"<tr><td>DT0</td><td>"+d.dt0+" C</td></tr></table>"
+      +"<h3>2. 额定参数</h3><table style='border-collapse:collapse;width:auto;margin:8px 0'><tr>"
+
+        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>L<sub>0</sub></td>"
+
+        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>T<sub>max</sub></td>"
+
+        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>V<sub>rated</sub></td>"
+
+        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>I<sub>rated</sub></td>"
+
+        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>ΔT<sub>0</sub></td></tr>"
+
+        +"<tr><td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+d.l0+" h</td>"
+
+        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+(d.vr||d.vrated)+" V</td>"
+
+        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+(d.ir||d.irated)+" mA</td>"
+
+        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+d.dt0+" °C</td></tr></table>"
+
       +"<h3>3. 运行剖面</h3><table><tr><th>时段</th><th>h/天</th><th>Ta C</th><th>Vop V</th><th>DT C</th><th>Ths C</th><th>KT</th><th>KV</th><th>Li h</th><th>纹波</th></tr>"+sr+"</table>"
-      +"<h3>4. 累积损伤</h3><table><tr><th>项目</th><th>数值</th></tr>"
+      +"<h3>4. 计算过程</h3>"+calcFormulas()
+
+      +"<h3>5. 结论</h3><table><tr><th>项目</th><th>数值</th></tr>"
+
         +"<tr><td>年损伤 D</td><td>"+fv(d.dmg*100,3)+"%</td></tr>"
         +"<tr><td>预计寿命</td><td>"+fv(d.ly,1)+" 年</td></tr>"
         +"<tr><td>质保期</td><td>"+d.wt+" 年</td></tr>"
         +"<tr><td>裕量</td><td>"+fv(d.margin,2)+"x</td></tr>"
         +"<tr><td>判定</td><td><strong>"+d.ws+"</strong></td></tr></table>"
-      +"<p style=margin:6px 0;padding:6px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>结论:</strong> "+d.wd2+"</p>"
-      +calcFormulas()
-      +"<h3>6. 设计建议</h3><ul style=margin:3px 0 0 18px>"
-        +"<li>温度每降10C寿命延长一倍</li>"
-        +"<li>"+(d.margin>=d.req?"裕量满足":"裕量不足,需改善")+"</li>"
-        +"<li>建议高温负载试验验证</li></ul>"
       +"<div style=margin-top:14px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.8rem;color:#64748b>"
         +"<span>电解电容寿命计算器 v2.0</span><span>报告: "+ds+" "+ts+"</span></div>";
 
@@ -266,11 +301,9 @@
     h+='<p>\u62a5\u544a\u7f16\u53f7: EL-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
     h+='<p>\u751f\u6210\u65e5\u671f: '+new Date().toLocaleDateString('zh-CN')+'</p>';
     h+='<h2>1. \u9879\u76ee\u4fe1\u606f</h2><table><tr><th>\u9879\u76ee</th><th>\u5185\u5bb9</th></tr>'+(pn?'<tr><td>\u9879\u76ee\u540d\u79f0</td><td>'+pn+'</td></tr>':'')+(cm?'<tr><td>\u7535\u5bb9\u578b\u53f7</td><td>'+cm+'</td></tr>':'')+'<tr><td>\u5e94\u7528\u573a\u666f</td><td>'+d.mi.l+'</td></tr><tr><td>\u6563\u70ed\u6761\u4ef6</td><td>'+document.getElementById("cooling").selectedOptions[0].text+'</td></tr><tr><td>\u5de5\u4f5c\u5929\u6570</td><td>'+d.wd+'</td></tr><tr><td>\u8d28\u4fdd\u671f</td><td>'+d.wt+'\u5e74</td></tr></table>';
-    h+='<h2>2. \\u989d\\u5b9a\\u53c2\\u6570</h2><table><tr><th>\\u53c2\\u6570</th><th>\\u6570\\u503c</th></tr><tr><td>L0</td><td>'+d.l0+' h</td></tr><tr><td>Tmax</td><td>'+d.tmax+' C</td></tr><tr><td>Vrated</td><td>'+(d.vr||d.vrated)+' V</td></tr><tr><td>Irated</td><td>'+(d.ir||d.irated)+' mA</td></tr><tr><td>DT0</td><td>'+d.dt0+' C</td></tr></table>';
+    h+='<h2>2. \u989d\u5b9a\u53c2\u6570</h2><table><tr><th>\u53c2\u6570</th><th>\u6570\u503c</th></tr><tr><td>L0</td><td>'+d.l0+' h</td></tr><tr><td>Tmax</td><td>'+d.tmax+' C</td></tr><tr><td>Vrated</td><td>'+(d.vr||d.vrated)+' V</td></tr><tr><td>Irated</td><td>'+(d.ir||d.irated)+' mA</td></tr><tr><td>DT0</td><td>'+d.dt0+' C</td></tr></table>';
     h+='<h2>3. \u8fd0\u884c\u7ed3\u679c</h2><table><tr><th>\u65f6\u6bb5</th><th>h/\u5929</th><th>Ta C</th><th>Vop V</th><th>\u0394T C</th><th>Ths C</th><th>K_T</th><th>K_V</th><th>Li h</th><th>\u7eb9\u6ce2</th></tr>'+sr+'</table>';
-    h+='<h2>4. \u8bc4\u4f30</h2><table><tr><th>\u9879\u76ee</th><th>\u503c</th></tr><tr><td>\u5e74\u635f\u4f24</td><td>'+(d.dmg*100).toFixed(3)+'%</td></tr><tr><td>\u9884\u8ba1\u5bff\u547d</td><td>'+lh+' h / '+fv(d.ly,1)+' \u5e74</td></tr><tr><td>\u6807\u51c6\u8981\u6c42</td><td>'+d.req+'x ('+d.mi.l+')</td></tr><tr><td>\u8fbe\u6807\u500d\u6570</td><td>'+fv(d.margin,2)+'x</td></tr><tr><td>\u5224\u5b9a</td><td><strong>'+d.ws+'</strong></td></tr></table>';
-    h+='<p style="margin-top:16px">'+fh+'</p>';
-    h+='<h2>5. \u8bbe\u8ba1\u5efa\u8bae</h2><ul><li>\u6e29\u5ea6\u6bcf\u964d10C\uff0c\u5bff\u547d\u5ef6\u957f\u4e00\u500d</li><li>'+(d.margin>=d.req?' \u8d28\u4fdd\u671f\u9884\u91cf\u6ee1\u8db3':'\u8d28\u4fdd\u671f\u9884\u91cf\u4e0d\u8db3\uff0c\u5efa\u8bae\u964d\u4f4e\u6838\u6e29\u6216\u63d2\u6362\u66f4\u9ad8\u7ea7\u7535\u5bb9')+'</li><li>\u5efa\u8bae\u8fdb\u884c\u9ad8\u6e29\u8d1f\u8f7d\u8bd5\u9a8c\u9a8c\u8bc1</li></ul>';
+    h+='<h2>4. 计算过程</h2><p style="margin-top:16px">'+fh+'</p>';
     h+='<p style="margin-top:20px"><i>\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8ba1\u7b97\u5668 v2.0 - \u62a5\u544a\u81ea\u52a8\u751f\u6210</i></p></body></html>';
     var b=new Blob([h],{type:'application/msword'});var dn='\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+(te.length?'('+te.join('-')+')':'')+'.doc';saveBlobWithDialog(b,dn);
   }
