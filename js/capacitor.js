@@ -189,23 +189,26 @@
       if(r.rd&&r.rd.length){
         fs+='<p style="margin:1px 0 1px 8px;font-size:.85rem;color:#444">';
         fs+='<span class=latex data-l="\\Delta T_i = \\Delta T_0 \\times \\sum_j \\left(\\frac{I_{op,j}}{I_{rated} \\cdot K_{freq,j}}\\right)^2"></span></p>';
+        /* Build substitution as single LaTeX string, then wrap in one span */
+        var sub='';sub+=d.dt0+' \\times (';
+        r.rd.forEach(function(x,j){if(j>0)sub+=' + ';sub+='\\left(\\frac{'+x.iop+'}{'+ir+' \\cdot '+x.k.toFixed(2)+'}\\right)^2'});
+        sub+=')';
         fs+='<p style="margin:1px 0 3px 8px;font-size:.85rem;color:#666">=';
-        fs+='<span class=latex data-l="'+d.dt0+' \\times (';
-        r.rd.forEach(function(x,j){if(j>0)fs+=' + ';fs+='<span class=latex data-l="(\\frac{'+x.iop+'}{'+ir+' \\cdot '+x.k.toFixed(2)+'})^2"></span>'});
-        fs+=')</span></p>';
+        fs+='<span class=latex data-l="'+sub+'"></span></p>';
         fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#333">=';
         fs+='<span class=latex data-l="\\Delta T_'+r.i+' = '+r.dt.toFixed(2)+' \\text{°C}"></span></p>';
       } else {
         fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#666">无纹波输入, ΔT = 0°C</p>';
       }
+      /* Ths line as single KaTeX span — no mixed HTML/LaTeX */
       fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#333">';
-      fs+='T<sub>hs,'+r.i+'</sub> = T_a + \\Delta T = '+r.ta.toFixed(1)+' + '+(r.dt>0?r.dt.toFixed(2):'0')+' = '+r.ths.toFixed(1)+'°C</p>';
+      fs+='<span class=latex data-l="T_{hs,'+r.i+'} = T_a + \\Delta T = '+r.ta.toFixed(1)+' + '+(r.dt>0?r.dt.toFixed(2):'0')+' = '+r.ths.toFixed(1)+'\\text{°C}"></span></p>';
 
       fs+='<p style="margin:4px 0 2px 0"><b>时段'+r.i+' — ② 寿命计算</b></p>';
       fs+='<p style="margin:1px 0 1px 8px;font-size:.85rem;color:#444">';
       fs+='<span class=latex data-l="L_i = L_0 \\cdot 2^{\\frac{T_{max} - T_{hs,i}}{10}} \\cdot K_V"></span></p>';
       fs+='<p style="margin:1px 0 3px 8px;font-size:.85rem;color:#666">=';
-      fs+='<span class=latex data-l="L_'+r.i+' = '+d.l0+' \\cdot 2^{\\frac{'+d.tmax+' - '+r.ths.toFixed(1)+'}{10}} \\cdot '+r.kv.toFixed(3)+'</span></p>';
+      fs+='<span class=latex data-l="L_'+r.i+' = '+d.l0+' \\cdot 2^{\\frac{'+d.tmax+' - '+r.ths.toFixed(1)+'}{10}} \\cdot '+r.kv.toFixed(3)+'"></span></p>';
       fs+='<p style="margin:1px 0 6px 8px;font-size:.85rem;color:#333">=';
       fs+='<span class=latex data-l="L_'+r.i+' = '+r.Li.toFixed(0)+' \\text{h}"></span></p>';
     });
@@ -213,15 +216,15 @@
     fs+='<p style="margin:6px 0 2px 0"><b>累计损伤 (Miner准则)</b></p>';
     fs+='<p style="margin:1px 0 1px 8px;font-size:.85rem;color:#444">';
     fs+='<span class=latex data-l="D = \\sum_i \\frac{t_i \\cdot N_{days}}{L_i}"></span></p>';
+    /* Build Miner sum as single LaTeX string */
+    var miner='';var ft=true;
+    d.sr.forEach(function(r){if(!ft)miner+=' + ';ft=false;miner+='\\frac{'+r.dur.toFixed(1)+' \\cdot '+d.wd+'}{'+r.Li.toFixed(0)+'}'});
     fs+='<p style="margin:1px 0 3px 8px;font-size:.85rem;color:#666">=';
-    var ft=true;
-    d.sr.forEach(function(r){if(!ft)fs+=' + ';ft=false;fs+='<span class=latex data-l="\\frac{'+r.dur.toFixed(1)+' \\cdot '+d.wd+'}{'+r.Li.toFixed(0)+'}"></span>'});
-    fs+='</p>';
+    fs+='<span class=latex data-l="'+miner+'"></span></p>';
     fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#333">=';
     fs+='<span class=latex data-l="D = '+(d.dmg*100).toFixed(3)+'\\% / \\text{年}, \\quad \\text{寿命} = 1/'+d.dmg.toFixed(6)+' = '+d.ly.toFixed(1)+' \\text{年}"></span></p>';
     return fs;
   }
-
 
   /* ── Report generation (DOM-only) ───────── */
   function genRep(){
