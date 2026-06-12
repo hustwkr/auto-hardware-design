@@ -59,7 +59,8 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 <div class="fgl"><label>污染等级</label><select id="sPd"><option value="1">PD 1</option><option value="2" selected>PD 2</option><option value="3">PD 3</option></select></div>
 <div class="fgl"><label>材料组别 (CTI)</label><select id="sMg"><option value="i">I 组</option><option value="ii" selected>II 组</option><option value="iiia">IIIa 组</option><option value="iiib">IIIb 组</option></select></div>
 <div class="fgl"><label>海拔</label><select id="sAlt"><option value="2000" selected><=2000m</option><option value="3000">2000-3000m</option><option value="4000">3000-4000m</option><option value="5000">4000-5000m</option></select></div>
-<div class="fgl"><label>过电压类别</label><select id="sOvc"><option value="i">I</option><option value="ii" selected>II</option><option value="iii">III</option><option value="iv">IV</option></select></div>
+<div class="fgl"><label>隔离类型</label><select id="sIsolation"><option value="isolated" selected>有隔离 (变压器/光耦)</option><option value="non-isolated">无隔离</option></select></div>
+<div class="fgl"><label>AC侧过电压类别</label><select id="sOvc_AC"><option value="i">I</option><option value="ii" selected>II</option><option value="iii">III</option><option value="iv">IV</option></select></div>
 <div class="fgl"><label>AC系统电压 (V)</label><input type="number" id="sSysV_AC" value="300"></div>
 <div class="fgl"><label>DC系统电压 (V)</label><input type="number" id="sSysV_DC" value="600"></div>
 </div></div>
@@ -100,7 +101,7 @@ async function loadCurrent(){
   }
   if(d.safety){
     var s=d.safety;
-    ["sStd","sPd","sMg","sAlt","sOvc","sSysV_AC","sSysV_DC"].forEach(function(k){var el=document.getElementById(k);if(el)el.value=s[k]||""});
+    ["sStd","sPd","sMg","sAlt","sIsolation","sOvc_AC","sSysV_AC","sSysV_DC"].forEach(function(k){var el=document.getElementById(k);if(el)el.value=s[k]||""});
     document.getElementById("nodesJson").value=JSON.stringify(s.nodes||[],null,2);
   }
   showStatus("已加载");
@@ -113,12 +114,13 @@ async function saveDefaults(){
   d.capacitor.scenario=document.getElementById("scenario").value;
   try{ d.capacitor.segments = JSON.parse(document.getElementById("segmentsJson").value); }catch(e){ showStatus("运行段JSON错误: "+e.message,"#ef4444"); return; }
   
-  ["sStd","sPd","sMg","sAlt","sOvc","sSysV_AC","sSysV_DC"].forEach(function(k){d.safety[k]=document.getElementById(k).value});
+  ["sStd","sPd","sMg","sAlt","sIsolation","sOvc_AC","sSysV_AC","sSysV_DC"].forEach(function(k){d.safety[k]=document.getElementById(k).value});
   try{ d.safety.nodes=JSON.parse(document.getElementById("nodesJson").value); }catch(e){ showStatus("节点定义JSON错误: "+e.message,"#ef4444"); return; }
   
   var r=await authFetch("/api/admin/defaults",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});
   if(r.status===401){ alert("登录已过期"); localStorage.removeItem("admin_token"); window.location.href="/admin/login"; return; }
-  if(r.ok) showStatus("保存成功"); else showStatus("保存失败","#ef4444");
+  if(r.ok) showStatus("保存成功");
+    else { var msg="保存失败"; try{var j=await r.text();msg+=" ("+r.status+": "+j+")";}catch(e){} showStatus(msg,"#ef4444"); }
 }
 
 loadCurrent();

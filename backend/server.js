@@ -114,10 +114,10 @@ function validateDefaults(d) {
   }
 
   if (d.safety && typeof d.safety === "object") {
-    const safeK = ["sStd","sPd","sMg","sAlt","sOvc","sSysV_AC","sSysV_DC","nodes"];
+    const safeK = ["sStd","sPd","sMg","sAlt","sIsolation","sOvc","sOvc_AC","sOvc_DC","sSysV_AC","sSysV_DC","nodes"];
     for (const k of Object.keys(d.safety)) { if (!safeK.includes(k)) return false; }
     if (Array.isArray(d.safety.nodes)) {
-      const nodeK = ["name","vrms","ins","pcb","coat","circ","interp"];
+      const nodeK = ["name","vrms","ins","pcb","coat","circ","interp","toGnd"];
       for (const n of d.safety.nodes) {
         if (typeof n !== "object") return false;
         for (const k of Object.keys(n)) { if (!nodeK.includes(k)) return false; }
