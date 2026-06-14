@@ -119,30 +119,47 @@ node server.js
 
 ```
 auto-hardware-design/
-├── index.html                     # 最终输出文件（所有模块）
-├── build.py                       # 构建脚本
-├── gen-scripts/                   # 生成脚本（电容器模块）
-│   ├── 01_base.py                 # 基础 HTML 结构
-│   ├── 02_fix.py                  # 选择器修正
-│   ├── 03_frequency.py            # 频率输入组件
-│   ├── 04_katex_inputs.py         # KaTeX + 项目参数
-│   ├── 05_latex_formulas.py       # LaTeX 公式引擎
-│   ├── 06_fix_cf_position.py      # 公式位置修正
-│   ├── 07_fix_double_cf.py        # 去重修复
-│   ├── 08_export_word.py          # Word 导出
-│   ├── 09_fix_escaping.py         # LaTeX 转义修正
-│   └── 10_readable_fallback.py    # Unicode 降级方案
+├── index.html                     # SPA 入口（所有计算模块）
+├── css/app.css                    # 全局样式 + Design Tokens
+├── js/
+│   ├── app.js                     # App Shell：Tab 切换、Defaults API、导出
+│   ├── capacitor.js               # 电解电容寿命 UI 层
+│   ├── safety.js                  # 安规距离 UI 层
+│   └── models/
+│       ├── capacitor-model.js     # 纯计算模型（Arrhenius + Miner，零 DOM）
+│       └── safety-model.js        # 纯计算模型（IEC 62109-1 / UL 840）
 ├── backend/                       # Node.js 后端服务
-│   ├── server.js                  # HTTP 服务器 + API
-│   ├── defaults.json              # 默认参数配置
-│   ├── defaults_inject.js         # 前端注入脚本
-│   └── admin/                     # 管理面板
+│   ├── server.js                  # HTTP 服务器 + REST API
+│   ├── defaults.json              # 默认参数持久化存储
+│   └── admin/                     # 管理面板（Token 认证）
 │       ├── dashboard.html
 │       └── login.html
-├── v2/                            # 备份版本
-│   └── index.html
+├── build.py                       # Python 构建脚本
+├── IEC_62109-1_2010.pdf          # 安规标准参考文档
 └── README.md
 ```
+
+## 架构 Architecture
+
+### Model / UI 分离
+
+计算逻辑完全封装在 `js/models/` 中，为零依赖纯函数（IIFE），可直接用于单元测试或移植到其他语言：
+
+| 模型 | 核心入口 | 算法依据 |
+|------|----------|----------|
+| `CapacitorModel` | `calcLifetime(params)` | Arrhenius + Miner 累积损伤 |
+| `SafetyModel` | `calcSafety(params)` | IEC 62109-1 §7.3.7 / UL 840 |
+
+UI 层 (`capacitor.js`, `safety.js`) 仅负责 DOM 操作和事件绑定，通过 `window.CapacitorModel` / `window.SafetyModel` 调用计算。
+
+### 安全特性 Security Features
+
+- **密码策略**: 必须设置 `ADMIN_PASSWORD` 环境变量（≥8 字符），否则拒绝启动
+- **Token 认证**: HttpOnly + SameSite=Lax Cookie，防止 XSS 窃取和 CSRF
+- **登录限频**: 每 IP 5 分钟最多 10 次失败尝试
+- **请求体限制**: 最大 1MB，防止 DoS
+- **路径穿越防护**: `serveFile()` 校验解析后的文件必须在项目根目录下
+- **输入验证**: defaults.json 结构完整性校验（白名单字段）
 
 ## 路线图 Roadmap
 

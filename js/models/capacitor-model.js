@@ -112,7 +112,6 @@
 
   /* ── Expose ───────────────────────────────────── */
   global.CapacitorModel = {
-    FF: FF, MG: MG,
     fv: fv, kvf: kvf,
     calcDeltaT: calcDeltaT,
     calcSegments: calcSegments,

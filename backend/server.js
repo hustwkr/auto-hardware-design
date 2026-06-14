@@ -2,7 +2,19 @@ const http = require("http"), fs = require("fs"), path = require("path"), crypto
 
 // ── Config ──────────────────────────────────────────────
 const PORT          = parseInt(process.env.PORT || "8080", 10);
-const ADMIN_PW      = process.env.ADMIN_PASSWORD || "admin123";
+let ADMIN_PW        = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_PW) {
+  console.error("[SECURITY] ADMIN_PASSWORD environment variable is required.");
+  console.error("   Export it before starting: export ADMIN_PASSWORD=your-strong-password");
+  console.error("   Or set it in a .env file loaded by your process manager (PM2, docker, etc.)");
+  process.exit(1);
+}
+
+if (ADMIN_PW === "admin123" || ADMIN_PW.length < 8) {
+  console.warn("[SECURITY] Admin password is too weak. Use at least 8 characters with mixed types.");
+}
+
 const ROOT          = path.resolve(__dirname, "..");
 const DEF_FILE      = path.join(__dirname, "defaults.json");
 const TOKEN_TTL_MS  = 86_400_000; // 24 h
@@ -143,13 +155,21 @@ function json(res, code, data, corsAny) {
 }
 
 // ── Safe file serving (path-traversal protected) ────────
+// ── Cache headers by content type ───────────────────────
+function cacheHeader(fp) {
+  var ext = path.extname(fp).toLowerCase();
+  if (['.js','.css','.png','.jpg','.gif','.svg','.woff2','.woff','.ttf'].includes(ext))
+    return "public,max-age=31536000,immutable";
+  return "no-cache,no-store,must-revalidate"; // HTML + everything else
+}
+
 function serveFile(res, fp) {
   const resolved = path.resolve(fp);
   if (!resolved.startsWith(ROOT)) { res.writeHead(403, {"Content-Type":"text/plain"}); res.end("Forbidden"); return; }
   try {
     const data = fs.readFileSync(fp);
     const ext = path.extname(fp).toLowerCase();
-    res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream", "Cache-Control": "no-cache,no-store,must-revalidate" });
+    res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream", "Cache-Control": cacheHeader(fp) });
     res.end(data);
   } catch (_) { res.writeHead(404, {"Content-Type":"text/plain"}); res.end("Not Found"); }
 }
@@ -186,11 +206,8 @@ function safePath(p) {
   return cleaned.startsWith("/") ? cleaned : "/";
 }
 
-// ── Startup log (FIX: no password in plaintext) ────────
+// ── Startup ─────────────────────────────────────────────
 console.log(`Server starting on port ${PORT}`);
-if (ADMIN_PW === "admin123") {
-  console.warn("[SECURITY] Using default admin password! Set ADMIN_PASSWORD env var.");
-}
 
 // ── HTTP server ─────────────────────────────────────────
 http.createServer(async function (req, res) {
@@ -219,7 +236,7 @@ http.createServer(async function (req, res) {
       const t = crypto.randomBytes(16).toString("hex");
       tokens.set(t, Date.now() + TOKEN_TTL_MS);  // store with expiry
       if (ct.includes("json")) { json(res, 200, { success: true, token: t }, true); }
-      else { res.writeHead(302, { Location: "/admin", "Set-Cookie": `token=${t};Path=/;Max-Age=86400` }); res.end(); }
+      else { res.writeHead(302, { Location: "/admin", "Set-Cookie": `token=${t};Path=/;Max-Age=86400;HttpOnly;SameSite=Lax` }); res.end(); }
     } else {
       if (ct.includes("json")) json(res, 403, { error: "\u5bc6\u7801\u9519\u8bef" }, true);
       else { res.writeHead(302, { Location: "/admin/login?e=1" }); res.end(); }

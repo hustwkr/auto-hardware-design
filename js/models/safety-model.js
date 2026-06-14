@@ -376,9 +376,20 @@
 
     // Impulse withstand voltage (kV) — accept from caller or compute via lookupImpulse as fallback
     var impAC = typeof params.impAC === 'number' ? params.impAC : lookupImpulse(sysVAC, params.ovcClass||2, true);
-    var impDC = typeof params.impDC === 'number' ? params.impDC : lookupImpulse(sysVDC, params.ovcClass||2, true);
 
-    /* PV circuit rule: min 2.5 kV per §7.3.7.1.2b */
+    /* DC impulse: per IEC 62109-1 §7.3.7.1.2b — PV circuits have
+       minimum 2.5kV regardless of system voltage. For >600V systems,
+       step up to next standard level. Do NOT use AC Table 12 for DC. */
+    var impDC;
+    if (typeof params.impDC === 'number') {
+      impDC = params.impDC;
+    } else {
+      impDC = 2.5; // §7.3.7.1.2b minimum
+      if (sysVDC > 600)  impDC = 4.0;  // Next standard level for higher DC voltage
+      if (sysVDC > 1000) impDC = 5.0;  // 1500V PV systems
+    }
+
+    /* Legacy safety floor — still enforced */
     if(impDC < 2.5) impDC = 2.5;
 
     if (!nodes.length) return null;
@@ -397,19 +408,11 @@
     };
   }
 
-  /* ── Expose ─────────────────────────────────── */
+  /* ── Expose (internal lookup tables are private) ─── */
   global.SafetyModel = {
-    CLR_TBL_IEC: CLR_TBL_IEC,
-    CLR_TBL_UL: CLR_TBL_UL,
-    CRP_IEC: CRP_IEC,
-    CRP_UL: CRP_UL,
-    IMPULSE_TBL: IMPULSE_TBL,
-    TOV_TBL: TOV_TBL,
-    ALT_K: ALT_K,
-    INS_K: INS_K,
-    MG_I: MG_I,
-    INS_LABELS: INS_LABELS,
-    IMPULSE_LEVELS: IMPULSE_LEVELS,
+    ALT_K: ALT_K,          // Used by UI for altitude display
+    INS_K: INS_K,          // Used by UI report generation
+    INS_LABELS: INS_LABELS, // Insulation type labels
     lookupImpulse: lookupImpulse,
     lookupTov: lookupTov,
     lookupClr: lookupClr,
