@@ -331,7 +331,6 @@
 
       var segId=sid++;
       sc.insertAdjacentHTML('beforeend',mSeg(segId,idx,sg.dur||8,sg.ta||60,sg.vop||30,r));
-      if(rr){var tb=sc.querySelector('[data-id="'+segId+'] .rtb');if(tb)tb.innerHTML=rr;}
     });
     updT();calc();
     return true;
