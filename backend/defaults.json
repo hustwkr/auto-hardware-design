@@ -20,7 +20,7 @@
             "current": 800
           },
           {
-            "freq": 2000,
+            "freq": 20000,
             "current": 500
           }
         ]

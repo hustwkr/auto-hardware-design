@@ -114,31 +114,6 @@ node server.js
 - Input validation on defaults structure
 - Default password warning on startup
 
-## 构建 Build
-
-```bash
-cd auto-hardware-design
-python build.py
-```
-
-这会按顺序运行 `gen-scripts/` 下的所有生成脚本，在 `index.html` 输出最终文件。
-
-This runs all generation scripts in `gen-scripts/` in order, outputting the final file as `index.html`.
-
-### 生成步骤 Build Steps
-
-| # | 脚本 Script | 作用 Purpose |
-|---|---|---|
-| 1 | 01_base.py | 生成基础 HTML 结构 |
-| 2 | 02_fix.py | 修正选择器等问题 |
-| 3 | 03_frequency.py | 添加频率文本框 + Hz/kHz 选择 |
-| 4 | 04_katex_inputs.py | 添加 KaTeX CDN + 项目输入框 |
-| 5 | 05_latex_formulas.py | 添加 calcFormulas + renderLatex |
-| 6 | 06_fix_cf_position.py | 修正 calcFormulas 插入位置 |
-| 7 | 07_fix_double_cf.py | 修复重复调用 |
-| 8 | 08_export_word.py | 添加 Word 导出功能 |
-| 9 | 09_fix_escaping.py | 修正 LaTeX 反斜杠转义 |
-| 10 | 10_readable_fallback.py | 添加可读 Unicode 降级方案 |
 
 ## 文件结构 File Structure
 

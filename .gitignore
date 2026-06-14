@@ -16,3 +16,13 @@ v2/
 # Build temp files
 build_temp_*.html
 *.tmp
+
+# Fix scripts and backups (dev artifacts)
+_fix.js
+_apply_fixes_*.cjs
+fix_*.py
+*.bak
+backend/*.bak
+
+# Accidental nested copy
+codexprojects/

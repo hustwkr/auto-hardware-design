@@ -50,6 +50,7 @@
       if(!resp.ok)return;
       var d=await resp.json();
       _defaults = d;
+      window._defaultsApplied = true; // FIX Bug #3: track defaults arrival for race condition prevention
       applyDefaults(d);
     }catch(e){/* no server — use inline defaults */}
   }
@@ -88,8 +89,27 @@
     }
   }
 
-  function setVal(id,val){var el=document.getElementById(id);if(el&&val!==undefined)el.value=val}
-  function setValSelect(id,val){var el=document.getElementById(id);if(el&&val!==undefined)el.value=val}
+  function setVal(id,val){
+    var el=document.getElementById(id);
+    if(!el||val===undefined)return false;
+    var changed=String(el.value)!==String(val);
+    el.value=val;
+    if(changed){
+      try{el.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}
+      try{el.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}
+    }
+    return true;
+  }
+  function setValSelect(id,val){
+    var el=document.getElementById(id);
+    if(!el||val===undefined)return false;
+    var changed=String(el.value)!==String(val);
+    el.value=val;
+    if(changed)
+      try{el.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}
+
+    return true;
+  }
 
   /* ── Init on DOM ready ─────────────────── */
   window.addEventListener("DOMContentLoaded", function(){

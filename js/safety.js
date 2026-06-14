@@ -294,15 +294,17 @@
       sN.insertAdjacentHTML('beforeend',mNode(snid++,idx,n.name||'',n.vrms||0,n.ins||'basic',
         n.pcb||0,n.coat||0,n.interp||false,n.circ||'ac',n.toGnd));
     });
-    // Recalculate safety distances after loading nodes
-    if(typeof sCalc==='function')sCalc();
-    return true;
+    // FIX Bug #4: after loading nodes from defaults, ensure DC OVC is derived
+    if(typeof autoDeriveDC==='function')autoDeriveDC();
+    sCalc();
   }
 
   /* ── Init ──────────────────────── */
   function initSafety(defaultNodes){
+// FIX Bug #4: handle race where initSafety was already called with fallback,
+// but defaults have now arrived via applyDefaults -> loadNodesFromDefaults
     var hasNodes = document.querySelector("#sN [data-id]");
-    if(!hasNodes){
+
       // No nodes yet — load from defaults or use fallback
       if(defaultNodes && defaultNodes.length){
         defaultNodes.forEach(function(n,i){
