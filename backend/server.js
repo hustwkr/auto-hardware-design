@@ -158,9 +158,11 @@ function json(res, code, data, corsAny) {
 // ── Cache headers by content type ───────────────────────
 function cacheHeader(fp) {
   var ext = path.extname(fp).toLowerCase();
-  if (['.js','.css','.png','.jpg','.gif','.svg','.woff2','.woff','.ttf'].includes(ext))
-    return "public,max-age=31536000,immutable";
-  return "no-cache,no-store,must-revalidate"; // HTML + everything else
+  if (['.png','.jpg','.gif','.svg','.woff2','.woff','.ttf'].includes(ext))
+    return "public,max-age=31536000,immutable"; // media/fonts: long cache OK
+  if (['.js','.css'].includes(ext))
+    return "public,max-age=0,must-revalidate";   // JS/CSS: always revalidate
+  return "no-cache,no-store,must-revalidate";     // HTML + everything else
 }
 
 function serveFile(res, fp) {
