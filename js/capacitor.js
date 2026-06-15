@@ -22,8 +22,8 @@
       // FIX Bug #1: support {freq,current} objects for per-row frequency (K_freq)
       var freq = typeof v === 'object' && v !== null ? (v.freq || 120) : 120;
       var cur  = typeof v === 'object' && v !== null ? (v.current || 0)   : v;
-      rr="<tr><td class=ripgroup><input class=fv type=number value="+freq+" style=width:55px oninput=calc()>" +mU()+ "</td>"
-        +" <td><input class=fc type=number value=" +cur+ " min=0 step=10 style=width:65px oninput=calc()><span style=\"font-size:.7rem;color:#94a3b8;margin-left:2px\">mA</span></td>"
+      rr+="<tr><td class=ripgroup><input class=fv type=number value="+freq+" style=width:55px oninput=calc()>" +mU()+ "</td>"
+        +" <td><input class=fc type=number value=" +cur+" min=0 step=10 style=width:65px oninput=calc()><span style=\"font-size:.7rem;color:#94a3b8;margin-left:2px\">mA</span></td>"
         +" <td><button class=btn-sm onclick=removeRippleRow(this)>&times;</button></td></tr>";
     });
     return "<div class=seg data-id="+id+">"
