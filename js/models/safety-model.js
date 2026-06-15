@@ -4,12 +4,23 @@
 (function (global) {
   "use strict";
 
-  /* ── IEC Clearance Table [Vpeak, PD1, PD2, PD3] ──── */
+  /* ── IEC Clearance Table — extended with all Table 13 columns ─── */
+  /* [impulse_V, tov_peak_V, wrk_peak_surr_V, PD1, PD2, PD3]          */
+  /* Per §7.3.7.4.1: reinforced insulation uses three criteria:        */
+  /*   (a) impulse voltage stepped up → col 0 (impulse Vpeak)          */
+  /*   (b) 1.6× working peak      → col 2 (wrk peak for surroundings)  */
+  /*   (c) 1.6× TOV peak          → col 1 (TOV peak)                   */
   var CLR_TBL_IEC = [
-    [0,0.2,0.2,0.2],[330,0.2,0.2,0.2],[500,0.2,0.2,0.2],
-    [800,0.2,0.2,0.2],[1500,0.5,0.5,0.8],[2500,1.5,1.5,1.5],
-    [4000,3.0,3.0,3.0],[6000,5.5,5.5,5.5],[8000,8.0,8.0,8.0],
-    [12000,14.0,14.0,14.0]
+    [0,     0,    0,   0.01, 0.20, 0.80],
+    [330,   340,  212, 0.10, 0.20, 0.80],
+    [500,   530,  330, 0.10, 0.20, 0.80],
+    [800,   700,  440, 0.10, 0.20, 0.80],
+    [1500,  960,  600, 0.50, 0.50, 0.80],
+    [2500, 1600, 1000, 1.5,  1.5,  1.5],
+    [4000, 2600, 1600, 3.0,  3.0,  3.0],
+    [6000, 3700, 2300, 5.5,  5.5,  5.5],
+    [8000, 4800, 3000, 8.0,  8.0,  8.0],
+    [12000,7400, 4600, 14.0, 14.0, 14.0]
   ];
 
   /* ── UL Clearance Table [kVRMS, PD1, PD2, PD3] ───── */
@@ -99,8 +110,31 @@
     [300,2120,1500],[600,2550,1800],[1000,3110,2200]
   ];
 
-  /* ── Altitude correction factor ─────────────── */
-  var ALT_K = {2000:1.0,3000:1.14,4000:1.29,5000:1.48};
+  /* ── Altitude correction factor (IEC 62109-1 Annex F Table F.1) ─── */
+  var ALT_DATA = [
+    [2000, 80.0, 1.00],[3000, 70.0, 1.14],[4000, 62.0, 1.29],[5000, 54.0, 1.48],
+    [6000, 47.0, 1.70],[7000, 41.0, 1.95],[8000, 35.5, 2.25],[9000, 30.5, 2.62],
+    [10000, 26.5, 3.02],[15000, 12.0, 6.67],[20000, 5.5, 14.50]
+  ];
+
+  /* ── Altitude correction factor with linear interpolation ─── */
+  function altFactor(m) {
+    // m: altitude in meters (default 2000)
+    if (m <= 2000) return 1.0;
+    if (m >= 20000) return 14.50;
+    for (var i = 0; i < ALT_DATA.length - 1; i++) {
+      if (m >= ALT_DATA[i][0] && m <= ALT_DATA[i+1][0]) {
+        var a0 = ALT_DATA[i][0], a1 = ALT_DATA[i+1][0];
+        var k0 = ALT_DATA[i][2], k1 = ALT_DATA[i+1][2];
+        return Math.round((k0 + (m - a0) / (a1 - a0) * (k1 - k0)) * 100) / 100;
+      }
+    }
+    return 1.0;
+  }
+
+  /* ── Backward compat: ALT_K object for UI display ─── */
+  var ALT_K = {};
+  ALT_DATA.forEach(function(d){ ALT_K[d[0]] = d[2]; });
 
   /* ── Insulation multiplication factor ───────── */
   var INS_K = {func:1.0,basic:1.0,supp:1.0,reinf:2.0};
@@ -141,22 +175,41 @@
     return { peak: last[1], rms: last[2] };
   }
 
-  function lookupClr(impulseV, pd, standard, interp) {
-    // impulseV: in Volts peak (IEC) or kVRMS*1000 (UL converted)
-    // pd: pollution degree 1-3 → column index 1-3
+  function lookupClr(impulseV, pd, standard, interp, col) {
+    // impulseV: in Volts peak (IEC) or Volts (UL: kVRMS*1000 from caller)
+    // pd: pollution degree 1-3
     // standard: 'iec' | 'ul'
+    // col: voltage column index for IEC table (default 0 = impulse). Ignored for UL.
     if (impulseV <= 0) return 0;
-    var tbl = standard === 'ul' ? CLR_TBL_UL : CLR_TBL_IEC;
-    for (var i = 0; i < tbl.length; i++) {
-      if (impulseV == tbl[i][0]) return tbl[i][pd];
-      if (impulseV < tbl[i][0]) {
-        if (!interp || i == 0) return tbl[i][pd];
-        var x0 = tbl[i-1][0], x1 = tbl[i][0];
-        var y0 = tbl[i-1][pd], y1 = tbl[i][pd];
+
+    if (standard === 'ul') {
+      // UL table: [kVRMS, PD1, PD2, PD3] — convert impulseV to kVRMS for comparison
+      var v = impulseV / 1000;
+      for (var i = 0; i < CLR_TBL_UL.length; i++) {
+        if (v == CLR_TBL_UL[i][0]) return CLR_TBL_UL[i][pd];
+        if (v < CLR_TBL_UL[i][0]) {
+          if (!interp || i == 0) return CLR_TBL_UL[i][pd];
+          var x0 = CLR_TBL_UL[i-1][0], x1 = CLR_TBL_UL[i][0];
+          var y0 = CLR_TBL_UL[i-1][pd], y1 = CLR_TBL_UL[i][pd];
+          return Math.round((y0 + (v - x0) / (x1 - x0) * (y1 - y0)) * 1000) / 1000;
+        }
+      }
+      return CLR_TBL_UL[CLR_TBL_UL.length - 1][pd];
+    }
+
+    // IEC extended table: [impulse_V, tov_peak_V, wrk_peak_surr_V, PD1, PD2, PD3]
+    // PD columns at index 3,4,5 → offset = pd (since pd=1→idx3, pd=2→idx4, pd=3→idx5)
+    var colIdx = col || 0;
+    for (var i = 0; i < CLR_TBL_IEC.length; i++) {
+      if (impulseV == CLR_TBL_IEC[i][colIdx]) return CLR_TBL_IEC[i][2 + pd];
+      if (impulseV < CLR_TBL_IEC[i][colIdx]) {
+        if (!interp || i == 0) return CLR_TBL_IEC[i][2 + pd];
+        var x0 = CLR_TBL_IEC[i-1][colIdx], x1 = CLR_TBL_IEC[i][colIdx];
+        var y0 = CLR_TBL_IEC[i-1][2 + pd], y1 = CLR_TBL_IEC[i][2 + pd];
         return Math.round((y0 + (impulseV - x0) / (x1 - x0) * (y1 - y0)) * 1000) / 1000;
       }
     }
-    return tbl[tbl.length - 1][pd];
+    return CLR_TBL_IEC[CLR_TBL_IEC.length - 1][2 + pd];
   }
 
   function lookupCrp(rmsV, pd, mgGroup, standard, pcb) {
@@ -213,9 +266,11 @@
   }
 
   /* ── Table 13 lookup — IEC clearance from peak voltage & PD ─── */
-  function clrFromPeak(peakV, pd) {
+  function clrFromPeak(peakV, pd, col) {
     // peakV: in Volts (e.g. impulse Vpeak, TOV Vpeak, working Vpeak)
-    return lookupClr(peakV, pd || 2, 'iec', true);
+    // pd: pollution degree (default 2)
+    // col: voltage column index — 0=impulse (default), 1=tov_peak, 2=wrk_peak_surr
+    return lookupClr(peakV, pd || 2, 'iec', true, col);
   }
 
   /* ── Clearance calculation per IEC 62109-1 §7.3.7 / Table 14 ─── */
@@ -241,11 +296,11 @@
       var impNext = nextImpulseLevel(impKV);          // step up one level (kV)
       var clrA    = clrFromPeak(impNext * 1000, pd);  // criterion (a): stepped-up impulse
 
-      var clrB    = clrFromPeak(wrkPeak * 1.6, pd);   // criterion (b): 1.6× working peak
+      var clrB    = clrFromPeak(wrkPeak * 1.6, pd, 2);   // criterion (b): col 2 = wrk_peak_surr
 
       var reqClr;
       if (isMains && tovPeakV) {
-        var clrC  = clrFromPeak(tovPeakV * 1.6, pd);  // criterion (c): 1.6× TOV
+        var clrC  = clrFromPeak(tovPeakV * 1.6, pd, 1);  // criterion (c): col 1 = tov_peak
         reqClr    = Math.max(clrA, clrB, clrC);       // most stringent of all three
       } else {
         reqClr    = Math.max(clrA, clrB);              // only (a) and (b) for non-mains
@@ -338,7 +393,7 @@
       reqClr = lookupClr(impKV * 1000, pd, standard, false) * im;
     }
 
-    var altk = ALT_K[alt] || 1.0;
+    var altk = altFactor(alt);
     reqClr = Math.round(reqClr * altk * 10) / 10;
 
     // Creepage calculation — reinforced doubles the basic creepage per IEC 60664-1 Table A.2
@@ -346,8 +401,13 @@
     if (coat === 1) localPd = Math.max(1, localPd - 1);
     var crpMult = (effIns === 'reinf') ? 2.0 : 1.0;
     var reqCrp = lookupCrp(vrms, localPd, mgGroup, standard, pcb ? 1 : 0);
-    if (coat === 2) reqCrp = 0; // Coating cancels creepage requirement
-    reqCrp = Math.round(reqCrp * crpMult * 10) / 10;
+    if (coat === 2) {
+      // IEC 60664-3 Table 1: Type 2 potting provides solid insulation equivalent,
+      // Tables 13/14 do not apply. Use minimum spacing directly without crpMult.
+      reqCrp = Math.round(0.15 * 10) / 10;
+    } else {
+      reqCrp = Math.round(reqCrp * crpMult * 10) / 10;
+    }
 
     return {
       name: node.name || "节点",
@@ -366,6 +426,7 @@
 
   /* ── Full safety assessment (pure) ───────────── */
   function calcSafety(params) {
+    if (!params) return null;
     var pd       = params.pd || 2;
     var mgGroup  = params.mgGroup || 'ii';
     var alt      = params.alt || 2000;
@@ -378,23 +439,19 @@
     var impAC = typeof params.impAC === 'number' ? params.impAC : lookupImpulse(sysVAC, params.ovcClass||2, true);
 
     /* DC impulse: per IEC 62109-1 §7.3.7.1.2b — PV circuits have
-       minimum 2.5kV regardless of system voltage. For >600V systems,
-       step up to next standard level. Do NOT use AC Table 12 for DC. */
+       minimum 2.5kV regardless of system voltage. Use Table 12 lookup
+       with OVC II as baseline, then enforce the 2.5kV floor. */
     var impDC;
     if (typeof params.impDC === 'number') {
       impDC = params.impDC;
     } else {
-      impDC = 2.5; // §7.3.7.1.2b minimum
-      if (sysVDC > 600)  impDC = 4.0;  // Next standard level for higher DC voltage
-      if (sysVDC > 1000) impDC = 5.0;  // 1500V PV systems
+      // Table 12 lookup for DC system voltage at OVC II + minimum clamp
+      impDC = Math.max(lookupImpulse(sysVDC, 2, true), 2.5);
     }
-
-    /* Legacy safety floor — still enforced */
-    if(impDC < 2.5) impDC = 2.5;
 
     if (!nodes.length) return null;
 
-    var altk = ALT_K[alt] || 1.0;
+    var altk = altFactor(alt);
 
     var results = nodes.map(function (node) {
       return calcNode(node, pd, mgGroup, alt, standard, impAC, impDC, sysVAC);
@@ -410,7 +467,8 @@
 
   /* ── Expose (internal lookup tables are private) ─── */
   global.SafetyModel = {
-    ALT_K: ALT_K,          // Used by UI for altitude display
+    ALT_K: ALT_K,          // Used by UI for altitude display (backward compat)
+    altFactor: altFactor,   // Altitude correction with interpolation
     INS_K: INS_K,          // Used by UI report generation
     INS_LABELS: INS_LABELS, // Insulation type labels
     lookupImpulse: lookupImpulse,

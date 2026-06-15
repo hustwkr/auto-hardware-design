@@ -18,7 +18,7 @@
     var po='<option value="0" '+(pcb==0?'selected':'')+'>否(端子)</option><option value="1" '+(pcb==1?'selected':'')+'>是(PCB)</option>';
     var co='<option value="0" '+(coat==0?'selected':'')+'>无</option><option value="1" '+(coat==1?'selected':'')+'>Type 1 (降PD)</option><option value="2" '+(coat==2?'selected':'')+'>Type 2/灌封</option>';
     var go='<option value="0" '+(!toGnd?'selected':'')+'>否(线间)</option><option value="1" '+(toGnd?'selected':'')+'>是(对地)</option>';
-    return '<tr data-id='+id+'>'
+    return '<tr class="snode" data-id='+id+'>'
       +'<td style="text-align:center;color:#94a3b8;font-size:.72rem">'+(idx+1)+'</td>'
       +'<td><input class=sname type=text value="'+name+'" style="width:80px;border:1px solid #e2e8f0;border-radius:3px;padding:2px 4px;font-size:.78rem"></td>'
       +'<td><select class=stoGnd style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+go+'</select></td>'
@@ -42,7 +42,7 @@
   function sRmNode(b){b.closest("tr[data-id]").remove();sReNum();sCalc()};
 
   function sReNum(){
-    document.querySelectorAll("#sN .seg").forEach(function(s,i){s.cells[0].textContent=i+1;});
+    document.querySelectorAll("#sN .snode").forEach(function(s,i){s.cells[0].textContent=i+1;});
   }
 
   /* ── Auto-derive DC OVC from AC OVC + isolation architecture ─── */
@@ -66,7 +66,7 @@
 
   /* ── Read params from DOM → call model → render results ─── */
   function sCalc(){
-    var nodes=document.querySelectorAll("#sN .seg");
+    var nodes=document.querySelectorAll("#sN .snode");
     document.getElementById("sNc").textContent=nodes.length;
     if(!nodes.length){
       document.getElementById("sRtb").innerHTML="";
@@ -169,12 +169,23 @@
     });
 
     // Call pure model calculation — pass impulse voltage (kV) for clearance lookup
-    var result = SM.calcSafety({
-      pd:pd, mgGroup:mg, alt:alt, standard:std,
-      impAC:impAC, impDC:impDC,
-      sysVAC:sysVAC, sysVDC:sysVDC, nodes:nodeArr
-    });
-    if(!result) return;
+    var result;
+    try {
+      result = SM.calcSafety({
+        pd:pd, mgGroup:mg, alt:alt, standard:std,
+        impAC:impAC, impDC:impDC,
+        sysVAC:sysVAC, sysVDC:sysVDC, nodes:nodeArr
+      });
+    } catch(e) {
+      console.error("SafetyModel.calcSafety error:", e);
+      document.getElementById("sMa").innerHTML = '<p style="color:#ef4444">计算错误: '+e.message+'</p>';
+      return;
+    }
+    if(!result){
+      document.getElementById("sRtb").innerHTML="";
+      document.getElementById("sMa").innerHTML="<p>请检查节点配置。</p>";
+      return;
+    }
 
     // Render results to DOM
     var tb="";
@@ -186,7 +197,7 @@
     });
     document.getElementById("sRtb").innerHTML=tb;
 
-    var altk = SM.ALT_K[alt] || 1.0;
+    var altk = SM.altFactor(alt);
     var ah="<p style=margin-bottom:6px><strong>安规距离计算结果</strong></p>";
     ah+="<p style=font-size:.85rem>标准: "+document.getElementById("sStd").selectedOptions[0].text+" | PD: "+pd+" | 材料: "+document.getElementById("sMg").selectedOptions[0].text+" | 海拔: "+alt+"m(系数"+altk+")</p>";
     var isoLabel = iso==='isolated'?'有隔离':'无隔离';
@@ -267,22 +278,66 @@
     if(mode==='pdf'){window.print();return}
     var pn=document.getElementById('sProjName').value,te=[];if(pn)te.push(pn);
     var ts=te.length?' ('+te.join(' - ')+')':'',sr='';
+
+    /* ── Shared CSS for Word (matches web report style) ─── */
+    var css='<style>';
+    css+='body{font-family:"Microsoft YaHei","Segoe UI",SimSun,sans-serif;font-size:10pt;color:#1e293b;line-height:1.6}';
+    css+='table.data-tbl{border-collapse:collapse;width:100%;margin:10px 0;font-size:9pt}';
+    css+='table.data-tbl th,table.data-tbl td{border:1px solid #d0d7e4;padding:6px 10px;text-align:center;vertical-align:middle}';
+    css+='table.data-tbl thead th{background:#f1f5f9;font-weight:bold;color:#475569;font-size:8.5pt}';
+    css+='table.data-tbl tbody tr:nth-child(even){background:#fafbfd}';
+    css+='h2.title{text-align:center;font-size:16pt;margin-bottom:6px;color:#1e293b}';
+    css+='h3{font-size:12pt;margin-top:18px;margin-bottom:6px;color:#475569;border-left:3px solid #2563eb;padding-left:8px}';
+    css+='p.meta{text-align:center;font-size:8.5pt;color:#64748b;margin:2px 0}';
+    css+='div.footer{margin-top:18px;padding-top:8px;border-top:1px solid #e2e8f0;text-align:center;font-size:8pt;color:#94a3b8}';
+    css+='table.compact{border-collapse:collapse;width:auto;margin:10px 0;font-size:9pt;display:inline-table}';
+    css+='table.compact th,table.compact td{border:1px solid #d0d7e4;padding:5px 12px;text-align:center;vertical-align:middle}';
+    css+='table.compact thead th{background:#f1f5f9;font-weight:bold;color:#475569;font-size:8.5pt}';
+    css+='</style>';
+
+    /* ── Results rows ─── */
     d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间)';sr+='<tr><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+'</td><td>'+r.reqCrp+'</td></tr>'});
+
     var isoLabel = (d.isolation==='isolated')?'有隔离':'无隔离';
-    var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>安规距离评估报告'+ts+'</title><style>body{font-family:SimSun,serif;font-size:11pt}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:3px 6px;font-size:10pt}th{background:#eee}h2{font-size:13pt;margin-top:14px}</style></head><body>';
-    h+='<h2 style="text-align:center">安规距离评估报告'+ts+'</h2>';
-    h+='<p>报告编号: SA-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
-    h+='<p>生成日期: '+new Date().toLocaleDateString('zh-CN')+'</p>';
-    h+='<h2>1. 项目信息</h2><table><tr><th>项目</th><th>内容</th></tr>'+(pn?'<tr><td>项目名称</td><td>'+pn+'</td></tr>':'')+'<tr><td>标准</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>'+'<tr><td>隔离架构</td><td>'+isoLabel+'</td></tr></table>';
-    h+='<h2>2. 基础参数</h2><table><tr><th>参数</th><th>值</th></tr>'
+    var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"});
+
+    var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>安规距离评估报告'+ts+'</title>';
+    h+=css;
+    h+='</head><body>';
+
+    /* Title */
+    h+='<h2 class="title">安规距离评估报告'+ts+'</h2>';
+    h+='<p class="meta">报告编号: SA-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
+    h+='<p class="meta">生成日期: '+ds+'</p>';
+
+    /* 1. Project info */
+    h+='<h3>1. 项目信息</h3>';
+    h+='<table class="compact"><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody>';
+    if(pn) h+='<tr><td>'+pn+'</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>';
+    h+='<tr><td>标准</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>';
+    h+='<tr><td>隔离架构</td><td>'+isoLabel+'</td></tr>';
+    h+='</tbody></table>';
+
+    /* 2. Base parameters */
+    h+='<h3>2. 基础参数</h3>';
+    h+='<table class="compact"><thead><tr><th>参数</th><th>值</th></tr></thead><tbody>'
       +'<tr><td>污染等级</td><td>PD '+d.pd+'</td></tr>'
       +'<tr><td>材料组别</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr>'
       +'<tr><td>海拔</td><td>'+d.alt+'m (系数 '+d.altk+')</td></tr>'
       +'<tr><td>AC侧过电压类别</td><td>OVC '+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+' ('+d.impAC+' kV)</td></tr>'
       +'<tr><td>DC侧过电压类别</td><td>OVC '+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+' ('+d.impDC+' kV)' +(d.isolation==='isolated'?' (隔离降档)':'')+'</td></tr>'
       +'<tr><td>说明</td><td>线间节点按IEC 62109-1 §7.3.7降一档计算电气间隙</td></tr>'
-      +'</table>';
-    h+='<p style="margin-top:20px"><i>安规距离计算工具 v1.0 - 报告自动生成</i></body></html>';
+      +'</tbody></table>';
+
+    /* 3. Results table */
+    h+='<h3>3. 评估结果</h3>';
+    h+='<table class="data-tbl"><thead><tr>'
+      +'<th>节点名称</th><th>Vrms (V)</th><th>绝缘等级</th><th>电气间隙 mm</th><th>爬电距离 mm</th>'
+      +'</tr></thead><tbody>'+sr+'</tbody></table>';
+
+    /* Footer */
+    h+='<div class="footer">安规距离计算工具 v1.0 &nbsp;|&nbsp; 报告自动生成 '+ds+'</div>';
+    h+='</body></html>';
     var b=new Blob([h],{type:'application/msword'});var dn='安规距离评估报告'+(te.length?'('+te.join('-')+')':'')+'.doc';saveBlobWithDialog(b,dn);
   }
 

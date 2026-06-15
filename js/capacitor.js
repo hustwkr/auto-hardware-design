@@ -166,17 +166,7 @@
     var tb="";result.sr.forEach(function(r){tb+="<tr><td>时段"+r.i+"</td><td>"+fv(r.dur,1)+"</td><td>"+fv(r.ths,1)+"</td><td>"+fv(r.kt,2)+"</td><td>"+fv(r.kv,3)+"</td><td>"+(r.Li>=1e6?fv(r.Li/1e4,1)+"万":fv(r.Li,0))+"</td><td>"+fv(r.d*100,3)+"%</td></tr>"});
     document.getElementById("srb").innerHTML=tb;
 
-    // Summary bar chart
-    var td=result.sr.reduce(function(s,r){return s+r.d},0)||1,
-        ah="<p style=margin-bottom:4px><strong>寿命预测</strong></p>"
-      +"<p style=font-size:.82rem>预计寿命: <strong>"+fv(result.ly,1)+" 年</strong></p>"
-      +"<p style=font-size:.82rem>质保期: "+wt+"年 | "+result.mi.l+" | 裕量: <strong>"+fv(result.margin,2)+"x</strong> "+(result.margin>=result.req?"✓":"✗")+"</p>"
-      +"<p style=font-size:.82rem;color:#64748b;margin-top:3px>"+result.wd2+"</p>"
-      +"<p style=font-size:.82rem;margin-top:6px><strong>各时段寿命消耗占比</strong></p>"
-      +"<div style=display:flex;gap:3px;margin-top:3px;align-items:flex-end;flex-wrap:wrap;min-height:40px>";
-    result.sr.forEach(function(r){var p=(r.d/td)*100,h=Math.max(16,p*2);ah+="<div style=display:flex;flex-direction:column;align-items:center;gap:1px><div style=width:28px;height:"+h+"px;background:#2563eb;border-radius:3px 3px 0 0;opacity:.75></div><span style=font-size:.64rem;color:#64748b>"+fv(p,0)+"%</span><span style=font-size:.6rem;color:#64748b>T"+r.i+"</span></div>"});
-    ah+="</div>";
-    document.getElementById("ma").innerHTML=ah;
+
 
     // Store for report/export
     window._cd=result;
@@ -336,19 +326,101 @@ ight'){i=j;continue;}o+=(G_LW[w.slice(1)]||O_LW[w.slice(1)]||w.slice(1));i=j;con
     var d=window._cd;if(!d||!d.sr||!d.sr.length)return;
     var pn=document.getElementById('projName').value||'-',cm=document.getElementById('capModel').value||'-',te=[];if(pn&&pn!=='-')te.push(pn);if(cm&&cm!=='-')te.push(cm);
     var ts=te.length?' ('+te.join(' - ')+')':'',sr='';
-    d.sr.forEach(function(r){var rd=r.rd.length?r.rd.map(function(x){return x.iop+'mA@'+x.f+'Hz'}).join(', '):'\u65e0';sr+='<tr><td>\u65f6\u6bb5'+r.i+'</td><td>'+r.dur.toFixed(1)+'</td><td>'+r.ta.toFixed(1)+'</td><td>'+r.vop.toFixed(1)+'</td><td>'+r.dt.toFixed(2)+'</td><td>'+r.ths.toFixed(1)+'</td><td>'+r.kt.toFixed(2)+'</td><td>'+r.kv.toFixed(3)+'</td><td>'+r.Li.toFixed(0)+'</td><td>'+rd+'</td></tr>'});
-    var fh=calcFormulas();fh=fh.replace(/<span[^>]*class=latex[^>]*data-l="([^"]*)"[^>]*><\/span>/g,function(m,ltx){return latexToWord(ltx)});
-    var lh=d.lh>=1e6?(d.lh/1e4).toFixed(1)+'\u4e07':d.lh.toFixed(0);
-    var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+ts+'</title><style>body{font-family:SimSun,serif;font-size:11pt}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:3px 6px;font-size:10pt}th{background:#eee}h2{font-size:13pt;margin-top:14px}</style></head><body>';
-    h+='<h2 style="text-align:center">\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+ts+'</h2>';
-    h+='<p>\u62a5\u544a\u7f16\u53f7: EL-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
-    h+='<p>\u751f\u6210\u65e5\u671f: '+new Date().toLocaleDateString('zh-CN')+'</p>';
-    h+='<h2>1. \u9879\u76ee\u4fe1\u606f</h2><table><tr><th>\u9879\u76ee</th><th>\u5185\u5bb9</th></tr>'+(pn?'<tr><td>\u9879\u76ee\u540d\u79f0</td><td>'+pn+'</td></tr>':'')+(cm?'<tr><td>\u7535\u5bb9\u578b\u53f7</td><td>'+cm+'</td></tr>':'')+'<tr><td>\u5e94\u7528\u573a\u666f</td><td>'+d.mi.l+'</td></tr><tr><td>\u6563\u70ed\u6761\u4ef6</td><td>'+document.getElementById("cooling").selectedOptions[0].text+'</td></tr><tr><td>\u5de5\u4f5c\u5929\u6570</td><td>'+d.wd+'</td></tr><tr><td>\u8d28\u4fdd\u671f</td><td>'+d.wt+'\u5e74</td></tr></table>';
-    h+='<h2>2. \u989d\u5b9a\u53c2\u6570</h2><table><tr><th>\u53c2\u6570</th><th>\u6570\u503c</th></tr><tr><td>L0</td><td>'+d.l0+' h</td></tr><tr><td>Tmax</td><td>'+d.tmax+' C</td></tr><tr><td>Vrated</td><td>'+(d.vr||d.vrated)+' V</td></tr><tr><td>Irated</td><td>'+(d.ir||d.irated)+' mA</td></tr><tr><td>DT0</td><td>'+d.dt0+' C</td></tr></table>';
-    h+='<h2>3. \u8fd0\u884c\u7ed3\u679c</h2><table><tr><th>\u65f6\u6bb5</th><th>h/\u5929</th><th>Ta C</th><th>Vop V</th><th>\u0394T C</th><th>Ths C</th><th>K_T</th><th>K_V</th><th>Li h</th><th>\u7eb9\u6ce2</th></tr>'+sr+'</table>';
-    h+='<h2>4. 计算过程</h2><p style="margin-top:16px">'+fh+'</p>';
-    h+='<p style="margin-top:20px"><i>\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8ba1\u7b97\u5668 v2.0 - \u62a5\u544a\u81ea\u52a8\u751f\u6210</i></p></body></html>';
-    var b=new Blob([h],{type:'application/msword'});var dn='\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+(te.length?'('+te.join('-')+')':'')+'.doc';saveBlobWithDialog(b,dn);
+
+    /* ── Shared CSS for Word (matches web report style) ─── */
+    var css='<style>';
+    css+='body{font-family:"Microsoft YaHei","Segoe UI",SimSun,sans-serif;font-size:10pt;color:#1e293b;line-height:1.6}';
+    css+='table.data-tbl{border-collapse:collapse;width:100%;margin:10px 0;font-size:9pt}';
+    css+='table.data-tbl th,table.data-tbl td{border:1px solid #d0d7e4;padding:6px 10px;text-align:center;vertical-align:middle}';
+    css+='table.data-tbl thead th{background:#f1f5f9;font-weight:bold;color:#475569;font-size:8.5pt}';
+    css+='table.data-tbl tbody tr:nth-child(even){background:#fafbfd}';
+    css+='h2.title{text-align:center;font-size:16pt;margin-bottom:6px;color:#1e293b}';
+    css+='h3{font-size:12pt;margin-top:18px;margin-bottom:6px;color:#475569;border-left:3px solid #2563eb;padding-left:8px}';
+    css+='p.meta{text-align:center;font-size:8.5pt;color:#64748b;margin:2px 0}';
+    css+='div.footer{margin-top:18px;padding-top:8px;border-top:1px solid #e2e8f0;text-align:center;font-size:8pt;color:#94a3b8}';
+    css+='p.formula{font-family:"Cambria Math","Times New Roman",serif;font-size:10pt;margin:6px 0 6px 16px;color:#334155;line-height:1.7}';
+    css+='div.model-box{background:#f0f9ff;border:1px solid #bae6fd;padding:8px 12px;margin-bottom:10px;font-size:8.5pt;color:#0c4a6e;line-height:1.6}';
+    css+='table.compact{border-collapse:collapse;width:auto;margin:10px 0;font-size:9pt;display:inline-table}';
+    css+='table.compact th,table.compact td{border:1px solid #d0d7e4;padding:5px 12px;text-align:center;vertical-align:middle}';
+    css+='table.compact thead th{background:#f1f5f9;font-weight:bold;color:#475569;font-size:8.5pt}';
+    css+='</style>';
+
+    /* ── Run-profile rows (same data, styled for Word) ─── */
+    d.sr.forEach(function(r){
+      var rd=r.rd.length?r.rd.map(function(x){return x.iop+'mA @ '+x.f+'Hz (K='+x.k.toFixed(2)+')'}).join(', '):'无纹波';
+      sr+='<tr><td>时段'+r.i+'</td><td>'+r.dur.toFixed(1)+'</td><td>'+r.ta.toFixed(1)+'</td><td>'+r.vop.toFixed(1)+'</td>'
+        +'<td>'+r.dt.toFixed(2)+'</td><td>'+r.ths.toFixed(1)+'</td><td>'+r.kt.toFixed(2)+'</td><td>'+r.kv.toFixed(3)+'</td>'
+        +'<td>'+(r.Li>=1e6?(r.Li/1e4).toFixed(1)+'万':r.Li.toFixed(0))+'</td><td>'+rd+'</td></tr>';
+    });
+
+    /* ── Formula rendering (convert LaTeX spans to plain text) ─── */
+    var fh=calcFormulas();
+    fh=fh.replace(/<span[^>]*class=latex[^>]*data-l="([^"]*)"[^>]*><\/span>/g,function(m,ltx){return latexToWord(ltx)});
+
+    /* ── Conclusion data ─── */
+    var margin=d.margin?d.margin.toFixed(2):'-';
+    var ws=d.ws||'--';
+
+    var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>电解电容寿命评估报告'+ts+'</title>';
+    h+=css;
+    h+='</head><body>';
+
+    /* Title block */
+    h+='<h2 class="title">电解电容寿命评估报告'+ts+'</h2>';
+    var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"});
+    h+='<p class="meta">报告编号: EL-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
+    h+='<p class="meta">生成日期: '+ds+'</p>';
+
+    /* 1. Project info */
+    h+='<h3>1. 项目信息</h3>';
+    h+='<table class="data-tbl"><thead><tr>'
+      +'<th>项目名称</th><th>器件型号</th><th>应用场景</th><th>散热条件</th><th>年工作天数</th><th>质保期</th>'
+      +'</tr></thead><tbody><tr>';
+    h+='<td>'+pn+'</td><td>'+cm+'</td><td>'+d.mi.l+'</td>';
+    h+='<td>'+document.getElementById("cooling").selectedOptions[0].text+'</td>';
+    h+='<td>'+d.wd+'</td><td>'+d.wt+'年</td></tr></tbody></table>';
+
+    /* 2. Rated parameters */
+    h+='<h3>2. 额定参数</h3>';
+    h+='<table class="compact"><thead><tr>'
+      +'<th>L<sub>0</sub></th><th>T<sub>max</sub></th><th>V<sub>rated</sub></th><th>I<sub>rated</sub></th><th>ΔT<sub>0</sub></th><th>τ (Arrhenius)</th>'
+      +'</tr></thead><tbody><tr>';
+    h+='<td>'+d.l0+' h</td><td>'+d.tmax+' °C</td><td>'+(d.vr||d.vrated)+' V</td>';
+    h+='<td>'+(d.ir||d.irated)+' mA</td><td>'+d.dt0+' °C</td><td>'+d.tau+' °C</td></tr></tbody></table>';
+
+    /* 3. Run profile */
+    h+='<h3>3. 运行剖面与寿命计算</h3>';
+    h+='<table class="data-tbl"><thead><tr>'
+      +'<th>时段</th><th>h/天</th><th>Ta °C</th><th>Vop V</th><th>ΔT °C</th><th>Ths °C</th><th>K<sub>T</sub></th><th>K<sub>V</sub></th>'
+      +'<th>Li h</th><th>纹波电流</th>'
+      +'</tr></thead><tbody>'+sr+'</tbody></table>';
+
+    /* 4. Calculation process */
+    h+='<h3>4. 计算过程</h3>';
+    h+='<div class="model-box"><b>计算模型说明</b><br>'
+      +'• <b>温度加速</b>: Arrhenius 模型 K<sub>T</sub> = 2^((T<sub>max</sub> - T<sub>hs</sub>) / τ), τ='+d.tau+'°C<br>'
+      +'• <b>电压修正</b>: Nichicon 指数模型 K<sub>V</sub> = exp[a·((V<sub>r</sub>/V<sub>op</sub>)^b - 1)], a=0.56, b=1.0<br>'
+      +'• <b>频率修正</b>: K<sub>freq</sub> 查表法（铝电解电容 ESR-频率特性）<br>'
+      +'• <b>累积损伤</b>: Miner 线性疲劳准则 D = Σ(t<sub>i</sub>·N<sub>days</sub> / L<sub>i</sub>)<br>'
+      +'• <b>EOL 判据</b>: 容量下降 ≥20% 或 ESR ≥2× 初始值<br>'
+      +'• 参考标准: Nichicon Technical Manual §"How to Calculate Life Time"</div>';
+
+    /* Convert formula divs/paragraphs to Word-friendly format */
+    h+='<p class="formula">'+fh.replace(/<br\s*\/?>/g,'<br>').replace(/<\/?div[^>]*>/g,'').replace(/style="[^"]*"/g,'')+'</p>';
+
+    /* 5. Conclusion */
+    h+='<h3>5. 结论</h3>';
+    h+='<table class="compact"><thead><tr>'
+      +'<th>年损伤 D</th><th>预计寿命</th><th>质保期</th><th>裕量</th><th>判定</th>'
+      +'</tr></thead><tbody><tr>';
+    h+='<td>'+(d.dmg*100).toFixed(3)+'%</td><td>'+d.ly.toFixed(1)+' 年</td>';
+    h+='<td>'+d.wt+' 年</td><td>'+margin+'x</td><td><b>'+ws+'</b></td></tr></tbody></table>';
+
+    /* Footer */
+    h+='<div class="footer">电解电容寿命计算器 v2.0 &nbsp;|&nbsp; 报告自动生成 '+ds+'</div>';
+    h+='</body></html>';
+
+    var b=new Blob([h],{type:'application/msword'});var dn='电解电容寿命评估报告'+(te.length?'('+te.join('-')+')':'')+'.doc';saveBlobWithDialog(b,dn);
   }
 
   /* ── Init ──────────────────────── */
