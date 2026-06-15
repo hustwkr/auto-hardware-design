@@ -5,6 +5,7 @@ Thumbs.db
 node_modules/
 .vscode/
 .env
+.auth_salt  # Auto-generated scrypt salt (per-instance)
 *.log
 
 # Large reference files (keep in repo but don't track changes accidentally)
@@ -17,12 +18,17 @@ v2/
 build_temp_*.html
 *.tmp
 
-# Fix scripts and backups (dev artifacts)
+# Fix scripts, build temp, and backups (dev artifacts)
 _fix.js
 _apply_fixes_*.cjs
 fix_*.py
+build*.py
 *.bak
 backend/*.bak
 
-# Accidental nested copy
+# Accidental nested copies
 codexprojects/
+
+# Test coverage reports
+coverage/
+.nyc_output/

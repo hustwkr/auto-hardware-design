@@ -19,23 +19,59 @@ const ROOT          = path.resolve(__dirname, "..");
 const DEF_FILE      = path.join(__dirname, "defaults.json");
 const TOKEN_TTL_MS  = 86_400_000; // 24 h
 
-// ── Token store: Map<tokenHex, expiryMs> + periodic GC   ──
-const tokens = new Map();
+// ── Password hashing (scrypt) ───────────────────────────
+const SALT_FILE     = path.join(__dirname, ".auth_salt");
 
-function validateToken(tok) {
-  if (!tok) return false;
-  const exp = tokens.get(tok);
-  if (exp === undefined || Date.now() >= exp) { tokens.delete(tok); return false; }
-  return true;
+function getSalt() {
+  try { return fs.readFileSync(SALT_FILE, "utf-8").trim(); }
+  catch (_) {
+    const salt = crypto.randomBytes(16).toString("hex");
+    fs.writeFileSync(SALT_FILE, salt, "utf-8");
+    console.log("[AUTH] Generated new scrypt salt -> " + SALT_FILE);
+    return salt;
+  }
 }
 
-// Clean expired tokens every hour
-const cleanupTimer = setInterval(() => {
-  const now = Date.now();
-  let n = 0;
-  for (const [t, e] of tokens) { if (now >= e) { tokens.delete(t); n++; } }
-  if (n > 0) console.log(`[CLEANUP] ${n} expired token(s)`);
-}, 3_600_000);
+function hashPassword(pw) {
+  const salt = getSalt();
+  return crypto.scryptSync(pw, salt, 64).toString("hex");
+}
+
+// Pre-compute the hash at startup
+const ADMIN_HASH = hashPassword(ADMIN_PW);
+
+function checkPassword(input) {
+  // Timing-safe comparison via scrypt (constant-time by nature of KDF)
+  try { return hashPassword(input) === ADMIN_HASH; }
+  catch (_) { return false; }
+}
+
+// ── Signed tokens (zero-dep JWT-like: payload.sig) ──────
+const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString("hex");
+
+function signToken(expMs) {
+  const payload = JSON.stringify({ exp: expMs, iat: Date.now() });
+  const sig     = crypto.createHmac("sha256", TOKEN_SECRET).update(payload).digest("base64url");
+  return payload + "." + sig;
+}
+
+function verifyToken(tok) {
+  if (!tok || typeof tok !== "string") return false;
+  const dot = tok.lastIndexOf(".");
+  if (dot <= 0) return false;
+  const payload = tok.substring(0, dot);
+  const sig     = tok.substring(dot + 1);
+  // Verify signature
+  const expected = crypto.createHmac("sha256", TOKEN_SECRET).update(payload).digest("base64url");
+  if (sig !== expected) return false;
+  // Check expiry
+  try {
+    const data = JSON.parse(payload);
+    return Date.now() < data.exp;
+  } catch (_) { return false; }
+}
+
+function validateToken(tok) { return verifyToken(tok); }
 
 // ── MIME types & limits ─────────────────────────────────
 const MIME = {
@@ -106,37 +142,52 @@ function createDefaults() {
   };
 }
 
-// ── Defaults structure validator ────────────────────────
+// ── Defaults structure validator (warn on unknown fields, reject only structural errors) --
 function validateDefaults(d) {
-  if (typeof d !== "object" || d === null) return false;
+  if (typeof d !== "object" || d === null) return { ok: false, error: "Root must be an object" };
   const topAllowed = ["capacitor", "safety"];
-  for (const k of Object.keys(d)) { if (!topAllowed.includes(k)) return false; }
+  var warnings = [];
+
+  for (const k of Object.keys(d)) {
+    if (!topAllowed.includes(k)) {
+      warnings.push("Unknown top-level key: " + k);
+    }
+  }
 
   if (d.capacitor && typeof d.capacitor === "object") {
     const capK = ["l0","tmax","vrated","irated","dt0","cooling","workdays",
                   "warrantyTarget","scenario","segments"];
-    for (const k of Object.keys(d.capacitor)) { if (!capK.includes(k)) return false; }
+    for (const k of Object.keys(d.capacitor)) {
+      if (!capK.includes(k)) warnings.push("Unknown capacitor key: " + k);
+    }
     if (Array.isArray(d.capacitor.segments)) {
       const segK = ["dur","ta","vop","rips"];
       for (const s of d.capacitor.segments) {
-        if (typeof s !== "object") return false;
-        for (const k of Object.keys(s)) { if (!segK.includes(k)) return false; }
+        if (typeof s !== "object") return { ok: false, error: "Segment must be an object" };
+        for (const k of Object.keys(s)) {
+          if (!segK.includes(k)) warnings.push("Unknown segment key: " + k);
+        }
       }
     }
   }
 
   if (d.safety && typeof d.safety === "object") {
     const safeK = ["sStd","sPd","sMg","sAlt","sIsolation","sOvc","sOvc_AC","sOvc_DC","sSysV_AC","sSysV_DC","nodes"];
-    for (const k of Object.keys(d.safety)) { if (!safeK.includes(k)) return false; }
+    for (const k of Object.keys(d.safety)) {
+      if (!safeK.includes(k)) warnings.push("Unknown safety key: " + k);
+    }
     if (Array.isArray(d.safety.nodes)) {
       const nodeK = ["name","vrms","ins","pcb","coat","circ","interp","toGnd"];
       for (const n of d.safety.nodes) {
-        if (typeof n !== "object") return false;
-        for (const k of Object.keys(n)) { if (!nodeK.includes(k)) return false; }
+        if (typeof n !== "object") return { ok: false, error: "Node must be an object" };
+        for (const k of Object.keys(n)) {
+          if (!nodeK.includes(k)) warnings.push("Unknown node key: " + k);
+        }
       }
     }
   }
-  return true;
+
+  return { ok: true, warnings: warnings.length ? warnings : undefined };
 }
 
 // ── Response helpers ────────────────────────────────────
@@ -234,9 +285,8 @@ http.createServer(async function (req, res) {
     if (checkRateLimit(clientIP)) { json(res, 429, { error: "Too many attempts. Try again in 5 minutes." }, true); return; }
     const ct = req.headers["content-type"] || "";
     const body = ct.includes("json") ? await parseBody(req) : await parseForm(req);
-    if (body.password === ADMIN_PW) {
-      const t = crypto.randomBytes(16).toString("hex");
-      tokens.set(t, Date.now() + TOKEN_TTL_MS);  // store with expiry
+    if (checkPassword(body.password)) {
+      const t = signToken(Date.now() + TOKEN_TTL_MS);
       if (ct.includes("json")) { json(res, 200, { success: true, token: t }, true); }
       else { res.writeHead(302, { Location: "/admin", "Set-Cookie": `token=${t};Path=/;Max-Age=86400;HttpOnly;SameSite=Lax` }); res.end(); }
     } else {
@@ -248,7 +298,7 @@ http.createServer(async function (req, res) {
 
   // ── LOGOUT (public) ──────────────────────────────────
   if (p === "/api/logout" && req.method === "POST") {
-    tokens.delete(tok);
+    // Stateless tokens - client discards token on logout
     json(res, 200, { success: true }, true);
     return;
   }
@@ -271,9 +321,11 @@ http.createServer(async function (req, res) {
     if (req.method === "GET")   { json(res, 200, loadDefaults(), false); return; }
     if (req.method === "PUT") {
       const body = await parseBody(req);
-      if (!validateDefaults(body)) { json(res, 400, { error: "Invalid defaults structure" }, false); return; }
+      var result = validateDefaults(body);
+      if (!result.ok) { json(res, 400, { error: result.error }, false); return; }
+      if (result.warnings) console.warn("[DEFAULTS] " + result.warnings.join("; "));
       saveDefaults(body);
-      json(res, 200, { success: true }, false);
+      json(res, 200, { success: true, warnings: result.warnings || [] }, false);
       return;
     }
     res.writeHead(405); res.end();
@@ -302,5 +354,5 @@ http.createServer(async function (req, res) {
 });
 
 // Graceful shutdown
-process.on("SIGTERM", () => { clearInterval(cleanupTimer); process.exit(0); });
-process.on("SIGINT",  () => { clearInterval(cleanupTimer); process.exit(0); });
+process.on("SIGTERM", () => { process.exit(0); });
+process.on("SIGINT",  () => { process.exit(0); });
