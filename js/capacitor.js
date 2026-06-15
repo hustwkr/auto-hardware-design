@@ -183,6 +183,14 @@
     genRep();
   }
 
+  /* ── LaTeX → Unicode/HTML for Word export ─── */
+  function latexToWord(src){return cvtLW(src);}
+  function brkLW(s,p){var d=1,o='';while(p<s.length&&d>0){if(s[p]==='{'){d++;o+=s[p];}else if(s[p]==='}'){d--;if(!d)break;o+=s[p];}else o+=s[p];p++}return{c:o,e:p};}
+  function cvtLW(s){var o='';var i=0;while(i<s.length){if(s[i]==='\\'){var j=i+1;while(j<s.length&&((s[j]>='a'&&s[j]<='z')||(s[j]>='A'&&s[j]<='Z')))j++;var w=s.slice(i,j);if(w==='\\frac' && s[j]==='{'){var r=brkLW(s,++j);i=r.e+1;var rn=cvtLW(r.c);r=brkLW(s,++i);i=r.e+1;var rd=cvtLW(r.c);o+='('+rn+')/('+rd+')';continue;}if(w==='\\text' && s[j]==='{'){var r=brkLW(s,++j);i=r.e+1;o+=r.c;continue;}if(w==='\\left'||w==='\
+ight'){i=j;continue;}o+=(G_LW[w.slice(1)]||O_LW[w.slice(1)]||w.slice(1));i=j;continue;}if(s[i]==='^'||s[i]==='_'){i++;var tag=s[i-1]==='^'?'sup':'sub';if(s[i]==='{'){var r=brkLW(s,++i);i=r.e+1;o+='<'+tag+'>'+cvtLW(r.c)+'</'+tag+'>';}else{o+='<'+tag+'>'+cvtLW(s[i])+'</'+tag+'>';i++;}continue;}o+=s[i];i++}return o;}
+  var G_LW={Delta:'Δ',alpha:'α',beta:'β',gamma:'γ',delta:'δ',epsilon:'ε',sigma:'σ',tau:'τ',mu:'μ',pi:'π',lambda:'λ',rho:'ρ',phi:'φ'};
+  var O_LW={cdot:'·',times:'×',sum:'Σ',quad:'  ',circ:'°'};
+
   /* ── Formula rendering (uses model data) ─── */
   function calcFormulas(){
     var d=window._cd;if(!d||!d.sr||!d.sr.length)return '';
@@ -329,7 +337,7 @@
     var pn=document.getElementById('projName').value||'-',cm=document.getElementById('capModel').value||'-',te=[];if(pn&&pn!=='-')te.push(pn);if(cm&&cm!=='-')te.push(cm);
     var ts=te.length?' ('+te.join(' - ')+')':'',sr='';
     d.sr.forEach(function(r){var rd=r.rd.length?r.rd.map(function(x){return x.iop+'mA@'+x.f+'Hz'}).join(', '):'\u65e0';sr+='<tr><td>\u65f6\u6bb5'+r.i+'</td><td>'+r.dur.toFixed(1)+'</td><td>'+r.ta.toFixed(1)+'</td><td>'+r.vop.toFixed(1)+'</td><td>'+r.dt.toFixed(2)+'</td><td>'+r.ths.toFixed(1)+'</td><td>'+r.kt.toFixed(2)+'</td><td>'+r.kv.toFixed(3)+'</td><td>'+r.Li.toFixed(0)+'</td><td>'+rd+'</td></tr>'});
-    var fh=calcFormulas();fh=fh.replace(/<span class=latex data-l="([^"]*)"><\/span>/g,'$1');
+    var fh=calcFormulas();fh=fh.replace(/<span[^>]*class=latex[^>]*data-l="([^"]*)"[^>]*><\/span>/g,function(m,ltx){return latexToWord(ltx)});
     var lh=d.lh>=1e6?(d.lh/1e4).toFixed(1)+'\u4e07':d.lh.toFixed(0);
     var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+ts+'</title><style>body{font-family:SimSun,serif;font-size:11pt}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:3px 6px;font-size:10pt}th{background:#eee}h2{font-size:13pt;margin-top:14px}</style></head><body>';
     h+='<h2 style="text-align:center">\u7535\u89e3\u7535\u5bb9\u5bff\u547d\u8bc4\u4f30\u62a5\u544a'+ts+'</h2>';
