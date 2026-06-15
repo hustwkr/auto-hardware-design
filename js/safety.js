@@ -313,7 +313,6 @@
       } else {
         sAddNode();
       }
-    }
     var btn=document.getElementById("addNodeBtn");if(btn)btn.onclick=sAddNode;
 
     /* Auto-derive DC OVC based on isolation + AC OVC — called during init */
