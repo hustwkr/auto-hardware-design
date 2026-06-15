@@ -117,7 +117,7 @@ function saveDefaults(d) {
 function createDefaults() {
   return {
     capacitor: {
-      l0: "5000", tmax: "105", vrated: "450", irated: "2000",
+      l0: "5000", tmax: "105", tau: "10", vrated: "450", irated: "2000",
       dt0: "10", cooling: "1.0", workdays: "365", warrantyTarget: "10",
       scenario: "industrial",
       segments: [
@@ -155,7 +155,7 @@ function validateDefaults(d) {
   }
 
   if (d.capacitor && typeof d.capacitor === "object") {
-    const capK = ["l0","tmax","vrated","irated","dt0","cooling","workdays",
+    const capK = ["l0","tmax","tau","vrated","irated","dt0","cooling","workdays",
                   "warrantyTarget","scenario","segments"];
     for (const k of Object.keys(d.capacitor)) {
       if (!capK.includes(k)) warnings.push("Unknown capacitor key: " + k);

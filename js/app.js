@@ -60,7 +60,7 @@
 
     /* Capacitor defaults */
     var c=d.capacitor;if(c&&typeof c==='object'){
-      setVal('l0',c.l0);setVal('tmax',c.tmax);setVal('vrated',c.vrated);setVal('irated',c.irated);
+      setVal('l0',c.l0);setVal('tmax',c.tmax);setVal('tau',c.tau||'10');setVal('vrated',c.vrated);setVal('irated',c.irated);
       setVal('dt0',c.dt0);setVal('workdays',c.workdays);setVal('warrantyTarget',c.warrantyTarget);
       if(c.cooling)document.getElementById('cooling').value=c.cooling;
       if(c.scenario)document.getElementById('scenario').value=c.scenario;

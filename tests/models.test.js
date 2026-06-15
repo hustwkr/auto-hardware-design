@@ -50,13 +50,21 @@ test("kvf voltage correction - at rated = 1", function () {
   approx(CM.kvf(50, 50), 1, 0.001);
 });
 
-test("kvf voltage correction - below rated increases life", function () {
+test("kvf voltage correction - below rated increases life (Nichicon exponential)", function () {
   assert.ok(CM.kvf(25, 50) > 1, "KV should be > 1 at half voltage");
-  approx(CM.kvf(25, 50), 1.21, 0.05);
+  // Nichicon model: Kv = exp[a * ((Vr/Vop)^b - 1)] with a=0.56, b=1.0
+  // At Vop=25, Vr=50: ratio=2, Kv = exp[0.56*(2-1)] = exp(0.56) ≈ 1.75
+  approx(CM.kvf(25, 50), 1.75, 0.05);
 });
 
 test("kvf above rated = 1", function () {
   approx(CM.kvf(60, 50), 1, 0.001);
+});
+
+test("tau configurable - tau=8 gives longer life than tau=10 at moderate temps", function () {
+  var r10 = CM.calcLifetime({l0:5000,tmax:105,tau:10,vrated:450,irated:2000,dt0:10,cooling:1.0,wd:365,wt:10,scenario:"industrial",segments:[{dur:24,ta:70,vop:400,rips:[{freq:120,current:800}]}]});
+  var r8  = CM.calcLifetime({l0:5000,tmax:105,tau:8,vrated:450,irated:2000,dt0:10,cooling:1.0,wd:365,wt:10,scenario:"industrial",segments:[{dur:24,ta:70,vop:400,rips:[{freq:120,current:800}]}]});
+  assert.ok(r8.ly > r10.ly, "tau=8 should give longer life (Arrhenius more sensitive to cooling)");
 });
 
 test("calcDeltaT - single frequency ripple", function () {

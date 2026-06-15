@@ -18,10 +18,15 @@
   /* ── Pure helpers ─────────────────────────────── */
   function fv(v, d) { return typeof v !== "number" || !isFinite(v) ? "-" : v.toFixed(d); }
 
-  function kvf(v, vr) {
+  /* ── Voltage correction (Nichicon exponential model) ─── */
+  function kvf(v, vr, a, b) {
     if (vr <= 0 || v <= 0) return 1;
-    var r = v / vr;
-    return r >= 1 ? 1 : 1 + 0.6 * Math.pow(1 - r, 1.5);
+    // Nichicon-style: Kv = exp[a * ((Vr/Vop)^b - 1)]
+    // Default a=0.56, b=1.0 for industrial-grade electrolytic caps
+    var ka = typeof a === "number" ? a : 0.56;
+    var kb = typeof b === "number" ? b : 1.0;
+    if (v >= vr) return 1;
+    return Math.exp(ka * (Math.pow(vr / v, kb) - 1));
   }
 
   /* ── Ripple → ΔT calculation (pure) ───────────── */
@@ -43,7 +48,7 @@
   }
 
   /* ── Per-segment lifetime (pure Arrhenius + Miner) */
-  function calcSegments(segments, l0, tmax, vrated, irated, dt0, cooling, vr, wd) {
+  function calcSegments(segments, l0, tmax, tau, vrated, irated, dt0, cooling, kva, kvb, wd) {
     var deltas = calcDeltaT(segments, irated, dt0, cooling);
     return segments.map(function (seg, i) {
       var dur = seg.dur || 0;
@@ -53,8 +58,9 @@
       // Find matching deltaT from deltas array
       var dtInfo = deltas[i] || { rd: [], dt: 0 };
       var ths   = ta + dtInfo.dt;
-      var kt    = Math.pow(2, (tmax - ths) / 10);
-      var kv    = kvf(vop, vr || vrated);
+      // Arrhenius temperature acceleration: kt = 2^((Tmax - Ths) / tau)
+      var kt    = Math.pow(2, (tmax - ths) / tau);
+      var kv    = kvf(vop, vrated, kva, kvb);
       var Li    = l0 * kt * kv;
       var d     = Li > 0 ? dur * wd / Li : Infinity;
 
@@ -69,6 +75,7 @@
   function calcLifetime(params) {
     var l0       = params.l0       || 2000;
     var tmax     = params.tmax     || 105;
+    var tau      = params.tau      || 10;   // Arrhenius temperature coefficient (8/9/10)
     var vrated   = params.vrated   || 50;
     var irated   = params.irated   || 500;
     var dt0      = params.dt0      || 10;
@@ -76,12 +83,14 @@
     var wd       = params.wd       || 365;
     var wt       = params.wt       || 5;
     var scenario = params.scenario || "industrial";
+    var kva      = params.kva      || 0.56; // Kv exponential model parameter a (Nichicon)
+    var kvb      = params.kvb      || 1.0;  // Kv exponential model parameter b
     var segments = params.segments || [];
 
     if (!segments.length) return null;
 
     var mi   = MG[scenario] || MG.industrial;
-    var sr   = calcSegments(segments, l0, tmax, vrated, irated, dt0, cooling, vrated, wd);
+    var sr   = calcSegments(segments, l0, tmax, tau, vrated, irated, dt0, cooling, kva, kvb, wd);
     var dmg  = sr.reduce(function (s, r) { return s + r.d; }, 0);
     var ly   = dmg > 0 ? 1 / dmg : Infinity;
     var lh   = ly * wd * segments.reduce(function (s, seg) { return s + (seg.dur || 0); }, 0);
@@ -101,7 +110,7 @@
     sr.forEach(function (r) { if (r.ths > wtHs) wtHs = r.ths; if (r.kt < wtKt) wtKt = r.kt; });
 
     return {
-      l0: l0, tmax: tmax, vrated: vrated, irated: irated, dt0: dt0,
+      l0: l0, tmax: tmax, tau: tau, vrated: vrated, irated: irated, dt0: dt0,
       cooling: cooling, wd: wd, wt: wt, scenario: scenario, mi: mi,
       sr: sr, dmg: dmg, lh: lh, ly: ly, margin: margin,
       ws: ws, wc: wc, wd2: wd2, req: req,

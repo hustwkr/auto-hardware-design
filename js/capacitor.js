@@ -118,6 +118,7 @@
     // Read rated params from DOM
     var l0=+document.getElementById("l0").value||2e3,
         tmax=+document.getElementById("tmax").value||105,
+        tau=+document.getElementById("tau").value||10,
         vrated=+document.getElementById("vrated").value||50,
         irated=+document.getElementById("irated").value||500,
         dt0=+document.getElementById("dt0").value||10,
@@ -142,7 +143,7 @@
     });
 
     // Call pure model calculation
-    var result = CM.calcLifetime({l0:l0,tmax:tmax,vrated:vrated,irated:irated,dt0:dt0,cooling:cooling,wd:wd,wt:wt,scenario:scenario,segments:segments});
+    var result = CM.calcLifetime({l0:l0,tmax:tmax,tau:tau,vrated:vrated,irated:irated,dt0:dt0,cooling:cooling,wd:wd,wt:wt,scenario:scenario,segments:segments});
     if(!result) return;
 
     // Render results to DOM
@@ -187,6 +188,14 @@
     var d=window._cd;if(!d||!d.sr||!d.sr.length)return '';
     var ir=d.irated;
     var fs='';
+    fs+='<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:.8rem;color:#0c4a6e">';
+    fs+='<b>计算模型说明</b><br>';
+    fs+='• <b>温度加速</b>：Arrhenius 模型 K_T = 2^((T_max - T_hs) / τ)，τ='+d.tau+'°C<br>';
+    fs+='• <b>电压修正</b>：Nichicon 指数模型 K_V = exp[a·((V_r/V_op)^b - 1)]，a=0.56, b=1.0<br>';
+    fs+='• <b>频率修正</b>：K_freq 查表法（铝电解电容 ESR-频率特性）<br>';
+    fs+='• <b>累积损伤</b>：Miner 线性疲劳准则 D = Σ(t_i·N_days / L_i)<br>';
+    fs+='• <b>EOL 判据</b>：容量下降 ≥20% 或 ESR ≥2× 初始值<br>';
+    fs+='• 参考标准：Nichicon Technical Manual §"How to Calculate Life Time"<br></div>';
     d.sr.forEach(function(r){
       fs+='<p style="margin:4px 0 2px 0"><b>时段'+r.i+' — ① 温升计算</b></p>';
       if(r.rd&&r.rd.length){
@@ -209,9 +218,9 @@
 
       fs+='<p style="margin:4px 0 2px 0"><b>时段'+r.i+' — ② 寿命计算</b></p>';
       fs+='<p style="margin:1px 0 1px 8px;font-size:.85rem;color:#444">';
-      fs+='<span class=latex data-l="L_i = L_0 \\cdot 2^{\\frac{T_{max} - T_{hs,i}}{10}} \\cdot K_V"></span></p>';
+      fs+='<span class=latex data-l="L_i = L_0 \\cdot 2^{\\frac{T_{max} - T_{hs,i}}{' + d.tau + '}} \\cdot K_V"></span></p>';
       fs+='<p style="margin:1px 0 3px 8px;font-size:.85rem;color:#666">=';
-      fs+='<span class=latex data-l="L_'+r.i+' = '+d.l0+' \\cdot 2^{\\frac{'+d.tmax+' - '+r.ths.toFixed(1)+'}{10}} \\cdot '+r.kv.toFixed(3)+'"></span></p>';
+      fs+='<span class=latex data-l="L_'+r.i+' = '+d.l0+' \\cdot 2^{\\frac{'+d.tmax+' - '+r.ths.toFixed(1)+'}{' + d.tau + '}} \\cdot '+r.kv.toFixed(3)+'"></span></p>';
       fs+='<p style="margin:1px 0 6px 8px;font-size:.85rem;color:#333">=';
       fs+='<span class=latex data-l="L_'+r.i+' = '+r.Li.toFixed(0)+' \\text{h}"></span></p>';
     });
@@ -367,7 +376,7 @@
   /* ── Wire static inputs via event delegation ─── */
   document.addEventListener('input', function(e){
     var t=e.target;
-    if(t.id && ['l0','tmax','vrated','irated','dt0','cap','workdays','warrantyTarget'].includes(t.id)){calc()}
+    if(t.id && ['l0','tmax','tau','vrated','irated','dt0','cap','workdays','warrantyTarget'].includes(t.id)){calc()}
   });
   document.addEventListener('change', function(e){
     var t=e.target;
