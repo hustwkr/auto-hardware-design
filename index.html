@@ -26,9 +26,16 @@
 <h1 style="font-size:1.4rem;margin-bottom:2px">电解电容寿命计算工具 <span style="font-size:.82rem;font-weight:400;color:#64748b">Electrolytic Capacitor Lifetime Calculator</span></h1>
 <p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35">Arrhenius + Miner 累积损伤 + 多段运行剖面 + 多频率纹波叠加 + 质保期判定</p>
 
-<div class="card"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><h2 style="margin:0;border:none;padding:0;font-size:.82rem">基本信息&器件参数</h2></div><div class="param-grid">
+<div class="card"><h2 style="font-size:.82rem">基本信息</h2><div class="param-grid">
     <div class="fgi"><label>项目名称</label><input type="text" id="projName" placeholder="选填"></div>
     <div class="fgi"><label>器件型号</label><input type="text" id="capModel" placeholder="选填"></div>
+    <div class="fgi"><label>散热条件</label><select id="cooling"><option value="1.0" selected>自然对流</option><option value="1.15">强制风冷 1-2m/s</option><option value="1.30">强制风冷 &gt;2m/s</option></select></div>
+    <div class="fgi"><label>每年工作天数</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"><span class="unit">天</span></div>
+    <div class="fgi"><label>质保期(年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
+    <div class="fgi"><label>场景</label><select id="scenario"><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select></div>
+  </div></div>
+
+<div class="card"><h2 style="font-size:.82rem">器件参数</h2><div class="param-grid">
     <div class="fgi"><label>额定寿命(h)</label><input type="number" id="l0" value="2000" min="100" step="100"><span class="unit">h</span></div>
     <div class="fgi"><label>最高温度(C)</label><input type="number" id="tmax" value="105" min="60" max="150"><span class="unit">°C</span></div>
     <div class="fgi"><label>额定电压(V)</label><input type="number" id="vrated" value="50" min="1" step="1"><span class="unit">V</span></div>
@@ -47,13 +54,6 @@
     <span id="stt" style="font-size:.72rem;color:#64748b;margin-left:10px"></span>
     <div id="stw" style="font-size:.72rem;color:#ef4444;margin-top:3px;display:none"></div>
   </div>
-
-  <div class="card"><h2>环境与质保</h2><div class="param-grid">
-      <div class="fgi"><label>散热条件</label><select id="cooling"><option value="1.0" selected>自然对流</option><option value="1.15">强制风冷 1-2m/s</option><option value="1.30">强制风冷 &gt;2m/s</option></select></div>
-      <div class="fgi"><label>每年工作天数</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"><span class="unit">天</span></div>
-      <div class="fgi"><label>质保期(年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
-      <div class="fgi"><label>场景</label><select id="scenario"><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select></div>
-    </div></div>
 </div>
 
 <!-- Right column: results -->
