@@ -269,3 +269,54 @@ f) 电路内部功能绝缘：比对地低一档
 - 均匀电场减小 (§7.3.7.4.2 Case B)
 
 ================================================================================
+
+## 四、UL 840 / UL 1741 安规距离计算修正 (2026-06-16)
+
+### [严重] UL 电气间隙使用了冲击电压而非系统电压
+
+**代码位置**: safety-model.js line ~390-394（修复前）
+```javascript
+// 旧代码 — 错误：使用冲击电压查UL表
+var im = INS_K[effIns] || 1.0;
+reqClr = lookupClr(impKV * 1000, pd, standard, false) * im;
+```
+
+**规范要求**:
+- **UL 1741 §25.4g**: "The Phase-to-Ground Rated System Voltage shall be used to determine clearances" — 电气间隙由相地系统电压决定，而非冲击耐受电压。
+- **UL 840 §6.3**: Clearance table is indexed by system voltage (kVRMS), NOT impulse withstand voltage.
+- **UL 1741 §25.4b**: Inverters use Overvoltage Category IV — 逆变器使用OVC IV。
+- **UL 1741 §25.4a**: Default Pollution Degree 3 (§25.4c: coated PCB = PD2).
+
+**Bug 影响**:
+对于典型 300V AC 系统 @ OVC IV：
+| 方法 | 查表值 | 结果 |
+|------|--------|------|
+| ~~旧代码~~ impKV=6kV → row [6.0] PD3 | ~50mm | **严重过大（~20x）** |
+| ✅ 新代码 sysKVRMS=0.3 → row [0.33] PD3 | 0.8mm (reinf) | 正确 |
+
+**修复**:
+1. `calcNode()` 新增 `sysVDC` 参数，从 `calcSafety()` 透传系统电压。
+2. UL模式下使用 `sysVAC/1000` (AC电路) 或 `sysVDC/1000` (DC电路) 作为 kVRMS 查表值。
+3. 加强绝缘：在UL表中向上查找一行（table step-up），与 basic*2 取较大值，符合 UL 840 §6.3 的两种等效方法。
+
+**测试**: 新增5个UL专用测试用例 (47/47 pass)：
+- `calcNode - UL uses system voltage not impulse for clearance` — 验证300V AC系统电气间隙 ~0.8mm
+- `calcNode - UL DC circuit uses sysVDC for clearance` — 验证800V DC系统电气间隙 ~7.0mm
+- `calcNode - UL reinforced insulation exceeds basic` — 加强绝缘 > 基本绝缘 (≥2x)
+- `lookupClr - UL interpolation works` — UL表线性插值正确性
+- `calcSafety - UL full calculation with sysVDC` — 完整UL计算流程
+
+### UL 840 规范要点总结（从 standards/ 目录提取）
+
+**电气间隙 (Clearance)**:
+- 查表依据：系统电压 kVRMS + 污染等级 (PD1/PD2/PD3)
+- CLR_TBL_UL = [[kVRMS, PD1, PD2, PD3], ...] — 从 0.33kV 到 12kV，共17行
+- 加强绝缘：翻倍基本绝缘距离 **或** 向上查找一行（取较大值）
+
+**爬电距离 (Creepage)**:
+- 查表依据：工作电压 Vrms + PD + 材料组别 (CTI)
+- CRP_UL = [[Vrms, PD1-B, PD1-F, PD2-B, PD2-F, PCB, PD3-B, PD3-F, ...], ...] — 从0V到6300V，共27行
+- 加强绝缘：爬电距离翻倍 (UL 840 §6.3.1)
+- UL 1741 §25.4d: All PWBs minimum CTI = 100 → Material Group II
+
+================================================================================

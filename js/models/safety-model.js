@@ -132,6 +132,15 @@
     return 1.0;
   }
 
+  /* ── UL 840 altitude correction (§6.3 note 5) ─── */
+  function altFactorUL(m) {
+    // m: altitude in meters
+    if (m <= 2000) return 1.0;
+    // UL uses exponential atmosphere model: k = e^((h-2000)/3300)
+    var h = m - 2000;
+    return Math.round(Math.exp(h / 3300) * 100) / 100;
+  }
+
   /* ── Backward compat: ALT_K object for UI display ─── */
   var ALT_K = {};
   ALT_DATA.forEach(function(d){ ALT_K[d[0]] = d[2]; });
@@ -342,9 +351,10 @@
   }
 
   /* ── Per-node calculation (pure) ─────────────── */
-  function calcNode(node, pd, mgGroup, alt, standard, impAC, impDC, sysVAC) {
+  function calcNode(node, pd, mgGroup, alt, standard, impAC, impDC, sysVAC, sysVDC) {
     // node: { name, vrms, ins, pcb, coat, circ, toGnd }
     // sysVAC: AC system voltage for TOV lookup (optional, V rms)
+    // sysVDC: DC system voltage for UL clearance lookup (optional, V)
     var vrms = node.vrms || 0;
     var ins  = node.ins  || 'basic';
     var pcb  = !!node.pcb;
@@ -388,12 +398,40 @@
 
       reqClr = calcClearance(vrms, impKV, tovPeak, isMains, effIns, pd);
     } else {
-      // UL: simplified approach — impulse voltage based with insulation multiplier
-      var im = INS_K[effIns] || 1.0;
-      reqClr = lookupClr(impKV * 1000, pd, standard, false) * im;
+      /* ── UL 840 clearance: based on system voltage (kVRMS) ─── */
+      // Per UL 1741 §25.4g and UL 840 §6.3:
+      // Clearance is determined by Phase-to-Ground Rated System Voltage,
+      // NOT impulse withstand voltage. The CLR_TBL_UL table is indexed by kVRMS.
+      var sysKV = circ === 'dc' ? (sysVDC || 600) : (sysVAC || 300);
+      var sysKVRMS = sysKV / 1000; // V → kVRMS for UL table lookup
+
+      if (effIns === 'reinf') {
+        /* ── REINFORCED INSULATION (UL 840 §6.3) ───────────── */
+        // Two equivalent approaches per UL 840:
+        //   (1) Double the basic insulation distance, OR
+        //   (2) Step up one row in the clearance table
+        // We use approach (2): find next higher voltage row → more accurate.
+        var basicClr = lookupClr(sysKVRMS * 1000, pd, standard, false);
+        // Find the row used for basic, then step to the NEXT row:
+        var reinfV = sysKVRMS;
+        var foundBasic = false;
+        for (var ri = 0; ri < CLR_TBL_UL.length; ri++) {
+          if (!foundBasic && CLR_TBL_UL[ri][0] >= sysKVRMS) {
+            foundBasic = true; // This is the basic row — skip to next
+            continue;
+          }
+          if (foundBasic) { reinfV = CLR_TBL_UL[ri][0]; break; }
+        }
+        var reinfClr = lookupClr(reinfV * 1000, pd, standard, false);
+        // Use the more conservative (larger) of both approaches:
+        reqClr = Math.max(basicClr * 2, reinfClr);
+      } else {
+        // Basic/supplementary/functional insulation — direct lookup by system voltage
+        reqClr = lookupClr(sysKVRMS * 1000, pd, standard, true);
+      }
     }
 
-    var altk = altFactor(alt);
+    var altk = (standard === 'ul') ? altFactorUL(alt) : altFactor(alt);
     reqClr = Math.round(reqClr * altk * 10) / 10;
 
     // Creepage calculation — reinforced doubles the basic creepage per IEC 60664-1 Table A.2
@@ -451,10 +489,10 @@
 
     if (!nodes.length) return null;
 
-    var altk = altFactor(alt);
+    var altk = (standard === 'ul') ? altFactorUL(alt) : altFactor(alt);
 
     var results = nodes.map(function (node) {
-      return calcNode(node, pd, mgGroup, alt, standard, impAC, impDC, sysVAC);
+      return calcNode(node, pd, mgGroup, alt, standard, impAC, impDC, sysVAC, sysVDC);
     });
 
     return {
@@ -468,7 +506,8 @@
   /* ── Expose (internal lookup tables are private) ─── */
   global.SafetyModel = {
     ALT_K: ALT_K,          // Used by UI for altitude display (backward compat)
-    altFactor: altFactor,   // Altitude correction with interpolation
+    altFactor: altFactor,   // Altitude correction with interpolation (IEC)
+    altFactorUL: altFactorUL, // UL 840 altitude correction (exponential)
     INS_K: INS_K,          // Used by UI report generation
     INS_LABELS: INS_LABELS, // Insulation type labels
     lookupImpulse: lookupImpulse,

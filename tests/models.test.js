@@ -369,9 +369,93 @@ test("INS_K reinforced = 2x", function () {
   assert.strictEqual(SM.INS_K.basic, 1.0);
 });
 
+/* ── UL clearance tests (system voltage based) ─── */
+test("calcNode - UL uses system voltage not impulse for clearance", function () {
+  // For a 300V AC system: sysKVRMS = 0.3, basic → row [0.33] PD3=0.2mm
+  // Reinforced: next row [0.4] PD3=0.8mm; max(0.2*2, 0.8) = 0.8mm
+  // NOT 6kV impulse → ~50mm (which was the old bug)
+  var result = SM.calcNode({name: "L-PE", vrms: 230, ins: "reinf", pcb: 0, coat: 0, circ: "ac", toGnd: true},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  assert.ok(result.reqClr < 10, "UL clearance for 300V system should be reasonable (got " + result.reqClr + ")");
+  approx(result.reqClr, 0.8, 0.1); // reinforced: max(basic*2=0.4, next_row=0.8) = 0.8mm
+});
+
+test("calcNode - UL DC circuit uses sysVDC for clearance", function () {
+  var result = SM.calcNode({name: "DC+-PE", vrms: 600, ins: "reinf", pcb: 0, coat: 0, circ: "dc", toGnd: true},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 800);
+  // sysVDC=800 → sysKVRMS=0.8 → basic row [0.8] PD3=3.5mm; next row [1.0]=4.5mm
+  // reqClr = max(3.5*2, 4.5) = 7.0mm
+  approx(result.reqClr, 7.0, 0.5);
+});
+
+test("calcNode - UL reinforced insulation exceeds basic", function () {
+  var basic = SM.calcNode({name: "X", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  var reinf = SM.calcNode({name: "X", vrms: 230, ins: "reinf", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  assert.ok(reinf.reqClr > basic.reqClr, "Reinforced UL clearance should exceed basic (" + reinf.reqClr + " > " + basic.reqClr + ")");
+  // For 300V: basic=0.2mm, reinf=0.8mm → 4x increase
+  assert.ok(reinf.reqClr >= basic.reqClr * 2, "Reinforced should be at least 2x basic");
+});
+
+test("lookupClr - UL interpolation works", function () {
+  // Between rows [0.5, PD3=1.5] and [0.6, PD3=2.2], at 0.55 → ~1.85mm
+  var val = SM.lookupClr(550, 3, "ul", true);
+  approx(val, 1.85, 0.3);
+});
+
+test("calcSafety - UL full calculation with sysVDC", function () {
+  var result = SM.calcSafety({
+    pd: 3, mgGroup: "ii", alt: 2000, standard: "ul",
+    sysVAC: 300, sysVDC: 600,
+    nodes: [
+      {name: "L-PE", vrms: 230, ins: "reinf", pcb: 0, coat: 0, circ: "ac", toGnd: true},
+      {name: "DC+-PE", vrms: 600, ins: "reinf", pcb: 0, coat: 0, circ: "dc", toGnd: true}
+    ]
+  });
+  assert.ok(result.results.length === 2);
+  // AC node: sysKVRMS=0.3 → reinf ~0.8mm
+  approx(result.results[0].reqClr, 0.8, 0.1);
+  // DC node: sysKVRMS=0.6 → basic row [0.6] PD3=2.2; next=[0.8]=3.5; max(4.4, 3.5)=4.4mm
+  approx(result.results[1].reqClr, 4.4, 0.5);
+});
+
 
 /* ================================================== */
-/* Summary                                            */
+/* Altitude correction — IEC vs UL                    */
+/* ================================================== */
+
+test("altFactor - IEC 2000m baseline", function() {
+  assert.strictEqual(SM.altFactor(2000), 1.0);
+});
+
+test("altFactor - IEC 5000m interpolation", function() {
+  var k = SM.altFactor(5000);
+  assert.ok(k > 1 && k < 3, "IEC alt factor at 5000m should be ~1.6-2.0");
+});
+
+test("altFactorUL - baseline 2000m", function() {
+  assert.strictEqual(SM.altFactorUL(2000), 1.0);
+});
+
+test("altFactorUL - exponential at 5000m", function() {
+  var k = SM.altFactorUL(5000);
+  // e^((5000-2000)/3300) ≈ e^0.909 ≈ 2.48
+  assert.ok(k > 2.4 && k < 2.6, "UL alt factor at 5000m should be ~2.48, got: " + k);
+});
+
+test("altFactorUL - exponential at 10000m", function() {
+  var k = SM.altFactorUL(10000);
+  // e^((10000-2000)/3300) ≈ e^2.424 ≈ 11.29
+  assert.ok(k > 11 && k < 12, "UL alt factor at 10000m should be ~11.3, got: " + k);
+});
+
+test("altFactorUL - below 2000m returns 1", function() {
+  assert.strictEqual(SM.altFactorUL(1500), 1.0);
+  assert.strictEqual(SM.altFactorUL(0), 1.0);
+});
+
+
 /* ================================================== */
 
 process.stderr.write("\n" + "=".repeat(50) + "\n");

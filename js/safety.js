@@ -64,6 +64,18 @@
     if(badge) badge.style.display = 'inline-block';
   }
 
+  /* ── Apply standard-specific UI mode (IEC vs UL) ─── */
+  function applyStandardMode(std){
+    // Toggle data-standard="iec" and data-standard="ul" elements
+    document.querySelectorAll("[data-standard]").forEach(function(el){
+      if(el.getAttribute("data-standard") === std){
+        el.style.display = "";
+      } else {
+        el.style.display = "none";
+      }
+    });
+  }
+
   /* ── Read params from DOM → call model → render results ─── */
   function sCalc(){
     var nodes=document.querySelectorAll("#sN .snode");
@@ -79,11 +91,22 @@
     var mg  = document.getElementById("sMg").value||"ii";
     var alt = +document.getElementById("sAlt").value||2000;
     var std = document.getElementById("sStd").value||"iec";
+
+    /* ── UL mode: PD and material group are fixed by standard ─── */
+    if(std === 'ul'){
+      pd = 3; // UL 1741 §25.4a: default PD3
+      mg = "ii"; // UL 1741 §25.4d: CTI >= 100 → Material Group II
+    }
+
     var iso = document.getElementById('sIsolation')?document.getElementById('sIsolation').value:'isolated';
     var ovc_AC = {i:1,ii:2,iii:3,iv:4}[document.getElementById('sOvc_AC').value||'ii'] || 2;
     var ovc_DC = {i:1,ii:2,iii:3,iv:4}[document.getElementById('sOvc_DC').value||'ii'] || 2;
-    var sysVAC = +document.getElementById('sSysV_AC').value || 300;
-    var sysVDC = +document.getElementById('sSysV_DC').value || 600;
+
+    /* ── Read system voltage from IEC or UL inputs ─── */
+    var sysVAC_el = std === 'ul' ? document.getElementById('sSysV_AC_ul') : document.getElementById('sSysV_AC');
+    var sysVDC_el = std === 'ul' ? document.getElementById('sSysV_DC_ul') : document.getElementById('sSysV_DC');
+    var sysVAC = +(sysVAC_el?sysVAC_el.value:0) || 300;
+    var sysVDC = +(sysVDC_el?sysVDC_el.value:0) || 600;
 
     /* ── Impulse withstand voltage per IEC 62109-1 Table 12 ──── */
     var IMPULSE_TBL = [
@@ -133,26 +156,39 @@
       return kv;
     }
 
-    /* ── Display impulse + TOV info in #sImpulseInfo ─── */
-    (function(){
-      var el = document.getElementById("sImpulseInfo");
-      if(!el) return;
-      var ovcLabel = function(n){return {1:'I',2:'II',3:'III',4:'IV'}[n]||'II';};
-      var tovAC_info = tovFor(sysVAC);
-      var isoNote = iso==='isolated'?'<span style="color:#64748b;font-size:.75rem">(隔离降档)</span>':'<span style="color:#64748b;font-size:.75rem">(无隔离取较高值)</span>';
-      el.innerHTML =
-        '<div><span style="font-weight:600;color:#1e293b">AC侧冲击电压:</span> ' +
-        '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+impAC+' kV</span> ' +
-        '<span style="color:#64748b">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
-        '<div><span style="font-weight:600;color:#1e293b">DC侧冲击电压:</span> ' +
-        '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+impDC+' kV</span> ' +
-        '<span style="color:#64748b">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span> '+isoNote+'</div>' +
-        '<div><span style="font-weight:600;color:#1e293b">AC侧暂态过电压:</span> ' +
-        '<span style="color:#7c3aed;font-size:.85rem">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span></div>' +
-        '<div style="margin-top:4px;padding-top:4px;border-top:1px solid #e0e7ff;font-size:.78rem;color:#64748b">' +
-        '线间节点(电气间隙): 冲击电压降一档 → AC '+prevImpLevel(impAC)+' kV, DC '+Math.max(prevImpLevel(impDC), 2.5)+' kV' +
-        '<br><span style="font-style:italic">依据 IEC 62109-1 §7.3.7 — 同一电路内部的功能绝缘比对地再降一档</span></div>';
-    })();
+    /* ── Display impulse + TOV info in #sImpulseInfo (IEC only) ─── */
+    if(std === 'iec'){
+      (function(){
+        var el = document.getElementById("sImpulseInfo");
+        if(!el) return;
+        var ovcLabel = function(n){return {1:'I',2:'II',3:'III',4:'IV'}[n]||'II';};
+        var tovAC_info = tovFor(sysVAC);
+        var isoNote = iso==='isolated'?'<span style="color:#64748b;font-size:.75rem">(隔离降档)</span>':'<span style="color:#64748b;font-size:.75rem">(无隔离取较高值)</span>';
+        el.innerHTML =
+          '<div><span style="font-weight:600;color:#1e293b">AC侧冲击电压:</span> ' +
+          '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+impAC+' kV</span> ' +
+          '<span style="color:#64748b">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
+          '<div><span style="font-weight:600;color:#1e293b">DC侧冲击电压:</span> ' +
+          '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+impDC+' kV</span> ' +
+          '<span style="color:#64748b">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span> '+isoNote+'</div>' +
+          '<div><span style="font-weight:600;color:#1e293b">AC侧暂态过电压:</span> ' +
+          '<span style="color:#7c3aed;font-size:.85rem">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span></div>' +
+          '<div style="margin-top:4px;padding-top:4px;border-top:1px solid #e0e7ff;font-size:.78rem;color:#64748b">' +
+          '线间节点(电气间隙): 冲击电压降一档 → AC '+prevImpLevel(impAC)+' kV, DC '+Math.max(prevImpLevel(impDC), 2.5)+' kV' +
+          '<br><span style="font-style:italic">依据 IEC 62109-1 §7.3.7 — 同一电路内部的功能绝缘比对地再降一档</span></div>';
+      })();
+    } else {
+      /* ── UL mode: show system voltage info instead of impulse/TOV ─── */
+      (function(){
+        var el = document.getElementById("sImpulseInfo");
+        if(!el) return;
+        el.innerHTML =
+          '<div style="padding:8px 12px;background:#f0fdf4;border-radius:6px;font-size:.85rem;width:100%">' +
+          '<span style="font-weight:600;color:#1e293b">UL 840 查表依据:</span><br>' +
+          'AC侧系统电压: <strong>'+sysVAC+' V</strong> → '+((sysVAC/1000).toFixed(2))+' kVRMS | DC侧系统电压: <strong>'+sysVDC+' V</strong> → '+((sysVDC/1000).toFixed(2))+' kVRMS<br>' +
+          '<span style="font-size:.78rem;color:#64748b">UL 电气间隙由相地额定系统电压查表确定 (§25.4g)，不使用冲击耐受电压</span></div>';
+      })();
+    }
 
     // Build nodes array for model
     var nodeArr=[];
@@ -200,22 +236,32 @@
     var altk = SM.altFactor(alt);
     var ah="<p style=margin-bottom:6px><strong>安规距离计算结果</strong></p>";
     ah+="<p style=font-size:.85rem>标准: "+document.getElementById("sStd").selectedOptions[0].text+" | PD: "+pd+" | 材料: "+document.getElementById("sMg").selectedOptions[0].text+" | 海拔: "+alt+"m(系数"+altk+")</p>";
-    var isoLabel = iso==='isolated'?'有隔离':'无隔离';
-    ah+="<p style=font-size:.82rem;color:#64748b>隔离架构: "+isoLabel+"</p>";
-    ah+="<p style=font-size:.82rem;color:#64748b>注:</p><ul style=font-size:.82rem;color:#64748b;margin:2px 0 0 16px;line-height:1.7>";
-    ah+='<li><strong>对地节点</strong>(⊕): 使用电路完整OVC冲击电压 — IEC 62109-1 §7.3.7 强制要求加强绝缘</li>';
-    ah+='<li><strong>线间节点</strong>(↓1OVC): 同一电路内部的功能绝缘比对地再降一档 (§7.3.7) — 冲击电压取低一档计算电气间隙</li>';
-    ah+='<li>电气间隙(IEC): 取冲击电压、暂态过电压(TOV)、工作电压峰值三者查表后最严苛值，再乘海拔系数</li>';
-    ah+='<li>加强绝缘(IEC): 取三项中最严 — (a)冲击电压升一档 (b)1.6×工作峰值 (c)1.6×TOV峰值(仅电网电路)</li>';
-    ah+='<li>爬电距离已乘绝缘倍率，非PCB走线按污染等级选取</li>';
-    ah+='<li style="color:#f59e0b;font-weight:500">⚠ = 用户选择了非加强绝缘但对地连接，系统已自动按加强绝缘计算</li>';
-    ah+='</ul>';
+    if(std === 'iec'){
+      var isoLabel = iso==='isolated'?'有隔离':'无隔离';
+      ah+="<p style=font-size:.82rem;color:#64748b>隔离架构: "+isoLabel+"</p>";
+      ah+="<p style=font-size:.82rem;color:#64748b>注:</p><ul style=font-size:.82rem;color:#64748b;margin:2px 0 0 16px;line-height:1.7>";
+      ah+='<li><strong>对地节点</strong>(⊕): 使用电路完整OVC冲击电压 — IEC 62109-1 §7.3.7 强制要求加强绝缘</li>';
+      ah+='<li><strong>线间节点</strong>(↓1OVC): 同一电路内部的功能绝缘比对地再降一档 (§7.3.7) — 冲击电压取低一档计算电气间隙</li>';
+      ah+='<li>电气间隙(IEC): 取冲击电压、暂态过电压(TOV)、工作电压峰值三者查表后最严苛值，再乘海拔系数</li>';
+      ah+='<li>加强绝缘(IEC): 取三项中最严 — (a)冲击电压升一档 (b)1.6×工作峰值 (c)1.6×TOV峰值(仅电网电路)</li>';
+      ah+='<li>爬电距离已乘绝缘倍率，非PCB走线按污染等级选取</li>';
+      ah+='<li style="color:#f59e0b;font-weight:500">⚠ = 用户选择了非加强绝缘但对地连接，系统已自动按加强绝缘计算</li>';
+      ah+='</ul>';
+    } else {
+      /* ── UL mode assessment notes ─── */
+      ah+="<p style=font-size:.82rem;color:#64748b>注:</p><ul style=font-size:.82rem;color:#64748b;margin:2px 0 0 16px;line-height:1.7>";
+      ah+='<li><strong>电气间隙(UL)</strong>: 由相地额定系统电压(kVRMS)查表确定 (§25.4g)，不使用冲击耐受电压</li>';
+      ah+='<li>加强绝缘(UL): 取基本绝缘距离×2 或表中上一行，以较大值为准 (§6.3)</li>';
+      ah+='<li>爬电距离(UL): 由工作电压Vrms查表确定，加强绝缘翻倍</li>';
+      ah+='<li style="color:#f59e0b;font-weight:500">⚠ = 对地节点强制加强绝缘，系统已自动应用</li>';
+      ah+='</ul>';
+    }
     document.getElementById("sMa").innerHTML=ah;
 
     // Store for report/export
     var ovc_AC_val = document.getElementById('sOvc_AC').value;
     var ovc_DC_val = document.getElementById('sOvc_DC').value;
-    window._sd={results:result.results,pd:pd,mg:mg,alt:alt,altk:altk,impAC:impAC,impDC:impDC,ovc_AC:ovc_AC_val,ovc_DC:ovc_DC_val,isolation:iso};
+    window._sd={results:result.results,pd:pd,mg:mg,alt:alt,altk:altk,std:std,impAC:impAC,impDC:impDC,ovc_AC:ovc_AC_val,ovc_DC:ovc_DC_val,isolation:iso};
     sGenRep();
   }
 
@@ -227,9 +273,21 @@
     var ovcAC = document.getElementById('sOvc_AC')?document.getElementById('sOvc_AC').value.toUpperCase():'II';
     var ovcDC = document.getElementById('sOvc_DC')?document.getElementById('sOvc_DC').value.toUpperCase():'II';
     var isoLabel = (d.isolation==='isolated')?'有隔离':'无隔离';
-    fs+='<ul style=margin:2px 0 2px 20px;font-size:.82rem;color:#555>'+(std.includes('IEC')?'<li>标准: IEC 60664-1 / Table 13</li>':'<li>标准: UL 840</li>')+'<li>隔离架构: '+isoLabel+'</li><li>AC侧冲击电压: OVC '+ovcAC+', '+d.impAC+' kV | DC侧: OVC '+ovcDC+', '+d.impDC+' kV'+(d.isolation==='isolated'?' (隔离降档)':'')+'</li>'+'<li>海拔系数: '+d.altk+'</li>'+'<li>爬电距离: PD '+d.pd+', 材料组别'+document.getElementById('sMg').selectedOptions[0].text+'</li>';
-    fs+='<li style="color:#2563eb;font-weight:500">对地节点(⊕): 使用完整OVC冲击电压，强制加强绝缘</li>';
-    fs+='<li style="color:#64748b">线间节点: 按IEC 62109-1 §7.3.7降一档计算电气间隙</li>';
+    fs+='<ul style=margin:2px 0 2px 20px;font-size:.82rem;color:#555>';
+    if(d.std === 'iec'){
+      fs+='<li>标准: IEC 60664-1 / Table 13</li><li>隔离架构: '+isoLabel+'</li>';
+      fs+='<li>AC侧冲击电压: OVC '+ovcAC+', '+d.impAC+' kV | DC侧: OVC '+ovcDC+', '+d.impDC+' kV'+(d.isolation==='isolated'?' (隔离降档)':'')+'</li>';
+      fs+='<li>海拔系数: '+d.altk+'</li><li>爬电距离: PD '+d.pd+', 材料组别'+document.getElementById('sMg').selectedOptions[0].text+'</li>';
+      fs+='<li style="color:#2563eb;font-weight:500">对地节点(⊕): 使用完整OVC冲击电压，强制加强绝缘</li>';
+      fs+='<li style="color:#64748b">线间节点: 按IEC 62109-1 §7.3.7降一档计算电气间隙</li>';
+    } else {
+      /* ── UL mode formulas ─── */
+      fs+='<li>标准: UL 840 / UL 1741 §25</li><li>污染等级: PD '+d.pd+' (UL §25.4a)</li>';
+      fs+='<li>材料组别: II 组 (CTI >= 100, UL §25.4d)</li><li>过电压类别: OVC IV (UL §25.4b)</li>';
+      fs+='<li>海拔系数: '+d.altk+'</li>';
+      fs+='<li>电气间隙(UL): 由相地额定系统电压(kVRMS)查表确定 (§25.4g)，不使用冲击耐受电压</li>';
+      fs+='<li>加强绝缘(UL): 取基本绝缘距离×2 或表中上一行，以较大值为准 (§6.3)</li>';
+    }
     d.results.forEach(function(r){var k=SM.INS_K[r.ins]||1;if(k>1)fs+='<li>'+r.name+': '+r.insL+'绝缘x'+k+'</li>'});
     return fs+='</ul>';
   }
@@ -241,33 +299,71 @@
     var sr="";d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间,降档)';var f=r.forcedReinforced?' ⚠强制加强':'';sr+="<tr><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+r.reqClr+"</td><td>"+r.reqCrp+"</td></tr>";});
 
     var isoLabel = (d.isolation==='isolated')?'有隔离':'无隔离';
+
+    /* ── Read system voltage from correct input based on standard ─── */
+    var sysVAC_el = d.std === 'ul' ? document.getElementById('sSysV_AC_ul') : document.getElementById('sSysV_AC');
+    var sysVDC_el = d.std === 'ul' ? document.getElementById('sSysV_DC_ul') : document.getElementById('sSysV_DC');
+    var sysVAC_val = (sysVAC_el?sysVAC_el.value:'-');
+    var sysVDC_val = (sysVDC_el?sysVDC_el.value:'-');
+
+    /* ── Build base params table based on standard ─── */
+    var baseTable;
+    if(d.std === 'iec'){
+      baseTable=
+        "<tr><td>标准</td><td>"+document.getElementById('sStd').selectedOptions[0].text+"</td></tr>"
+        +"<tr><td>污染等级</td><td>PD "+d.pd+"</td></tr>"
+        +"<tr><td>材料组别</td><td>"+document.getElementById('sMg').selectedOptions[0].text+"</td></tr>"
+        +"<tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr>"
+        +"<tr><td>隔离架构</td><td>"+isoLabel+"</td></tr>"
+        +"<tr><td>AC侧过电压类别</td><td>OVC "+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+" (冲击电压 "+(d.impAC||'-')+' kV)'+"</td></tr>"
+        +"<tr><td>DC侧过电压类别</td><td>OVC "+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+" (冲击电压 "+(d.impDC||'-')+' kV)' +(d.isolation==='isolated'?' <em>(隔离降档)</em>':'')+ "</td></tr>"
+        +"<tr><td>AC系统电压</td><td>"+sysVAC_val+' V'+'</td></tr>'
+        +"<tr><td>DC系统电压</td><td>"+sysVDC_val+' V'+'</td></tr>';
+    } else {
+      /* ── UL mode base params ─── */
+      baseTable=
+        "<tr><td>标准</td><td>"+document.getElementById('sStd').selectedOptions[0].text+"</td></tr>"
+        +"<tr><td>污染等级</td><td>PD "+d.pd+" (UL §25.4a)</td></tr>"
+        +"<tr><td>材料组别</td><td>II 组 CTI >= 100 (UL §25.4d)</td></tr>"
+        +"<tr><td>过电压类别</td><td>OVC IV (UL §25.4b)</td></tr>"
+        +"<tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr>"
+        +"<tr><td>AC系统电压</td><td>"+sysVAC_val+' V ('+((+sysVAC_val/1000).toFixed(2))+' kVRMS)'+ "</td></tr>"
+        +"<tr><td>DC系统电压</td><td>"+sysVDC_val+' V ('+((+sysVDC_val/1000).toFixed(2))+' kVRMS)'+ "</td></tr>";
+    }
+
+    /* ── Build design recommendations based on standard ─── */
+    var recs;
+    if(d.std === 'iec'){
+      recs=
+        "<li>实际工程设计中应确保实际距离大于上表所需值</li>"
+        +"<li>海拔超过2000m时电气间隙需按系数放大</li>"
+        +"<li>加强绝缘(Reinforced)要求为基本绝缘的2倍</li>"
+        +'<li style="color:#2563eb;font-weight:500">对地节点（标记"对地"）：IEC 62109-1 §7.3.7 强制要求加强绝缘，电气间隙和爬电距离均×2</li>'
+        +'<li style="color:#64748b">线间节点：同一电路内部的功能绝缘比对地再降一档（§7.3.7），冲击电压取低一档计算</li>'
+        +"<li>建议预留20%以上设计裕量</li>"
+        +"<li>最终需通过安规认证机构(如TUV/UL)的实测验证</li>";
+    } else {
+      /* ── UL mode recommendations ─── */
+      recs=
+        "<li>实际工程设计中应确保实际距离大于上表所需值</li>"
+        +"<li>海拔超过2000m时电气间隙需按系数放大 (UL 840)</li>"
+        +"<li>加强绝缘(Reinforced)要求为基本绝缘的2倍 (§6.3)</li>"
+        +'<li style="color:#f59e0b;font-weight:500">对地节点：标准强制要求加强绝缘，电气间隙和爬电距离均×2</li>'
+        +"<li>UL 电气间隙由相地额定系统电压(kVRMS)查表确定 (§25.4g)</li>"
+        +"<li>建议预留20%以上设计裕量</li>"
+        +"<li>最终需通过UL认证机构的实测验证</li>";
+    }
+
     document.getElementById("sRc").innerHTML=
       (document.getElementById('sProjName').value?'<p><strong>项目: </strong>'+document.getElementById('sProjName').value+'</p>':'')
       +" <h3>1. 项目信息</h3><table><tr><th>项目</th><th>内容</th></tr>"
         +"<tr><td>报告编号</td><td>SA-"+ds.replace(/\//g,"")+"-" +(1e3+Math.floor(9e3*Math.random()))+"</td></tr>"
         +"<tr><td>生成日期</td><td>"+ds+" "+ts+"</td></tr>"
         +"<tr><td>项目名称</td><td>"+(document.getElementById('sProjName').value||'-')+"</td></tr></table>"
-      +" <h3>2. 基础参数</h3><table><tr><th>参数</th><th>值</th></tr>"
-        +"<tr><td>标准</td><td>"+document.getElementById('sStd').selectedOptions[0].text+"</td></tr>"
-        +"<tr><td>污染等级</td><td>PD "+d.pd+"</td></tr>"
-        +"<tr><td>材料组别</td><td>"+document.getElementById('sMg').selectedOptions[0].text+"</td></tr>"
-        +"<tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr>"
-        +"<tr><td>隔离架构</td><td>"+isoLabel+"</td></tr>"
-        +"<tr><td>AC侧过电压类别</td><td>OVC "+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+" (冲击电压 "+(d.impAC||'-')+' kV)'+"</td></tr>"
-        +"<tr><td>DC侧过电压类别</td><td>OVC "+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+" (冲击电压 "+(d.impDC||'-')+' kV)' +(d.isolation==='isolated'?' <em>(隔离降档)</em>':'')+"</td></tr>"
-        +"<tr><td>AC系统电压</td><td>"+document.getElementById('sSysV_AC').value+' V'+'</td></tr>'
-        +"<tr><td>DC系统电压</td><td>"+document.getElementById('sSysV_DC').value+' V'+'</td></tr>'
-        +"</table>"
+      +" <h3>2. 基础参数</h3><table><tr><th>参数</th><th>值</th></tr>"+baseTable+"</table>"
       +" <h3>3. 各节点所需安规距离</h3><table><tr><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr>"+sr+"</table>"
       +sCalcFormulas()
-      +" <h3>4. 设计建议</h3><ul style=margin:4px 0 0 20px>"
-        +"<li>实际工程设计中应确保实际距离大于上表所需值</li>"
-        +"<li>海拔超过2000m时电气间隙需按系数放大</li>"
-        +"<li>加强绝缘(Reinforced)要求为基本绝缘的2倍</li>"
-        +'<li style="color:#2563eb;font-weight:500">对地节点（标记"对地"）：IEC 62109-1 §7.3.7 强制要求加强绝缘，电气间隙和爬电距离均×2</li>'
-        +'<li style="color:#64748b">线间节点：同一电路内部的功能绝缘比对地再降一档（§7.3.7），冲击电压取低一档计算</li>'
-        +"<li>建议预留20%以上设计裕量</li>"
-        +"<li>最终需通过安规认证机构(如TUV/UL)的实测验证</li></ul>"
+      +" <h3>4. 设计建议</h3><ul style=margin:4px 0 0 20px>"+recs+"</ul>"
       +" <p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>结论:</strong> 各节点安规距离计算结果如上表所示，实际工程设计中应确保实际距离大于所需值，并留足设计裕量。</p>"
       +" <div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b><span>安规距离计算工具 v1.0</span><span>报告: "+ds+" "+ts+"</span></div>";
   }
@@ -301,6 +397,43 @@
     var isoLabel = (d.isolation==='isolated')?'有隔离':'无隔离';
     var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"});
 
+    /* ── Read system voltage from correct input based on standard ─── */
+    var sysVAC_el = d.std === 'ul' ? document.getElementById('sSysV_AC_ul') : document.getElementById('sSysV_AC');
+    var sysVDC_el = d.std === 'ul' ? document.getElementById('sSysV_DC_ul') : document.getElementById('sSysV_DC');
+    var sysVAC_val = (sysVAC_el?sysVAC_el.value:'-');
+    var sysVDC_val = (sysVDC_el?sysVDC_el.value:'-');
+
+    /* ── Build project info + base params based on standard ─── */
+    var projInfo, baseParams;
+    if(d.std === 'iec'){
+      projInfo=
+        (pn?'<tr><td>'+pn+'</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>':'')
+        +'<tr><td>标准</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>'
+        +'<tr><td>隔离架构</td><td>'+isoLabel+'</td></tr>';
+      baseParams=
+        '<tr><td>污染等级</td><td>PD '+d.pd+'</td></tr>'
+        +'<tr><td>材料组别</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr>'
+        +'<tr><td>海拔</td><td>'+d.alt+'m (系数 '+d.altk+')</td></tr>'
+        +'<tr><td>AC侧过电压类别</td><td>OVC '+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+' ('+d.impAC+' kV)</td></tr>'
+        +'<tr><td>DC侧过电压类别</td><td>OVC '+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+' ('+d.impDC+' kV)' +(d.isolation==='isolated'?' (隔离降档)':'')+'</td></tr>'
+        +'<tr><td>AC系统电压</td><td>'+sysVAC_val+' V</td></tr>'
+        +'<tr><td>DC系统电压</td><td>'+sysVDC_val+' V</td></tr>'
+        +'<tr><td>说明</td><td>线间节点按IEC 62109-1 §7.3.7降一档计算电气间隙</td></tr>';
+    } else {
+      /* ── UL mode project info + base params ─── */
+      projInfo=
+        (pn?'<tr><td>'+pn+'</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>':'')
+        +'<tr><td>标准</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>';
+      baseParams=
+        '<tr><td>污染等级</td><td>PD '+d.pd+' (UL §25.4a)</td></tr>'
+        +'<tr><td>材料组别</td><td>II 组 CTI >= 100 (UL §25.4d)</td></tr>'
+        +'<tr><td>过电压类别</td><td>OVC IV (UL §25.4b)</td></tr>'
+        +'<tr><td>海拔</td><td>'+d.alt+'m (系数 '+d.altk+')</td></tr>'
+        +'<tr><td>AC系统电压</td><td>'+sysVAC_val+' V ('+((+sysVAC_val/1000).toFixed(2))+' kVRMS)</td></tr>'
+        +'<tr><td>DC系统电压</td><td>'+sysVDC_val+' V ('+((+sysVDC_val/1000).toFixed(2))+' kVRMS)</td></tr>'
+        +'<tr><td>说明</td><td>UL 电气间隙由相地额定系统电压(kVRMS)查表确定 (§25.4g)</td></tr>';
+    }
+
     var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>安规距离评估报告'+ts+'</title>';
     h+=css;
     h+='</head><body>';
@@ -312,22 +445,11 @@
 
     /* 1. Project info */
     h+='<h3>1. 项目信息</h3>';
-    h+='<table class="compact"><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody>';
-    if(pn) h+='<tr><td>'+pn+'</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>';
-    h+='<tr><td>标准</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>';
-    h+='<tr><td>隔离架构</td><td>'+isoLabel+'</td></tr>';
-    h+='</tbody></table>';
+    h+='<table class="compact"><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody>'+projInfo+'</tbody></table>';
 
     /* 2. Base parameters */
     h+='<h3>2. 基础参数</h3>';
-    h+='<table class="compact"><thead><tr><th>参数</th><th>值</th></tr></thead><tbody>'
-      +'<tr><td>污染等级</td><td>PD '+d.pd+'</td></tr>'
-      +'<tr><td>材料组别</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr>'
-      +'<tr><td>海拔</td><td>'+d.alt+'m (系数 '+d.altk+')</td></tr>'
-      +'<tr><td>AC侧过电压类别</td><td>OVC '+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+' ('+d.impAC+' kV)</td></tr>'
-      +'<tr><td>DC侧过电压类别</td><td>OVC '+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+' ('+d.impDC+' kV)' +(d.isolation==='isolated'?' (隔离降档)':'')+'</td></tr>'
-      +'<tr><td>说明</td><td>线间节点按IEC 62109-1 §7.3.7降一档计算电气间隙</td></tr>'
-      +'</tbody></table>';
+    h+='<table class="compact"><thead><tr><th>参数</th><th>值</th></tr></thead><tbody>'+baseParams+'</tbody></table>';
 
     /* 3. Results table */
     h+='<h3>3. 评估结果</h3>';
@@ -374,6 +496,9 @@
     dcManualOverride = false; // Reset before init derivation
     autoDeriveDC();
 
+    /* Apply standard-specific UI mode (IEC by default) */
+    applyStandardMode(document.getElementById("sStd").value || "iec");
+
     sCalc();
   }
 
@@ -408,8 +533,17 @@
     }
     // Other global settings that trigger recalculation
     if(t.id && ['sStd','sPd','sMg','sAlt'].includes(t.id)){
+      if(t.id === 'sStd'){
+        applyStandardMode(t.value);
+      }
       sCalc();
     }
+  });
+
+  /* ── Wire UL input fields to recalculation ─── */
+  document.addEventListener('input', function(e){
+    var t=e.target;
+    if(t.id && ['sSysV_AC_ul','sSysV_DC_ul'].includes(t.id)){sCalc()}
   });
 
   global.initSafety = initSafety;
