@@ -184,7 +184,7 @@
         if(!el) return;
         el.innerHTML =
           '<div style="padding:8px 12px;background:#f0fdf4;border-radius:6px;font-size:.85rem;width:100%">' +
-          '<span style="font-weight:600;color:#1e293b">UL 840 查表依据:</span><br>' +
+          '<span style="font-weight:600;color:#1e293b">UL 1741 查表依据:</span><br>' +
           'AC侧系统电压: <strong>'+sysVAC+' V</strong> → '+((sysVAC/1000).toFixed(2))+' kVRMS | DC侧系统电压: <strong>'+sysVDC+' V</strong> → '+((sysVDC/1000).toFixed(2))+' kVRMS<br>' +
           '<span style="font-size:.78rem;color:#64748b">UL 电气间隙由相地额定系统电压查表确定 (§25.4g)，不使用冲击耐受电压</span></div>';
       })();
@@ -200,7 +200,9 @@
         pcb:  +seg.querySelector(".spcb").value || 0,
         coat: +seg.querySelector(".scoat").value || 0,
         circ: seg.querySelector('.scirc')?seg.querySelector('.scirc').value:'ac',
-        toGnd: seg.querySelector('.stoGnd')?+seg.querySelector('.stoGnd').value||0:1
+        toGnd: seg.querySelector('.stoGnd')?+seg.querySelector('.stoGnd').value||0:1,
+        interp: seg.dataset.interp === 'true',       // P2#5: secondary circuit → linear interpolation
+        fieldTerminal: seg.dataset.fieldTerm === 'true'  // P2#4: UL §25.3 field wiring terminal
       });
     });
 
@@ -229,7 +231,9 @@
       var gndMark = r.toGnd ? '<span style="color:#2563eb;font-size:.7rem" title="对地节点，IEC 62109-1 §7.3.7 强制加强绝缘">⊕</span>' : '';
       var withinNote = !r.toGnd ? ' <span style="color:#64748b;font-size:.65rem" title="线间节点：冲击电压按标准降一档计算">↓1OVC</span>' : '';
       var warnNote = r.forcedReinforced ? ' <span style="color:#f59e0b;font-size:.7rem" title="该节点为对地连接，标准强制要求加强绝缘(×2)，已自动应用">⚠ 已强制加强</span>' : '';
-      tb+="<tr><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+r.insL+warnNote+withinNote+"</td><td>"+r.reqClr+"</td><td>"+r.reqCrp+"</td></tr>";
+      var peakWarn = (r.recurringPeakOk === false) ? ' <span style="color:#ef4444;font-size:.7rem" title="UL 840 §9.6: PCB反复峰值电压超出Table 9.3限制，请增大爬电距离或降低工作电压">🔴 峰值超限</span>' : '';
+      var t241Warn = r.tbl241Note ? ' <span style="color:#f59e0b;font-size:.7rem" title="UL 1741 §25.3: 现场接线端子强制使用Table 24.1基线间距(非UL 840替代方案)">⚠ T24.1</span>' : '';
+      tb+="<tr><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+r.insL+warnNote+withinNote+"</td><td>"+r.reqClr+t241Warn+"</td><td>"+r.reqCrp+peakWarn+"</td></tr>";
     });
     document.getElementById("sRtb").innerHTML=tb;
 
@@ -254,6 +258,8 @@
       ah+='<li>加强绝缘(UL): 取基本绝缘距离×2 或表中上一行，以较大值为准 (§6.3)</li>';
       ah+='<li>爬电距离(UL): 由工作电压Vrms查表确定，加强绝缘翻倍</li>';
       ah+='<li style="color:#f59e0b;font-weight:500">⚠ = 对地节点强制加强绝缘，系统已自动应用</li>';
+      ah+='<li style="color:#ef4444;font-weight:500">🔴 = PCB反复峰值电压超限 (UL 840 §9.6)，需增大爬电距离或降低工作电压</li>';
+      ah+='<li style="color:#f59e0b;font-weight:500">⚠T24.1 = 现场接线端子强制使用Table 24.1基线间距 (UL 1741 §25.3)，不使用UL 840替代方案</li>';
       ah+='</ul>';
     }
     document.getElementById("sMa").innerHTML=ah;
@@ -282,11 +288,12 @@
       fs+='<li style="color:#64748b">线间节点: 按IEC 62109-1 §7.3.7降一档计算电气间隙</li>';
     } else {
       /* ── UL mode formulas ─── */
-      fs+='<li>标准: UL 840 / UL 1741 §25</li><li>污染等级: PD '+d.pd+' (UL §25.4a)</li>';
+      fs+='<li>标准: UL 1741 §25 (参考 UL 840)</li><li>污染等级: PD '+d.pd+' (UL §25.4a)</li>';
       fs+='<li>材料组别: II 组 (CTI >= 100, UL §25.4d)</li><li>过电压类别: OVC IV (UL §25.4b)</li>';
       fs+='<li>海拔系数: '+d.altk+'</li>';
       fs+='<li>电气间隙(UL): 由相地额定系统电压(kVRMS)查表确定 (§25.4g)，不使用冲击耐受电压</li>';
       fs+='<li>加强绝缘(UL): 取基本绝缘距离×2 或表中上一行，以较大值为准 (§6.3)</li>';
+      fs+='<li style="color:#f59e0b;font-weight:500">⚠T24.1 = 现场接线端子强制使用Table 24.1基线间距 (UL §25.3)</li>';
     }
     d.results.forEach(function(r){var k=SM.INS_K[r.ins]||1;if(k>1)fs+='<li>'+r.name+': '+r.insL+'绝缘x'+k+'</li>'});
     return fs+='</ul>';
@@ -296,7 +303,7 @@
     var d=window._sd;
     if(!d||!d.results||!d.results.length){document.getElementById("sRc").innerHTML="<h3>安规距离评估报告</h3><p>请添加测量节点。</p>";return;}
     var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
-    var sr="";d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间,降档)';var f=r.forcedReinforced?' ⚠强制加强':'';sr+="<tr><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+r.reqClr+"</td><td>"+r.reqCrp+"</td></tr>";});
+    var sr="";d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间,降档)';var f=r.forcedReinforced?' ⚠强制加强':'';var pw=(r.recurringPeakOk===false)?' 🔴峰值超限':'';var t241=r.tbl241Note?' ⚠T24.1':'';sr+="<tr><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
 
     var isoLabel = (d.isolation==='isolated')?'有隔离':'无隔离';
 
@@ -346,7 +353,7 @@
       /* ── UL mode recommendations ─── */
       recs=
         "<li>实际工程设计中应确保实际距离大于上表所需值</li>"
-        +"<li>海拔超过2000m时电气间隙需按系数放大 (UL 840)</li>"
+        +"<li>海拔超过2000m时电气间隙需按系数放大 (UL 1741)</li>"
         +"<li>加强绝缘(Reinforced)要求为基本绝缘的2倍 (§6.3)</li>"
         +'<li style="color:#f59e0b;font-weight:500">对地节点：标准强制要求加强绝缘，电气间隙和爬电距离均×2</li>'
         +"<li>UL 电气间隙由相地额定系统电压(kVRMS)查表确定 (§25.4g)</li>"
@@ -392,7 +399,7 @@
     css+='</style>';
 
     /* ── Results rows ─── */
-    d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间)';sr+='<tr><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+'</td><td>'+r.reqCrp+'</td></tr>'});
+    d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间)';var pw=(r.recurringPeakOk===false)?' 🔴峰值超限':'';var t241=r.tbl241Note?' ⚠T24.1':'';sr+='<tr><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+pw+'</td></tr>'});
 
     var isoLabel = (d.isolation==='isolated')?'有隔离':'无隔离';
     var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"});
@@ -514,9 +521,13 @@
   document.addEventListener('input', function(e){
     var t=e.target;
     if(t.id && ['sSysV_AC','sSysV_DC'].includes(t.id)){sCalc()}
+    // Node-level text/number inputs (dynamically added rows) — class-based detection
+    if(t.className && typeof t.className === 'string' && /svrms|sname/.test(t.className)){sCalc()}
   });
   document.addEventListener('change', function(e){
     var t=e.target;
+    // Node-level select inputs (insulation, PCB, coating, circuit type, toGnd)
+    if(t.className && typeof t.className === 'string' && /sins|spcb|scoat|scirc|stoGnd/.test(t.className)){sCalc(); return;}
     // Isolation architecture or AC OVC change → re-derive DC OVC (unless manually overridden)
     if((t.id === 'sIsolation' || t.id === 'sOvc_AC') && !dcManualOverride){
       autoDeriveDC();

@@ -102,14 +102,14 @@
 <!-- ════════════════════════════════════════ -->
 <div id="tab-safety" class="tab-content">
 <h1 style="font-size:1.6rem;margin-bottom:4px">安规距离计算工具 <span style="font-size:.9rem;font-weight:400;color:#64748b">Creepage &amp; Clearance Calculator</span></h1>
-<p style="color:#64748b;margin-bottom:24px;font-size:.9rem">IEC 62109-1 / UL 840 爬电距离 + 电气间隙 | 适用于并网逆变器</p>
+<p style="color:#64748b;margin-bottom:24px;font-size:.9rem">IEC 62109-1 / UL 1741 爬电距离 + 电气间隙 | 适用于并网逆变器</p>
 
 <div class="card" style="padding:12px 20px;margin-bottom:20px"><div class="fgl"><label>项目名称</label><input type="text" id="sProjName" placeholder="选填"></div></div>
 
 <div class="layout">
 <!-- Left column -->
 <div>
-  <div class="card"><h2>标准体系</h2><div class="fgl"><label>标准体系</label><select id="sStd"><option value="iec" selected>IEC 62109-1</option><option value="ul">UL 840</option></select></div></div>
+  <div class="card"><h2>标准体系</h2><div class="fgl"><label>标准体系</label><select id="sStd"><option value="iec" selected>IEC 62109-1</option><option value="ul">UL 1741</option></select></div></div>
 
   <div class="card"><h2>基础参数</h2><div class="fg">
     <div class="fgl" data-standard="iec"><label>污染等级<span id="sPd_iec_hint"></span></label><select id="sPd"><option value="1">PD 1 (无污染/密封)</option><option value="2" selected>PD 2 (一般污染)</option><option value="3">PD 3 (严重污染)</option></select></div>
@@ -172,7 +172,7 @@
 <script src="js/models/capacitor-model.js?v=10"></script>
 <script src="js/models/safety-model.js?v=10"></script>
 <script src="js/capacitor.js?v=10"></script>
-<script src="js/safety.js?v=10"></script>
+<script src="js/safety.js?v=11"></script>
 <script src="js/app.js?v=10"></script>
 </body>
 </html>

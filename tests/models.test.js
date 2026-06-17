@@ -369,23 +369,23 @@ test("INS_K reinforced = 2x", function () {
   assert.strictEqual(SM.INS_K.basic, 1.0);
 });
 
-/* ── UL clearance tests (system voltage based) ─── */
+/* ── UL clearance tests (system voltage based — per corrected CLR_TBL_UL = UL 840 Table 8.1) ─── */
 test("calcNode - UL uses system voltage not impulse for clearance", function () {
-  // For a 300V AC system: sysKVRMS = 0.3, basic → row [0.33] PD3=0.2mm
-  // Reinforced: next row [0.4] PD3=0.8mm; max(0.2*2, 0.8) = 0.8mm
-  // NOT 6kV impulse → ~50mm (which was the old bug)
+  // For a 300V AC system: sysKVRMS = 0.3, basic → row [0.3] PD3=1.5mm (UL 840 Table 8.1)
+  // Reinforced: next row [0.6] PD3=1.5mm; max(1.5*2, 1.5) = 3.0mm
+  // NOT 6kV impulse → ~50mm (which was the old bug with incorrect CLR_TBL_UL data)
   var result = SM.calcNode({name: "L-PE", vrms: 230, ins: "reinf", pcb: 0, coat: 0, circ: "ac", toGnd: true},
     3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
   assert.ok(result.reqClr < 10, "UL clearance for 300V system should be reasonable (got " + result.reqClr + ")");
-  approx(result.reqClr, 0.8, 0.1); // reinforced: max(basic*2=0.4, next_row=0.8) = 0.8mm
+  approx(result.reqClr, 3.0, 0.1); // reinforced: max(basic*2=3.0, next_row=1.5) = 3.0mm
 });
 
 test("calcNode - UL DC circuit uses sysVDC for clearance", function () {
   var result = SM.calcNode({name: "DC+-PE", vrms: 600, ins: "reinf", pcb: 0, coat: 0, circ: "dc", toGnd: true},
     3, "ii", 2000, "ul", 6.0, 4.0, 300, 800);
-  // sysVDC=800 → sysKVRMS=0.8 → basic row [0.8] PD3=3.5mm; next row [1.0]=4.5mm
-  // reqClr = max(3.5*2, 4.5) = 7.0mm
-  approx(result.reqClr, 7.0, 0.5);
+  // sysVDC=800 → sysKVRMS=0.8 → basic (no interp) rounds up to row [1.0] PD3=3.0mm
+  // Reinforced: next row [1.5]=5.5; max(3.0*2, 5.5)=6.0mm
+  approx(result.reqClr, 6.0, 0.5);
 });
 
 test("calcNode - UL reinforced insulation exceeds basic", function () {
@@ -394,14 +394,15 @@ test("calcNode - UL reinforced insulation exceeds basic", function () {
   var reinf = SM.calcNode({name: "X", vrms: 230, ins: "reinf", pcb: 0, coat: 0, circ: "ac", toGnd: false},
     3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
   assert.ok(reinf.reqClr > basic.reqClr, "Reinforced UL clearance should exceed basic (" + reinf.reqClr + " > " + basic.reqClr + ")");
-  // For 300V: basic=0.2mm, reinf=0.8mm → 4x increase
+  // For 300V: basic=1.5mm (row [0.3] PD3), reinf=3.0mm → exactly 2x increase
   assert.ok(reinf.reqClr >= basic.reqClr * 2, "Reinforced should be at least 2x basic");
 });
 
 test("lookupClr - UL interpolation works", function () {
-  // Between rows [0.5, PD3=1.5] and [0.6, PD3=2.2], at 0.55 → ~1.85mm
-  var val = SM.lookupClr(550, 3, "ul", true);
-  approx(val, 1.85, 0.3);
+  // Between rows [1.0, PD3=3.0] and [1.5, PD3=5.5], at 1.25 kVRMS → linear interp:
+  // 3.0 + (1.25-1.0)/(1.5-1.0) * (5.5-3.0) = 4.25mm
+  var val = SM.lookupClr(1250, 3, "ul", true);
+  approx(val, 4.25, 0.05);
 });
 
 test("calcSafety - UL full calculation with sysVDC", function () {
@@ -414,10 +415,10 @@ test("calcSafety - UL full calculation with sysVDC", function () {
     ]
   });
   assert.ok(result.results.length === 2);
-  // AC node: sysKVRMS=0.3 → reinf ~0.8mm
-  approx(result.results[0].reqClr, 0.8, 0.1);
-  // DC node: sysKVRMS=0.6 → basic row [0.6] PD3=2.2; next=[0.8]=3.5; max(4.4, 3.5)=4.4mm
-  approx(result.results[1].reqClr, 4.4, 0.5);
+  // AC node: sysKVRMS=0.3 → basic row [0.3] PD3=1.5; reinf next=[0.6]=1.5; max(3.0, 1.5)=3.0mm
+  approx(result.results[0].reqClr, 3.0, 0.1);
+  // DC node: sysKVRMS=0.6 → basic row [0.6] PD3=1.5; reinf next=[1.0]=3.0; max(3.0, 3.0)=3.0mm
+  approx(result.results[1].reqClr, 3.0, 0.1);
 });
 
 
@@ -453,6 +454,164 @@ test("altFactorUL - exponential at 10000m", function() {
 test("altFactorUL - below 2000m returns 1", function() {
   assert.strictEqual(SM.altFactorUL(1500), 1.0);
   assert.strictEqual(SM.altFactorUL(0), 1.0);
+});
+
+/* ── UL 840 §9.6 — Recurring peak voltage verification (Table 9.3) ─── */
+
+test("lookupRecurringPeakMax - exact table entries", function() {
+  // Direct lookups from Table 9.3
+  assert.strictEqual(SM.lookupRecurringPeakMax(0.025), 330, "0.025mm → 330V");
+  assert.strictEqual(SM.lookupRecurringPeakMax(0.1), 360, "0.1mm → 360V");
+  assert.strictEqual(SM.lookupRecurringPeakMax(0.4), 600, "0.4mm → 600V");
+  assert.strictEqual(SM.lookupRecurringPeakMax(1.0), 913, "1.0mm → 913V");
+  assert.strictEqual(SM.lookupRecurringPeakMax(2.0), 1314, "2.0mm → 1314V");
+  assert.strictEqual(SM.lookupRecurringPeakMax(5.0), 2200, "5.0mm → 2200V");
+});
+
+test("lookupRecurringPeakMax - interpolation between entries", function() {
+  // Between 0.4 (600V) and 0.5 (640V): at 0.45 should be ~620V
+  var v = SM.lookupRecurringPeakMax(0.45);
+  assert.ok(v > 610 && v < 630, "Interpolation at 0.45mm: expected ~620V, got " + v);
+
+  // Between 1.0 (913V) and 1.3 (1049V): at 1.15 should be ~981V
+  var v2 = SM.lookupRecurringPeakMax(1.15);
+  assert.ok(v2 > 970 && v2 < 990, "Interpolation at 1.15mm: expected ~981V, got " + v2);
+});
+
+test("lookupRecurringPeakMax - boundary conditions", function() {
+  // Below minimum entry → return first value (330V)
+  assert.strictEqual(SM.lookupRecurringPeakMax(0.001), 330, "Below min returns 330V");
+
+  // Above maximum entry → return last value (2200V)
+  assert.strictEqual(SM.lookupRecurringPeakMax(10.0), 2200, "Above max returns 2200V");
+});
+
+test("calcNode UL PCB - recurring peak check passes for low voltage", function() {
+  // Low-voltage PCB node: 5V AC → opPeak=7.07V, well below any Table 9.3 limit
+  var result = SM.calcNode({ name: "Test", vrms: 5, ins: 'basic', pcb: true, circ: 'ac' },
+    2, 'ii', 2000, 'ul', 1.5, 2.5, 300, 600);
+  assert.strictEqual(result.recurringPeakOk, true, "Low-voltage PCB should pass recurring peak check");
+});
+
+test("calcNode UL PCB - recurring peak check fails for high voltage", function() {
+  // High-voltage PCB node: 800V AC → opPeak=1131.2V
+  // reqCrp at PD3 MG-II = 14mm, maxPeak from Table 9.3 ≈ extrapolated ~2200V (above table)
+  // This should pass because 14mm creepage handles >2200V peak
+  var result = SM.calcNode({ name: "Test", vrms: 800, ins: 'basic', pcb: true, circ: 'ac' },
+    3, 'ii', 2000, 'ul', 1.5, 2.5, 600, 800);
+  // 800V AC PCB at PD3 → reqCrp=14mm → maxPeak=2200V (clamped to table max)
+  // opPeak = 800*1.414 ≈ 1131V < 2200V → should pass
+  assert.strictEqual(result.recurringPeakOk, true, "800V AC PCB at PD3 should pass");
+});
+
+test("calcNode UL PCB - recurring peak check for tight creepage", function() {
+  // Tight scenario: 400V DC on PCB with small creepage
+  // reqCrp at PD2 MG-II = 4.0mm, maxPeak from Table 9.3 ≈ 1922V
+  var result = SM.calcNode({ name: "Test", vrms: 400, ins: 'basic', pcb: true, circ: 'dc' },
+    2, 'ii', 2000, 'ul', 1.5, 2.5, 300, 600);
+  // DC → opPeak = vrms = 400V; reqCrp(PD2,MG-II) ≈ 4.0mm → maxPeak=1922V
+  // 400 < 1922 → pass
+  assert.strictEqual(result.recurringPeakOk, true, "400V DC PCB should pass");
+});
+
+test("calcNode IEC — recurring peak check is N/A", function() {
+  var result = SM.calcNode({ name: "Test", vrms: 300, ins: 'basic', pcb: true, circ: 'ac' },
+    2, 'ii', 2000, 'iec', 1.5, 2.5, 300, 600);
+  assert.strictEqual(result.recurringPeakOk, null, "IEC mode should have recurringPeakOk=null");
+});
+
+test("calcNode UL non-PCB — recurring peak check is N/A", function() {
+  var result = SM.calcNode({ name: "Test", vrms: 300, ins: 'basic', pcb: false, circ: 'ac' },
+    2, 'ii', 2000, 'ul', 1.5, 2.5, 300, 600);
+  assert.strictEqual(result.recurringPeakOk, null, "Non-PCB UL node should have recurringPeakOk=null");
+});
+
+
+/* ================================================== */
+/* P2#4: UL 1741 §25.3 — Field wiring terminals (Table 24.1) */
+/* ================================================== */
+
+test("lookupTable24_1 - 50V range", function () {
+  var r = SM.lookupTable24_1(50);
+  assert.strictEqual(r.clearance, 1.6, "T24.1 50V: throughAir");
+  assert.strictEqual(r.creepage, 1.6, "T24.1 50V: overSurface");
+});
+
+test("lookupTable24_1 - >50-150V range", function () {
+  var r = SM.lookupTable24_1(120);
+  assert.strictEqual(r.clearance, 3.2, "T24.1 120V: throughAir");
+  assert.strictEqual(r.creepage, 6.4, "T24.1 120V: overSurface");
+});
+
+test("lookupTable24_1 - >150-300V range", function () {
+  var r = SM.lookupTable24_1(230);
+  assert.strictEqual(r.clearance, 6.4, "T24.1 230V: throughAir");
+  assert.strictEqual(r.creepage, 9.5, "T24.1 230V: overSurface");
+});
+
+test("lookupTable24_1 - >300-600V range", function () {
+  var r = SM.lookupTable24_1(480);
+  assert.strictEqual(r.clearance, 9.5, "T24.1 480V: throughAir");
+  assert.strictEqual(r.creepage, 12.7, "T24.1 480V: overSurface");
+});
+
+test("lookupTable24_1 - above 600V uses last row", function () {
+  var r = SM.lookupTable24_1(800);
+  assert.strictEqual(r.clearance, 9.5, "T24.1 800V: capped at last row");
+  assert.strictEqual(r.creepage, 12.7, "T24.1 800V: capped at last row");
+});
+
+test("calcNode - fieldTerminal enforces Table 24.1 floor", function () {
+  // 300V AC system, non-PCB, with fieldTerminal=true
+  // UL calc gives ~1.5mm clearance (UL 840), but T24.1 requires 6.4mm for >150-300V
+  var result = SM.calcNode({name: "FieldTerm", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false, fieldTerminal: true},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  assert.strictEqual(result.tbl241Note, 'both', "Field terminal should flag Table 24.1 enforcement");
+  approx(result.reqClr, 6.4, 0.1, "T24.1 clearance floor for 230V field terminal");
+  approx(result.reqCrp, 9.5, 0.1, "T24.1 creepage floor for 230V field terminal");
+});
+
+test("calcNode - non-fieldTerminal does NOT enforce Table 24.1", function () {
+  // Same node but without fieldTerminal flag — should use UL 840 values
+  var result = SM.calcNode({name: "InternalConn", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  assert.strictEqual(result.tbl241Note, null, "Non-field terminal should not have T24.1 note");
+  assert.ok(result.reqClr < 5, "Internal connection uses UL 840 (not T24.1) clearance: " + result.reqClr);
+});
+
+test("calcNode - fieldTerminal IEC mode is N/A", function () {
+  var result = SM.calcNode({name: "X", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false, fieldTerminal: true},
+    2, "ii", 2000, "iec", 4.0, 2.5, 230, 600);
+  assert.strictEqual(result.tbl241Note, null, "IEC mode ignores field terminal flag");
+});
+
+
+/* ================================================== */
+/* P2#5: Primary vs secondary circuit interpolation   */
+/* ================================================== */
+
+test("calcNode - UL primary circuit uses no interpolation", function () {
+  // sysVAC=300 → sysKVRMS=0.3, basic insulation, non-interp (primary)
+  var result = SM.calcNode({name: "Primary", vrms: 230, ins: "basic", pcb: 1, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  // Without interp, should round up to next table row [0.3] → PD3=1.5mm
+  approx(result.reqClr, 1.5, 0.1, "Primary circuit rounds up (no interpolation)");
+});
+
+test("calcNode - UL secondary circuit uses linear interpolation", function () {
+  // sysVAC=300 → sysKVRMS=0.3, with interp=true (secondary/control)
+  var result = SM.calcNode({name: "Secondary", vrms: 24, ins: "basic", pcb: 1, coat: 0, circ: "ac", toGnd: false, interp: true},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  // With interp at sysKVRMS=0.3: between [0.15]=0.8 and [0.3]=1.5 → interpolated value
+  assert.ok(result.reqClr >= 0.8 && result.reqClr <= 1.5, "Secondary circuit uses interpolation: " + result.reqClr);
+});
+
+test("calcNode - interp flag does not affect IEC mode", function () {
+  var rNo = SM.calcNode({name: "A", vrms: 230, ins: "basic", pcb: 1, coat: 0, circ: "ac", toGnd: false, interp: false},
+    2, "ii", 2000, "iec", 4.0, 2.5, 230, 600);
+  var rYes = SM.calcNode({name: "A", vrms: 230, ins: "basic", pcb: 1, coat: 0, circ: "ac", toGnd: false, interp: true},
+    2, "ii", 2000, "iec", 4.0, 2.5, 230, 600);
+  assert.strictEqual(rNo.reqClr, rYes.reqClr, "IEC mode ignores interp flag");
 });
 
 

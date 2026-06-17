@@ -23,14 +23,19 @@
     [12000,7400, 4600, 14.0, 14.0, 14.0]
   ];
 
-  /* ── UL Clearance Table [kVRMS, PD1, PD2, PD3] ───── */
+  /* ── UL Clearance Table (UL 840 Table 8.1, OVC IV for inverters) ─── */
+  /* [kVRMS(system voltage), PD1, PD2, PD3] — per §25.4g + Table 8.1     */
   var CLR_TBL_UL = [
-    [0.33,0.2,0.2,0.2],[0.4,0.5,0.5,0.8],[0.5,1.5,1.5,1.5],
-    [0.6,2.2,2.2,2.2],[0.8,3.5,3.5,3.5],[1.0,4.5,4.5,4.5],
-    [1.2,6.0,6.0,6.0],[1.5,9.0,9.0,9.0],[2.0,14,14,14],
-    [2.5,18,18,18],[3.0,23,23,23],[4.0,32,32,32],[5.0,42,42,42],
-    [6.0,50,50,50],[8.0,70,70,70],[10.0,95,95,95],
-    [12.0,120,120,120]
+    [0.050, 0.2, 0.8, 0.8],   // 50V   → 0.33kV impulse
+    [0.100, 0.2, 0.8, 1.6],   // 100V  → 0.5kV impulse
+    [0.150, 0.2, 0.8, 1.6],   // 150V  → 0.8kV impulse
+    [0.300, 0.5, 1.5, 1.5],   // 300V  → 1.5kV impulse
+    [0.600, 1.5, 1.5, 1.5],   // 600V  → 2.5kV impulse
+    [1.000, 3.0, 3.0, 3.0],   // 1000V → 4.0kV impulse
+    [1.500, 5.5, 5.5, 5.5],   // 1500V → 6.0kV impulse
+    [2.000, 8.0, 8.0, 8.0],   //       → 8.0kV impulse
+    [3.000, 14.0, 14.0, 14.0],//       → 12.0kV impulse
+    [4.000, 19.4, 19.4, 19.4] //       → 16.0kV impulse
   ];
 
   /* ── IEC Creepage Table [Vrms, PD1-B, PD1-F, PD2-B, PD2-F, PCB, PD3-B, PD3-F, ...] ── */
@@ -109,6 +114,42 @@
     [50,1770,1250],[100,1840,1300],[150,1910,1350],
     [300,2120,1500],[600,2550,1800],[1000,3110,2200]
   ];
+
+  /* ── UL 840 Table 9.3 — Max recurring peak voltage for PCB creepage distances ─── */
+  /* Per §9.6: when using Table 9.2 (PCB) creepage, recurring peak voltage must not    */
+  /* exceed the limit in this table. Values extracted from UL 840_2007.pdf via PyMuPDF.*/
+  var RECURRING_PEAK_TBL = [
+    [0.025, 330], [0.04, 336], [0.063, 345], [0.1, 360],
+    [0.16, 384], [0.25, 450], [0.4, 600], [0.5, 640],
+    [0.56, 678], [0.63, 723], [0.75, 800], [1.0, 913],
+    [1.3, 1049], [1.5, 1140], [1.6, 1150], [1.8, 1250],
+    [2.0, 1314], [2.4, 1443], [2.5, 1475], [3.2, 1700],
+    [4.0, 1922], [5.0, 2200]
+  ];
+
+  /* ── UL 1741 Table 24.1 — Baseline spacing requirements (field wiring terminals) ─ */
+  /* Per §25.3: field wiring terminals MUST comply with Section 24, not UL 840 alt.    */
+  /* [maxVrms, throughAir_mm, overSurface_mm]                                          */
+  var TBL_24_1 = [
+    [50,   1.6,  1.6],
+    [150,  3.2,  6.4],
+    [300,  6.4,  9.5],
+    [600,  9.5, 12.7]
+  ];
+
+  /* ── UL 1741 §25.3 — Table 24.1 lookup for field wiring terminals ─── */
+  function lookupTable24_1(vrms) {
+    // Returns { clearance: throughAir, creepage: overSurface } per Table 24.1
+    if (vrms <= 0) return { clearance: 0, creepage: 0 };
+    for (var i = 0; i < TBL_24_1.length; i++) {
+      if (vrms <= TBL_24_1[i][0]) {
+        return { clearance: TBL_24_1[i][1], creepage: TBL_24_1[i][2] };
+      }
+    }
+    // Above max entry — use last row
+    var last = TBL_24_1[TBL_24_1.length - 1];
+    return { clearance: last[1], creepage: last[2] };
+  }
 
   /* ── Altitude correction factor (IEC 62109-1 Annex F Table F.1) ─── */
   var ALT_DATA = [
@@ -245,6 +286,23 @@
     return last[6 + mi];
   }
 
+  /* ── UL 840 §9.6 — Recurring peak voltage check for PCB creepage distances ─── */
+  function lookupRecurringPeakMax(creepage_mm) {
+    // Returns max allowable recurring peak voltage (V) for given PCB creepage distance.
+    // Linear interpolation between table entries per UL 840 Table 9.3 footnote.
+    if (creepage_mm <= RECURRING_PEAK_TBL[0][0]) return RECURRING_PEAK_TBL[0][1];
+    for (var i = 0; i < RECURRING_PEAK_TBL.length - 1; i++) {
+      var c0 = RECURRING_PEAK_TBL[i][0], v0 = RECURRING_PEAK_TBL[i][1];
+      var c1 = RECURRING_PEAK_TBL[i+1][0], v1 = RECURRING_PEAK_TBL[i+1][1];
+      if (creepage_mm <= c1) {
+        // Linear interpolation: V = v0 + (v1-v0) * (c - c0) / (c1 - c0)
+        return Math.round((v0 + (v1 - v0) * (creepage_mm - c0) / (c1 - c0)) * 10) / 10;
+      }
+    }
+    // Above max table entry — extrapolate conservatively (return last value)
+    return RECURRING_PEAK_TBL[RECURRING_PEAK_TBL.length - 1][1];
+  }
+
   /* ── Impulse voltage levels for "one step higher" (reinforced) ─── */
   var IMPULSE_LEVELS = [0.33, 0.5, 0.8, 1.5, 2.5, 4.0, 6.0, 8.0];
 
@@ -352,7 +410,9 @@
 
   /* ── Per-node calculation (pure) ─────────────── */
   function calcNode(node, pd, mgGroup, alt, standard, impAC, impDC, sysVAC, sysVDC) {
-    // node: { name, vrms, ins, pcb, coat, circ, toGnd }
+    // node: { name, vrms, ins, pcb, coat, circ, toGnd, interp? }
+    // interp: optional — true for secondary/control circuits (linear interpolation allowed)
+    //         false/undefined for primary/power circuits (round up per §25.4g)
     // sysVAC: AC system voltage for TOV lookup (optional, V rms)
     // sysVDC: DC system voltage for UL clearance lookup (optional, V)
     var vrms = node.vrms || 0;
@@ -361,6 +421,7 @@
     var coat = node.coat || 0;
     var circ = node.circ || 'ac';
     var toGnd = !!node.toGnd;
+    var useInterp = !!node.interp;  // P2#5: secondary circuit → linear interpolation
 
     // Determine impulse withstand voltage (kV) from Table 12
     var impKV = circ === 'dc' ? impDC : impAC;
@@ -405,13 +466,18 @@
       var sysKV = circ === 'dc' ? (sysVDC || 600) : (sysVAC || 300);
       var sysKVRMS = sysKV / 1000; // V → kVRMS for UL table lookup
 
+      /* ── P2#5: Primary vs secondary circuit interpolation ─── */
+      // §25.4g: primary circuits round UP to next table entry (§25.4g "higher value")
+      //          secondary/control circuits allow linear interpolation
+      var clrInterp = useInterp;  // false for primary (round up), true for secondary
+
       if (effIns === 'reinf') {
         /* ── REINFORCED INSULATION (UL 840 §6.3) ───────────── */
         // Two equivalent approaches per UL 840:
         //   (1) Double the basic insulation distance, OR
         //   (2) Step up one row in the clearance table
         // We use approach (2): find next higher voltage row → more accurate.
-        var basicClr = lookupClr(sysKVRMS * 1000, pd, standard, false);
+        var basicClr = lookupClr(sysKVRMS * 1000, pd, standard, clrInterp);
         // Find the row used for basic, then step to the NEXT row:
         var reinfV = sysKVRMS;
         var foundBasic = false;
@@ -422,12 +488,12 @@
           }
           if (foundBasic) { reinfV = CLR_TBL_UL[ri][0]; break; }
         }
-        var reinfClr = lookupClr(reinfV * 1000, pd, standard, false);
+        var reinfClr = lookupClr(reinfV * 1000, pd, standard, clrInterp);
         // Use the more conservative (larger) of both approaches:
         reqClr = Math.max(basicClr * 2, reinfClr);
       } else {
         // Basic/supplementary/functional insulation — direct lookup by system voltage
-        reqClr = lookupClr(sysKVRMS * 1000, pd, standard, true);
+        reqClr = lookupClr(sysKVRMS * 1000, pd, standard, clrInterp);
       }
     }
 
@@ -447,6 +513,31 @@
       reqCrp = Math.round(reqCrp * crpMult * 10) / 10;
     }
 
+    /* ── P2#4: UL 1741 §25.3 — Field wiring terminals floor (Table 24.1) ─── */
+    // Per §25.3: field wiring terminals MUST comply with Section 24 (Table 24.1),
+    // not the UL 840 alternative approach. Only enforced when node.fieldTerminal is true.
+    var tbl241Note = null;
+    if (standard === 'ul' && node.fieldTerminal) {
+      var t24 = lookupTable24_1(vrms);
+      if (reqClr < t24.clearance) {
+        reqClr = Math.round(t24.clearance * 10) / 10;
+        tbl241Note = 'clr';
+      }
+      if (reqCrp < t24.creepage) {
+        reqCrp = Math.round(t24.creepage * 10) / 10;
+        tbl241Note = tbl241Note ? 'both' : 'crp';
+      }
+    }
+
+    // UL 840 §9.6: Recurring peak voltage check for PCB creepage distances
+    var recurringPeakOk = null;  // null = N/A, true = pass, false = exceed limit
+    if (standard === 'ul' && pcb) {
+      // Operating peak voltage: AC → vrms*√2, DC → vrms
+      var opPeakV = circ === 'ac' ? Math.round(vrms * 1.414 * 10) / 10 : vrms;
+      var maxPeakV = lookupRecurringPeakMax(reqCrp);
+      recurringPeakOk = opPeakV <= maxPeakV;
+    }
+
     return {
       name: node.name || "节点",
       vrms: vrms,
@@ -458,7 +549,9 @@
       toGnd: toGnd,
       forcedReinforced: forcedReinforced,
       reqClr: reqClr,
-      reqCrp: reqCrp
+      reqCrp: reqCrp,
+      recurringPeakOk: recurringPeakOk,   // UL §9.6 PCB check: null=NA, true=pass, false=exceeds
+      tbl241Note: tbl241Note               // UL §25.3 Table 24.1 floor: null/clr/crp/both
     };
   }
 
@@ -514,6 +607,8 @@
     lookupTov: lookupTov,
     lookupClr: lookupClr,
     lookupCrp: lookupCrp,
+    lookupRecurringPeakMax: lookupRecurringPeakMax, // UL 840 Table 9.3 PCB recurring peak check
+    lookupTable24_1: lookupTable24_1,               // UL 1741 §25.3 field wiring terminal baselines
     nextImpulseLevel: nextImpulseLevel,
     prevImpLevel: prevImpLevel,
     clrFromPeak: clrFromPeak,
