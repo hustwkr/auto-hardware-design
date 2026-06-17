@@ -448,6 +448,7 @@
 
     /* ── Clearance distances ─────────────── */
     var reqClr;
+    var interpUsed = false;  // true when linear interpolation was applied (UL secondary circuits)
     if (standard === 'iec') {
       // sysVAC: AC system voltage for TOV lookup (from calcSafety)
       var tovPeak = null;
@@ -494,6 +495,17 @@
       } else {
         // Basic/supplementary/functional insulation — direct lookup by system voltage
         reqClr = lookupClr(sysKVRMS * 1000, pd, standard, clrInterp);
+      }
+
+      /* ── Track if linear interpolation was actually used (UL only) ─── */
+      if (clrInterp) {
+        for (var _i = 0; _i < CLR_TBL_UL.length; _i++) {
+          if (sysKVRMS === CLR_TBL_UL[_i][0]) break; // exact match → no interpolation
+          if (_i > 0 && sysKVRMS > CLR_TBL_UL[_i - 1][0] && sysKVRMS < CLR_TBL_UL[_i][0]) {
+            interpUsed = true; // between rows → interpolation applied
+            break;
+          }
+        }
       }
     }
 
@@ -547,11 +559,13 @@
       pcb: pcb ? 1 : 0,
       coat: coat,
       toGnd: toGnd,
+      circ: circ,
       forcedReinforced: forcedReinforced,
       reqClr: reqClr,
       reqCrp: reqCrp,
       recurringPeakOk: recurringPeakOk,   // UL §9.6 PCB check: null=NA, true=pass, false=exceeds
-      tbl241Note: tbl241Note               // UL §25.3 Table 24.1 floor: null/clr/crp/both
+      tbl241Note: tbl241Note,            // UL §25.3 Table 24.1 floor: null/clr/crp/both
+      interpUsed: interpUsed              // true when linear interpolation was applied
     };
   }
 

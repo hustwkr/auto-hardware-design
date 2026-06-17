@@ -104,14 +104,13 @@
 <h1 style="font-size:1.6rem;margin-bottom:4px">安规距离计算工具 <span style="font-size:.9rem;font-weight:400;color:#64748b">Creepage &amp; Clearance Calculator</span></h1>
 <p style="color:#64748b;margin-bottom:24px;font-size:.9rem">IEC 62109-1 / UL 1741 爬电距离 + 电气间隙 | 适用于并网逆变器</p>
 
-<div class="card" style="padding:12px 20px;margin-bottom:20px"><div class="fgl"><label>项目名称</label><input type="text" id="sProjName" placeholder="选填"></div></div>
-
 <div class="layout">
 <!-- Left column -->
 <div>
   <div class="card"><h2>标准体系</h2><div class="fgl"><label>标准体系</label><select id="sStd"><option value="iec" selected>IEC 62109-1</option><option value="ul">UL 1741</option></select></div></div>
 
   <div class="card"><h2>基础参数</h2><div class="fg">
+    <div class="fgl full" style="margin-bottom:12px"><label>项目名称</label><input type="text" id="sProjName" placeholder="选填"></div>
     <div class="fgl" data-standard="iec"><label>污染等级<span id="sPd_iec_hint"></span></label><select id="sPd"><option value="1">PD 1 (无污染/密封)</option><option value="2" selected>PD 2 (一般污染)</option><option value="3">PD 3 (严重污染)</option></select></div>
     <div class="fgl" data-standard="ul" style="display:none"><label>污染等级<span id="sPd_ul_hint" class="hint">UL §25.4a 固定 PD3</span></label><input type="text" value="PD 3 (UL 1741 §25.4a 强制)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
     <div class="fgl" data-standard="iec"><label>材料组别 (CTI)</label><select id="sMg"><option value="i">I 组 (CTI >= 600)</option><option value="ii" selected>II 组 (400 <= CTI &lt; 600)</option><option value="iiia">IIIa 组 (175 <= CTI &lt; 400)</option><option value="iiib">IIIb 组 (100 <= CTI &lt; 175)</option></select></div>
@@ -144,10 +143,9 @@
 <!-- Right column -->
 <div>
   <div class="card"><h2>计算结果</h2><div class="result-grid">
-    <div class="ri"><div class="rl">节点数</div><div class="rv"><span id="sNc">-</span></div></div>
   </div>
   <h3 style="margin-top:14px;font-size:.88rem;font-weight:600;margin-bottom:6px">各节点所需安规距离</h3>
-  <table class="sg-tbl"><thead><tr><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr></thead><tbody id="sRtb"></tbody></table>
+  <table class="sg-tbl"><thead><tr><th>#</th><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>Clearance(mm)</th><th>Creepage(mm)</th></tr></thead><tbody id="sRtb"></tbody></table>
   </div>
   <div class="card"><h2>评估详情</h2><div id="sMa" style="font-size:.88rem"><p>-</p></div></div>
 </div>

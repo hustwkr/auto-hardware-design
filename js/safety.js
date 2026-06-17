@@ -79,7 +79,6 @@
   /* ── Read params from DOM → call model → render results ─── */
   function sCalc(){
     var nodes=document.querySelectorAll("#sN .snode");
-    document.getElementById("sNc").textContent=nodes.length;
     if(!nodes.length){
       document.getElementById("sRtb").innerHTML="";
       document.getElementById("sMa").innerHTML="<p>请添加测量节点。</p>";
@@ -227,13 +226,13 @@
 
     // Render results to DOM
     var tb="";
-    result.results.forEach(function(r){
+    result.results.forEach(function(r,i){
       var gndMark = r.toGnd ? '<span style="color:#2563eb;font-size:.7rem" title="对地节点，IEC 62109-1 §7.3.7 强制加强绝缘">⊕</span>' : '';
       var withinNote = !r.toGnd ? ' <span style="color:#64748b;font-size:.65rem" title="线间节点：冲击电压按标准降一档计算">↓1OVC</span>' : '';
       var warnNote = r.forcedReinforced ? ' <span style="color:#f59e0b;font-size:.7rem" title="该节点为对地连接，标准强制要求加强绝缘(×2)，已自动应用">⚠ 已强制加强</span>' : '';
       var peakWarn = (r.recurringPeakOk === false) ? ' <span style="color:#ef4444;font-size:.7rem" title="UL 840 §9.6: PCB反复峰值电压超出Table 9.3限制，请增大爬电距离或降低工作电压">🔴 峰值超限</span>' : '';
       var t241Warn = r.tbl241Note ? ' <span style="color:#f59e0b;font-size:.7rem" title="UL 1741 §25.3: 现场接线端子强制使用Table 24.1基线间距(非UL 840替代方案)">⚠ T24.1</span>' : '';
-      tb+="<tr><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+r.insL+warnNote+withinNote+"</td><td>"+r.reqClr+t241Warn+"</td><td>"+r.reqCrp+peakWarn+"</td></tr>";
+      tb+="<tr><td>"+(i+1)+"</td><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+r.insL+warnNote+withinNote+"</td><td>"+r.reqClr+t241Warn+"</td><td>"+r.reqCrp+peakWarn+"</td></tr>";
     });
     document.getElementById("sRtb").innerHTML=tb;
 
@@ -272,38 +271,66 @@
   }
 
   /* ── Report generation (DOM-only) ───────── */
-  function sCalcFormulas(d){
-    if(!d||!d.results||!d.results.length)return '';
-    var fs='<p style=margin:4px 0;font-size:.85rem><b>计算依据:</b></p>';
-    var std=document.getElementById('sStd').selectedOptions[0].text;
-    var ovcAC = document.getElementById('sOvc_AC')?document.getElementById('sOvc_AC').value.toUpperCase():'II';
-    var ovcDC = document.getElementById('sOvc_DC')?document.getElementById('sOvc_DC').value.toUpperCase():'II';
-    var isoLabel = (d.isolation==='isolated')?'有隔离':'无隔离';
-    fs+='<ul style=margin:2px 0 2px 20px;font-size:.82rem;color:#555>';
-    if(d.std === 'iec'){
-      fs+='<li>标准: IEC 60664-1 / Table 13</li><li>隔离架构: '+isoLabel+'</li>';
-      fs+='<li>AC侧冲击电压: OVC '+ovcAC+', '+d.impAC+' kV | DC侧: OVC '+ovcDC+', '+d.impDC+' kV'+(d.isolation==='isolated'?' (隔离降档)':'')+'</li>';
-      fs+='<li>海拔系数: '+d.altk+'</li><li>爬电距离: PD '+d.pd+', 材料组别'+document.getElementById('sMg').selectedOptions[0].text+'</li>';
-      fs+='<li style="color:#2563eb;font-weight:500">对地节点(⊕): 使用完整OVC冲击电压，强制加强绝缘</li>';
-      fs+='<li style="color:#64748b">线间节点: 按IEC 62109-1 §7.3.7降一档计算电气间隙</li>';
-    } else {
-      /* ── UL mode formulas ─── */
-      fs+='<li>标准: UL 1741 §25 (参考 UL 840)</li><li>污染等级: PD '+d.pd+' (UL §25.4a)</li>';
-      fs+='<li>材料组别: II 组 (CTI >= 100, UL §25.4d)</li><li>过电压类别: OVC IV (UL §25.4b)</li>';
-      fs+='<li>海拔系数: '+d.altk+'</li>';
-      fs+='<li>电气间隙(UL): 由相地额定系统电压(kVRMS)查表确定 (§25.4g)，不使用冲击耐受电压</li>';
-      fs+='<li>加强绝缘(UL): 取基本绝缘距离×2 或表中上一行，以较大值为准 (§6.3)</li>';
-      fs+='<li style="color:#f59e0b;font-weight:500">⚠T24.1 = 现场接线端子强制使用Table 24.1基线间距 (UL §25.3)</li>';
-    }
-    d.results.forEach(function(r){var k=SM.INS_K[r.ins]||1;if(k>1)fs+='<li>'+r.name+': '+r.insL+'绝缘x'+k+'</li>'});
-    return fs+='</ul>';
-  }
+    /* ── Build per-node calculation chain as plain text ─── */
+  function buildCalcChains(d){
+    if(!d||!d.results||!d.results.length)return "";
+    var html="";
+    d.results.forEach(function(r,i){
+      var mult = SM.INS_K[r.effIns] || SM.INS_K[r.ins] || 1;
+      var txt="<div style=margin:6px 0;padding:10px 14px;border-left:3px solid #2563eb;background:#f8fafc;font-size:.85rem;line-height:1.7>";
+      // Node header + input params
+      txt += "<strong>" + (i+1) + ". " + r.name + "</strong>，";
+      txt += "工作电压 " + r.vrms + " Vrms，" + r.insL + "（倍率×" + mult + "），";
+      // ── Clearance chain ──
+      if(d.std === 'ul'){
+        var sysKV = (r.circ === 'dc' ? d.sysVDC : d.sysVAC);
+        var sysKVRMS = (sysKV / 1000).toFixed(3);
+        txt += "Clearance：系统电压 " + sysKV + " V（" + sysKVRMS + " kVRMS），查UL 840表";
+        if(r.interpUsed) txt += "<span style=\"color:#2563eb;font-weight:600\">（差值法）</span>";
+        txt += "得基准值，";
+        if(mult > 1) txt += "绝缘倍率×" + mult + "，";
+        var clrBase = (r.reqClr / d.altk).toFixed(2);
+        txt += "海拔修正系数 k=" + d.altk + "（" + d.alt + " m），reqClearance = " + clrBase + " × " + d.altk + " = " + r.reqClr + " mm。";
+      } else {
+        var impKV = (r.circ === 'dc' ? d.impDC : d.impAC);
+        if(!r.toGnd){ impKV = Math.round((impKV * 0.6) * 10) / 10; }
+        txt += "Clearance：";
+        txt += "冲击电压 " + impKV + " kV";
+        if(!r.toGnd) txt += "（线间降档）";
+        txt += "，查IEC 60664-1表得基准值，";
+        if(mult > 1) txt += "绝缘倍率×" + mult + "，";
+        var clrBase = (r.reqClr / d.altk).toFixed(2);
+        txt += "海拔修正系数 k=" + d.altk + "（" + d.alt + " m），reqClearance = " + clrBase + " × " + d.altk + " = " + r.reqClr + " mm。";
+      }
+      // ── Creepage chain ──
+      if(d.std === 'ul'){
+        txt += "Creepage：工作电压 " + r.vrms + " V，污染等级PD" + d.pd + "，材料组II，查UL 840表得基准值";
+        var crpBase = (r.reqCrp / mult).toFixed(2);
+        txt += "约 " + crpBase + " mm，";
+        if(mult > 1) txt += "绝缘倍率×" + mult + "，";
+        txt += "reqCreepage = " + r.reqCrp + " mm。";
+      } else {
+        txt += "Creepage：工作电压 " + r.vrms + " V，污染等级PD" + d.pd + "，材料组" + (d.mg||'II') + "，查IEC 60664-1表得基准值";
+        var crpBase = (r.reqCrp / mult).toFixed(2);
+        txt += "约 " + crpBase + " mm，";
+        if(mult > 1) txt += "绝缘倍率×" + mult + "，";
+        txt += "reqCreepage = " + r.reqCrp + " mm。";
+      }
+      // ── Warnings/notes ──
+      if(r.forcedReinforced) txt += "<br><span style=color:#f59e0b>⚠ 对地节点，标准强制要求加强绝缘</span>";
+      if(r.tbl241Note) txt += "<br><span style=color:#f59e0b>⚠ UL Table 24.1最小值约束生效</span>";
+      if(r.recurringPeakOk === false) txt += "<br><span style=color:#ef4444>🔴 UL §9.6 PCB峰值电压超限</span>";
+      txt += "</div>";
+      html += txt;
+    });
+    return html;
+}
 
   function sGenRep(){
     var d=window._sd;
     if(!d||!d.results||!d.results.length){document.getElementById("sRc").innerHTML="<h3>安规距离评估报告</h3><p>请添加测量节点。</p>";return;}
     var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
-    var sr="";d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间,降档)';var f=r.forcedReinforced?' ⚠强制加强':'';var pw=(r.recurringPeakOk===false)?' 🔴峰值超限':'';var t241=r.tbl241Note?' ⚠T24.1':'';sr+="<tr><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
+    var sr="";d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间,降档)';var f=r.forcedReinforced?' ⚠强制加强':'';var pw=(r.recurringPeakOk===false)?' 🔴峰值超限':'';var t241=r.tbl241Note?' ⚠T24.1':'';sr+="<tr><td>"+(d.results.indexOf(r)+1)+"</td><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
 
     var isoLabel = (d.isolation==='isolated')?'有隔离':'无隔离';
 
@@ -330,47 +357,23 @@
       /* ── UL mode base params ─── */
       baseTable=
         "<tr><td>标准</td><td>"+document.getElementById('sStd').selectedOptions[0].text+"</td></tr>"
-        +"<tr><td>污染等级</td><td>PD "+d.pd+" (UL §25.4a)</td></tr>"
-        +"<tr><td>材料组别</td><td>II 组 CTI >= 100 (UL §25.4d)</td></tr>"
-        +"<tr><td>过电压类别</td><td>OVC IV (UL §25.4b)</td></tr>"
-        +"<tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr>"
-        +"<tr><td>AC系统电压</td><td>"+sysVAC_val+' V ('+((+sysVAC_val/1000).toFixed(2))+' kVRMS)'+ "</td></tr>"
-        +"<tr><td>DC系统电压</td><td>"+sysVDC_val+' V ('+((+sysVDC_val/1000).toFixed(2))+' kVRMS)'+ "</td></tr>";
-    }
-
-    /* ── Build design recommendations based on standard ─── */
-    var recs;
-    if(d.std === 'iec'){
-      recs=
-        "<li>实际工程设计中应确保实际距离大于上表所需值</li>"
-        +"<li>海拔超过2000m时电气间隙需按系数放大</li>"
-        +"<li>加强绝缘(Reinforced)要求为基本绝缘的2倍</li>"
-        +'<li style="color:#2563eb;font-weight:500">对地节点（标记"对地"）：IEC 62109-1 §7.3.7 强制要求加强绝缘，电气间隙和爬电距离均×2</li>'
-        +'<li style="color:#64748b">线间节点：同一电路内部的功能绝缘比对地再降一档（§7.3.7），冲击电压取低一档计算</li>'
-        +"<li>建议预留20%以上设计裕量</li>"
-        +"<li>最终需通过安规认证机构(如TUV/UL)的实测验证</li>";
-    } else {
-      /* ── UL mode recommendations ─── */
-      recs=
-        "<li>实际工程设计中应确保实际距离大于上表所需值</li>"
-        +"<li>海拔超过2000m时电气间隙需按系数放大 (UL 1741)</li>"
-        +"<li>加强绝缘(Reinforced)要求为基本绝缘的2倍 (§6.3)</li>"
-        +'<li style="color:#f59e0b;font-weight:500">对地节点：标准强制要求加强绝缘，电气间隙和爬电距离均×2</li>'
-        +"<li>UL 电气间隙由相地额定系统电压(kVRMS)查表确定 (§25.4g)</li>"
-        +"<li>建议预留20%以上设计裕量</li>"
-        +"<li>最终需通过UL认证机构的实测验证</li>";
+        +" <tr><td>污染等级</td><td>PD "+d.pd+" (UL §25.4a)</td></tr>"
+        +" <tr><td>材料组别</td><td>II 组 CTI >= 100 (UL §25.4d)</td></tr>"
+        +" <tr><td>过电压类别</td><td>OVC IV (UL §25.4b)</td></tr>"
+        +" <tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr>"
+        +" <tr><td>AC系统电压</td><td>"+sysVAC_val+' V ('+((+sysVAC_val/1000).toFixed(2))+' kVRMS)'+ "</td></tr>"
+        +" <tr><td>DC系统电压</td><td>"+sysVDC_val+' V ('+((+sysVDC_val/1000).toFixed(2))+' kVRMS)'+ "</td></tr>";
     }
 
     document.getElementById("sRc").innerHTML=
       (document.getElementById('sProjName').value?'<p><strong>项目: </strong>'+document.getElementById('sProjName').value+'</p>':'')
       +" <h3>1. 项目信息</h3><table><tr><th>项目</th><th>内容</th></tr>"
-        +"<tr><td>报告编号</td><td>SA-"+ds.replace(/\//g,"")+"-" +(1e3+Math.floor(9e3*Math.random()))+"</td></tr>"
+        +" <tr><td>报告编号</td><td>SA-"+ds.replace(/\//g,"")+"-" +(1e3+Math.floor(9e3*Math.random()))+"</td></tr>"
         +"<tr><td>生成日期</td><td>"+ds+" "+ts+"</td></tr>"
         +"<tr><td>项目名称</td><td>"+(document.getElementById('sProjName').value||'-')+"</td></tr></table>"
       +" <h3>2. 基础参数</h3><table><tr><th>参数</th><th>值</th></tr>"+baseTable+"</table>"
-      +" <h3>3. 各节点所需安规距离</h3><table><tr><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>所需Clr(mm)</th><th>所需Crp(mm)</th></tr>"+sr+"</table>"
-      +sCalcFormulas()
-      +" <h3>4. 设计建议</h3><ul style=margin:4px 0 0 20px>"+recs+"</ul>"
+      +" <h3>3. 各节点所需安规距离</h3><table><tr><th>#</th><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>Clearance(mm)</th><th>Creepage(mm)</th></tr>"+sr+"</table>"
+      +" <h3>4. 各节点计算过程</h3>" + buildCalcChains(d)
       +" <p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>结论:</strong> 各节点安规距离计算结果如上表所示，实际工程设计中应确保实际距离大于所需值，并留足设计裕量。</p>"
       +" <div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b><span>安规距离计算工具 v1.0</span><span>报告: "+ds+" "+ts+"</span></div>";
   }
@@ -399,7 +402,7 @@
     css+='</style>';
 
     /* ── Results rows ─── */
-    d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间)';var pw=(r.recurringPeakOk===false)?' 🔴峰值超限':'';var t241=r.tbl241Note?' ⚠T24.1':'';sr+='<tr><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+pw+'</td></tr>'});
+    d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间)';var pw=(r.recurringPeakOk===false)?' 🔴峰值超限':'';var t241=r.tbl241Note?' ⚠T24.1':'';sr+='<tr><td>'+i+'</td><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+pw+'</td></tr>'});
 
     var isoLabel = (d.isolation==='isolated')?'有隔离':'无隔离';
     var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"});
@@ -461,7 +464,7 @@
     /* 3. Results table */
     h+='<h3>3. 评估结果</h3>';
     h+='<table class="data-tbl"><thead><tr>'
-      +'<th>节点名称</th><th>Vrms (V)</th><th>绝缘等级</th><th>电气间隙 mm</th><th>爬电距离 mm</th>'
+      +'<th>节点名称</th><th>Vrms (V)</th><th>绝缘等级</th><th>Clearance mm</th><th>Creepage mm</th>'
       +'</tr></thead><tbody>'+sr+'</tbody></table>';
 
     /* Footer */
@@ -512,7 +515,7 @@
   /* ── Expose to global scope ────────────── */
   var expose = [
     'mNode','sNChange','sAddNode',
-    'sRmNode','sReNum','sCalc','sCalcFormulas','sGenRep','sExportReport',
+    'sRmNode','sReNum','sCalc','buildCalcChains','sGenRep','sExportReport',
     'loadNodesFromDefaults'
   ];
   expose.forEach(function(n){global[n]=eval('('+n+')')});
