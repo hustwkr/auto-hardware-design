@@ -24,19 +24,27 @@
   ];
 
   /* ── UL Clearance Table (UL 840 Table 8.1, OVC IV for inverters) ─── */
-  /* [kVRMS(system voltage), PD1, PD2, PD3] — per §25.4g + Table 8.1     */
+  /* [kVRMS(system voltage), PD1, PD2, PD3, PD4] — per §25.4g + Table 8.1     */
   var CLR_TBL_UL = [
-    [0.050, 0.2, 0.8, 0.8],   // 50V   → 0.33kV impulse
-    [0.100, 0.2, 0.8, 1.6],   // 100V  → 0.5kV impulse
-    [0.150, 0.2, 0.8, 1.6],   // 150V  → 0.8kV impulse
-    [0.300, 0.5, 1.5, 1.5],   // 300V  → 1.5kV impulse
-    [0.600, 1.5, 1.5, 1.5],   // 600V  → 2.5kV impulse
-    [1.000, 3.0, 3.0, 3.0],   // 1000V → 4.0kV impulse
-    [1.500, 5.5, 5.5, 5.5],   // 1500V → 6.0kV impulse
-    [2.000, 8.0, 8.0, 8.0],   //       → 8.0kV impulse
-    [3.000, 14.0, 14.0, 14.0],//       → 12.0kV impulse
-    [4.000, 19.4, 19.4, 19.4] //       → 16.0kV impulse
+    [0.050, 0.5, 0.5, 0.8, 1.6],   // 50V   → 1.5kV impulse
+    [0.100, 1.5, 1.5, 1.5, 1.6],   // 100V  → 2.5kV impulse
+    [0.150, 3.0, 3.0, 3.0, 3.0],   // 150V  → 4.0kV impulse
+    [0.300, 5.5, 5.5, 5.5, 5.5],   // 300V  → 6.0kV impulse
+    [0.600, 8.0, 8.0, 8.0, 8.0],   // 600V  → 8.0kV impulse
+    [1.000, 14.0, 14.0, 14.0, 14.0],// 1000V → 12.0kV impulse
+    [1.500, 19.4, 19.4, 19.4, 19.4] // 1500V → 16.0kV impulse
   ];
+
+  /* ── Extended UL Clearance (above 1500V — per IEC 60664-1 Table 2 extrapolation) ─── */
+  /* Used for high-voltage systems beyond standard UL 840 range.                    */
+  var CLR_TBL_UL_EXT = [
+    [2.000, 25.0, 25.0, 25.0, 25.0],// 2000V → 20.0kV impulse
+    [3.000, 40.0, 40.0, 40.0, 40.0],// 3000V → 30.0kV impulse
+    [4.000, 56.0, 56.0, 56.0, 56.0] // 4000V → 40.0kV impulse
+  ];
+
+  /* Combined lookup table for UL clearance (standard + extended) */
+  CLR_TBL_UL = CLR_TBL_UL.concat(CLR_TBL_UL_EXT);
 
   /* ── IEC Creepage Table [Vrms, PD1-B, PD1-F, PD2-B, PD2-F, PCB, PD3-B, PD3-F, ...] ── */
   var CRP_IEC = [
@@ -70,36 +78,59 @@
     [6300,32,45,63,80,25,80,90,100,100]
   ];
 
-  /* ── UL Creepage Table ─────────────────────── */
+  /* ── UL Creepage Table (UL 840 Table 9.1 — full data per Notebook) ─── */
+  /* [Vrms, PD1, PD2_allGr, PD3_GrI, PD3_GrII, PD3_GrIIIa, PD3_GrIIIb, PD4_GrI, PD4_GrII, PD4_GrIIIa] */
+  /* Note: PD3_GrIIIb is N/A for Vrms > 630V (footnote y) — marked as null in table.           */
   var CRP_UL = [
-    [0,0.5,0.5,0.5,1.0,0.04,1.0,1.0,1.0,1.0],
-    [2,0.5,0.5,0.5,1.0,0.04,1.0,1.0,1.0,1.0],
-    [10,0.6,0.6,0.6,1.2,0.04,1.2,1.2,1.2,1.2],
-    [25,0.6,0.6,0.6,1.4,0.04,1.4,1.4,1.4,1.4],
-    [32,1.0,1.0,1.0,1.5,0.04,1.5,1.5,1.5,1.5],
-    [40,1.2,1.2,1.2,1.6,0.04,1.6,1.8,2.0,2.0],
-    [50,1.5,1.5,1.5,1.7,0.04,1.7,2.0,2.2,2.2],
-    [63,2.0,2.0,2.0,1.8,0.06,1.8,2.0,2.3,2.3],
-    [80,2.5,2.5,2.5,2.0,0.10,2.0,2.2,2.5,2.5],
-    [100,2.5,2.5,2.5,2.2,0.16,2.2,2.5,2.8,2.8],
-    [125,3.2,3.2,3.2,2.4,0.25,2.4,2.6,3.0,3.0],
-    [160,4.0,4.0,4.0,2.5,0.40,2.5,2.8,3.2,3.2],
-    [200,5.0,5.0,5.0,3.2,0.63,3.2,3.6,4.0,4.0],
-    [250,6.3,6.3,6.3,4.0,0.90,4.0,4.5,5.0,5.0],
-    [320,8.0,8.0,8.0,5.0,1.2,5.0,5.6,6.3,6.3],
-    [400,8.0,10,10,12,1.6,6.3,7.1,8.0,8.0],
-    [500,10,12,12,14,2.0,8.0,9.0,10,10],
-    [630,12,14,14,18,2.5,10,11,12.5,12.5],
-    [800,12,14,14,18,3.2,12.5,14,16,16],
-    [1000,16,18,20,25,4.0,16,18,20,20],
-    [1250,20,22,25,32,5.0,20,22,25,25],
-    [1600,20,25,32,40,6.3,25,28,32,32],
-    [2000,20,32,40,50,8.0,32,36,40,40],
-    [2500,25,40,50,63,10.0,40,45,50,50],
-    [3200,32,50,63,80,12.5,50,56,63,63],
-    [4000,40,63,80,100,16,63,71,80,80],
-    [5000,50,80,100,125,20,80,90,100,100],
-    [6300,63,100,100,125,25,100,110,125,125]
+    [10,   0.08, 0.4,  1.0, 1.0, 1.0, 1.0,  1.6, 1.6, 1.6],
+    [12.5, 0.09, 0.42, 1.05,1.05,1.05,1.05, 1.6, 1.6, 1.6],
+    [16,   0.1,  0.45, 1.1, 1.1, 1.1, 1.1,  1.6, 1.6, 1.6],
+    [20,   0.11, 0.48, 1.2, 1.2, 1.2, 1.2,  1.6, 1.6, 1.6],
+    [25,   0.125,0.5,  1.25,1.25,1.25,1.25, 1.7, 1.7, 1.7],
+    [32,   0.14, 0.53, 1.3, 1.3, 1.3, 1.3,  1.8, 1.8, 1.8],
+    [40,   0.16, 0.56, 1.4, 1.6, 1.8, 1.8,  1.9, 2.4, 3.0],
+    [50,   0.18, 0.6,  1.5, 1.7, 1.9, 1.9,  2.0, 2.5, 3.2],
+    [63,   0.2,  0.63, 1.6, 1.8, 2.0, 2.0,  2.1, 2.6, 3.4],
+    [80,   0.22, 0.67, 1.7, 1.9, 2.1, 2.1,  2.2, 2.8, 3.6],
+    [100,  0.25, 0.71, 1.8, 2.0, 2.2, 2.2,  2.4, 3.0, 3.8],
+    [125,  0.28, 0.75, 1.9, 2.1, 2.4, 2.4,  2.5, 3.2, 4.0],
+    [160,  0.32, 0.8,  2.0, 2.2, 2.5, 2.5,  3.2, 4.0, 5.0],
+    [200,  0.42, 1.0,  2.5, 2.8, 3.2, 3.2,  4.0, 5.0, 6.3],
+    [250,  0.56, 1.25, 3.2, 3.6, 4.0, 4.0,  5.0, 6.3, 8.0],
+    [320,  0.75, 1.6,  4.0, 4.5, 5.0, 5.0,  6.3, 8.0, 10.0],
+    [400,  1.0,  2.0,  5.0, 5.6, 6.3, 6.3,  8.0, 10.0,12.5],
+    [500,  1.3,  2.5,  6.3, 7.1, 8.0, 8.0,  10.0,12.5,16.0],
+    [630,  1.8,  3.2,  8.0, 9.0, 10.0,10.0, 12.5,16.0,20.0],
+    [800,  2.4,  4.0,  10.0,11.0,12.5,null, 16.0,20.0,25.0],
+    [1000, 3.2,  5.0,  12.5,14.0,16.0,null, 20.0,25.0,32.0],
+    [1250, 4.2,  6.3,  16.0,18.0,20.0,null, 25.0,32.0,40.0],
+    [1600, 5.6,  8.0,  20.0,22.0,25.0,null, 32.0,40.0,50.0],
+    [2000, 7.5,  10.0, 25.0,28.0,32.0,null, 40.0,50.0,63.0],
+    [2500, 10.0, 12.5, 32.0,36.0,40.0,null, 50.0,63.0,80.0],
+    [3200, 12.5, 16.0, 40.0,45.0,50.0,null, 63.0,80.0,100.0],
+    [4000, 16.0, 20.0, 50.0,56.0,63.0,null, 80.0,100.0,125.0],
+    [5000, 20.0, 25.0, 63.0,71.0,80.0,null, 100.0,125.0,160.0],
+    [6300, 25.0, 32.0, 80.0,90.0,100.0,null, 125.0,160.0,200.0]
+  ];
+
+  /* ── UL PCB Creepage Table (UL 840 Table 9.2 — PD1/PD2 for PCB traces) ─── */
+  /* [Vrms, PD1_allGr, PD2_GrI_II_IIIa] — linear interpolation allowed per §9.3              */
+  /* Note: For Group IIIb at PD2, Table 9.2 does NOT apply — must fall back to Table 9.1.    */
+  var CRP_UL_PCB = [
+    [50,   0.025, 0.04],
+    [63,   0.04,  0.063],
+    [80,   0.063, 0.1],
+    [100,  0.1,   0.16],
+    [125,  0.16,  0.25],
+    [160,  0.25,  0.4],
+    [200,  0.4,   0.63],
+    [250,  0.56,  1.0],
+    [320,  0.75,  1.6],
+    [400,  1.0,   2.0],
+    [500,  1.3,   2.5],
+    [630,  1.8,   3.2],
+    [800,  2.4,   4.0],
+    [1000, 3.2,   5.0]
   ];
 
   /* ── Impulse withstand voltage per IEC 62109-1 Table 12 [sysV, OVC-I..IV] (kV) ─ */
@@ -149,6 +180,29 @@
     // Above max entry — use last row
     var last = TBL_24_1[TBL_24_1.length - 1];
     return { clearance: last[1], creepage: last[2] };
+  }
+
+  /* ── UL 1741 Table 1 — Enclosure (metal housing wall) forced spacing ─── */
+  /* Per §25.3: Enclosure and Field_Wiring areas MUST use this table;               */
+  /* UL 840 optimization is NOT allowed for these zones.                            */
+  /* [maxVrms, toEnclosure_mm, internalClearance_mm, internalCreepage_mm]           */
+  var TBL_UL1741_1 = [
+    [50,   1.6,  1.6,  1.6],
+    [150,  6.4,  3.2,  6.4],
+    [300,  12.7, 6.4,  9.5],
+    [600,  12.7, 9.5, 12.7]
+  ];
+
+  function lookupUL1741_Table1(vrms) {
+    // Returns { toEnclosure: mm, clearance: mm, creepage: mm } per UL 1741 Table 1
+    if (vrms <= 0) return { toEnclosure: 0, clearance: 0, creepage: 0 };
+    for (var i = 0; i < TBL_UL1741_1.length; i++) {
+      if (vrms <= TBL_UL1741_1[i][0]) {
+        return { toEnclosure: TBL_UL1741_1[i][1], clearance: TBL_UL1741_1[i][2], creepage: TBL_UL1741_1[i][3] };
+      }
+    }
+    var last = TBL_UL1741_1[TBL_UL1741_1.length - 1];
+    return { toEnclosure: last[1], clearance: last[2], creepage: last[3] };
   }
 
   /* ── Altitude correction factor (IEC 62109-1 Annex F Table F.1) ─── */
@@ -227,24 +281,25 @@
 
   function lookupClr(impulseV, pd, standard, interp, col) {
     // impulseV: in Volts peak (IEC) or Volts (UL: kVRMS*1000 from caller)
-    // pd: pollution degree 1-3
+    // pd: pollution degree 1-4
     // standard: 'iec' | 'ul'
     // col: voltage column index for IEC table (default 0 = impulse). Ignored for UL.
     if (impulseV <= 0) return 0;
 
     if (standard === 'ul') {
-      // UL table: [kVRMS, PD1, PD2, PD3] — convert impulseV to kVRMS for comparison
+      // UL table: [kVRMS, PD1, PD2, PD3, PD4] — convert impulseV to kVRMS for comparison
       var v = impulseV / 1000;
+      var pdIdx = Math.min(Math.max(pd, 1), 4); // clamp 1-4 → col index = pd (PD1→1, PD4→4)
       for (var i = 0; i < CLR_TBL_UL.length; i++) {
-        if (v == CLR_TBL_UL[i][0]) return CLR_TBL_UL[i][pd];
+        if (v == CLR_TBL_UL[i][0]) return CLR_TBL_UL[i][pdIdx];
         if (v < CLR_TBL_UL[i][0]) {
-          if (!interp || i == 0) return CLR_TBL_UL[i][pd];
+          if (!interp || i == 0) return CLR_TBL_UL[i][pdIdx];
           var x0 = CLR_TBL_UL[i-1][0], x1 = CLR_TBL_UL[i][0];
-          var y0 = CLR_TBL_UL[i-1][pd], y1 = CLR_TBL_UL[i][pd];
+          var y0 = CLR_TBL_UL[i-1][pdIdx], y1 = CLR_TBL_UL[i][pdIdx];
           return Math.round((y0 + (v - x0) / (x1 - x0) * (y1 - y0)) * 1000) / 1000;
         }
       }
-      return CLR_TBL_UL[CLR_TBL_UL.length - 1][pd];
+      return CLR_TBL_UL[CLR_TBL_UL.length - 1][pdIdx];
     }
 
     // IEC extended table: [impulse_V, tov_peak_V, wrk_peak_surr_V, PD1, PD2, PD3]
@@ -264,12 +319,36 @@
 
   function lookupCrp(rmsV, pd, mgGroup, standard, pcb) {
     // rmsV: RMS voltage in V
-    // pd: pollution degree 1-3
+    // pd: pollution degree 1-4 (UL), 1-3 (IEC)
     // mgGroup: 'i' | 'ii' | 'iiia' | 'iiib'
     // standard: 'iec' | 'ul'
-    // pcb: boolean — PCB trace (uses column 5)
+    // pcb: boolean — PCB trace (uses Table 9.2 for UL PD1/PD2)
     var v = Math.min(rmsV, 6300);
-    var tbl = standard === 'ul' ? CRP_UL : CRP_IEC;
+
+    if (standard === 'ul') {
+      /* ── UL 840 Creepage ─────────────────────── */
+      // CRP_UL columns: [Vrms, PD1, PD2_allGr, PD3_GrI, PD3_GrII, PD3_GrIIIa, PD3_GrIIIb, PD4_GrI, PD4_GrII, PD4_GrIIIa]
+      // PCB Table 9.2: [Vrms, PD1_allGr, PD2_GrI_II_IIIa] — only for PD1/PD2, NOT IIIb@PD2
+
+      if (pcb && pd <= 2) {
+        /* ── PCB Table 9.2 path ─────────────── */
+        // Group IIIb at PD2 → must fall back to Table 9.1 per footnote
+        if (pd === 2 && mgGroup === 'iiib') {
+          return lookupCrp_UL_Table9_1(v, pd, mgGroup);
+        }
+        var pcbCol = pd === 1 ? 1 : 2; // PD1→col 1, PD2→col 2
+        for (var i = 0; i < CRP_UL_PCB.length; i++) {
+          if (v <= CRP_UL_PCB[i][0]) return CRP_UL_PCB[i][pcbCol];
+        }
+        return CRP_UL_PCB[CRP_UL_PCB.length - 1][pcbCol];
+      }
+
+      // Non-PCB or PD3/PD4 → Table 9.1
+      return lookupCrp_UL_Table9_1(v, pd, mgGroup);
+    }
+
+    /* ── IEC path (unchanged) ─────────────── */
+    var tbl = CRP_IEC;
     var mi = MG_I[mgGroup] || 0;
     for (var i = 0; i < tbl.length; i++) {
       if (v <= tbl[i][0]) {
@@ -284,6 +363,40 @@
     if (pd === 1) return last[5];
     if (pd === 2) return last[1 + mi];
     return last[6 + mi];
+  }
+
+  /* ── UL Table 9.1 lookup helper (internal) ─── */
+  function lookupCrp_UL_Table9_1(v, pd, mgGroup) {
+    // CRP_UL: [Vrms, PD1, PD2_allGr, PD3_GrI, PD3_GrII, PD3_GrIIIa, PD3_GrIIIb, PD4_GrI, PD4_GrII, PD4_GrIIIa]
+    var mi = MG_I[mgGroup] || 0; // i=0, ii=1, iiia=2, iiib=3
+    for (var i = 0; i < CRP_UL.length; i++) {
+      if (v <= CRP_UL[i][0]) {
+        if (pd === 1) return CRP_UL[i][1];          // col 1 = PD1
+        if (pd === 2) return CRP_UL[i][2];          // col 2 = PD2 (all groups same)
+        if (pd === 3) {
+          var val = CRP_UL[i][3 + mi];              // cols 3-6 = Gr I/II/IIIa/IIIb
+          if (val === null) return null;            // IIIb >630V → N/A
+          return val;
+        }
+        if (pd === 4) {
+          var pd4ColMap = {i:7, ii:8, iiia:9, iiib:9}; // IIIb@PD4 not in table → use IIIa col
+          var c = pd4ColMap[mgGroup] !== undefined ? pd4ColMap[mgGroup] : 9;
+          return CRP_UL[i][c];
+        }
+      }
+    }
+    // Above max row — return last entry
+    var last = CRP_UL[CRP_UL.length - 1];
+    if (pd === 1) return last[1];
+    if (pd === 2) return last[2];
+    if (pd === 3) {
+      var val = last[3 + mi];
+      if (val === null) return null;
+      return val;
+    }
+    var pd4ColMap = {i:7, ii:8, iiia:9, iiib:9};
+    var c = pd4ColMap[mgGroup] !== undefined ? pd4ColMap[mgGroup] : 9;
+    return last[c];
   }
 
   /* ── UL 840 §9.6 — Recurring peak voltage check for PCB creepage distances ─── */
@@ -516,13 +629,40 @@
     var localPd = pd;
     if (coat === 1) localPd = Math.max(1, localPd - 1);
     var crpMult = (effIns === 'reinf') ? 2.0 : 1.0;
-    var reqCrp = lookupCrp(vrms, localPd, mgGroup, standard, pcb ? 1 : 0);
-    if (coat === 2) {
+
+    /* ── P1: Group IIIb @ PD3 >630V → N/A per UL 840 Table 9.1 footnote y ─── */
+    var grIIIbNa = false;
+    if (standard === 'ul' && mgGroup === 'iiib' && localPd === 3) {
+      // Notebook: "Group IIIb materials in PD3 environment, voltage exceeding 630V is not applicable"
+      if (vrms > 630) {
+        grIIIbNa = true;
+      }
+    }
+
+    var reqCrp;
+    if (grIIIbNa) {
+      // N/A — use most conservative PD3 value (Gr IIIa) as fallback with a warning flag
+      reqCrp = lookupCrp(vrms, localPd, 'iiia', standard, pcb ? 1 : 0);
+      reqCrp = Math.round(reqCrp * crpMult * 10) / 10;
+    } else if (coat === 2) {
       // IEC 60664-3 Table 1: Type 2 potting provides solid insulation equivalent,
       // Tables 13/14 do not apply. Use minimum spacing directly without crpMult.
       reqCrp = Math.round(0.15 * 10) / 10;
     } else {
-      reqCrp = Math.round(reqCrp * crpMult * 10) / 10;
+      var rawCrp = lookupCrp(vrms, localPd, mgGroup, standard, pcb ? 1 : 0);
+      if (rawCrp === null) {
+        // SafetyModel returned null (e.g. IIIb@PD3>630V edge case not caught above)
+        reqCrp = Math.round(reqClr * 10) / 10; // fallback to clearance value
+      } else {
+        reqCrp = Math.round(rawCrp * crpMult * 10) / 10;
+      }
+    }
+
+    /* ── P1: Cr ≥ Cl floor constraint (UL 840 §3.2.2 + Notebook rule) ─── */
+    // NOTE: This constraint does NOT apply when coating reduces creepage requirements,
+    // because coated assemblies use different measurement rules per IEC 60664-3 / UL 1741.
+    if (reqCrp < reqClr && coat !== 2) {
+      reqCrp = reqClr;
     }
 
     /* ── P2#4: UL 1741 §25.3 — Field wiring terminals floor (Table 24.1) ─── */
@@ -538,6 +678,22 @@
       if (reqCrp < t24.creepage) {
         reqCrp = Math.round(t24.creepage * 10) / 10;
         tbl241Note = tbl241Note ? 'both' : 'crp';
+      }
+    }
+
+    /* ── P2: UL 1741 Table 1 — Enclosure forced spacing (no UL 840 optimization) ─── */
+    // Per §25.3: nodes near metal enclosure walls MUST use Table 1 minimums.
+    // Enforced when node.enclosure is true. Overrides any UL 840 reduced values.
+    var tbl1Note = null;
+    if (standard === 'ul' && node.enclosure) {
+      var t1 = lookupUL1741_Table1(vrms);
+      if (reqClr < t1.toEnclosure) {
+        reqClr = Math.round(t1.toEnclosure * 10) / 10;
+        tbl1Note = 'clr';
+      }
+      if (reqCrp < t1.creepage) {
+        reqCrp = Math.round(t1.creepage * 10) / 10;
+        tbl1Note = tbl1Note ? 'both' : 'crp';
       }
     }
 
@@ -565,7 +721,9 @@
       reqCrp: reqCrp,
       recurringPeakOk: recurringPeakOk,   // UL §9.6 PCB check: null=NA, true=pass, false=exceeds
       tbl241Note: tbl241Note,            // UL §25.3 Table 24.1 floor: null/clr/crp/both
-      interpUsed: interpUsed              // true when linear interpolation was applied
+      tbl1Note: tbl1Note,                // UL 1741 Table 1 enclosure floor: null/clr/crp/both
+      interpUsed: interpUsed,              // true when linear interpolation was applied
+      grIIIbNa: grIIIbNa                  // Group IIIb @ PD3 >630V → N/A warning (fallback to IIIa)
     };
   }
 
@@ -623,6 +781,7 @@
     lookupCrp: lookupCrp,
     lookupRecurringPeakMax: lookupRecurringPeakMax, // UL 840 Table 9.3 PCB recurring peak check
     lookupTable24_1: lookupTable24_1,               // UL 1741 §25.3 field wiring terminal baselines
+    lookupUL1741_Table1: lookupUL1741_Table1,       // UL 1741 Table 1 enclosure forced spacing
     nextImpulseLevel: nextImpulseLevel,
     prevImpLevel: prevImpLevel,
     clrFromPeak: clrFromPeak,

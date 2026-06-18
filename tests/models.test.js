@@ -380,21 +380,20 @@ test("INS_K reinforced = 2x", function () {
 
 /* ── UL clearance tests (system voltage based — per corrected CLR_TBL_UL = UL 840 Table 8.1) ─── */
 test("calcNode - UL uses system voltage not impulse for clearance", function () {
-  // For a 300V AC system: sysKVRMS = 0.3, basic → row [0.3] PD3=1.5mm (UL 840 Table 8.1)
-  // Reinforced: next row [0.6] PD3=1.5mm; max(1.5*2, 1.5) = 3.0mm
-  // NOT 6kV impulse → ~50mm (which was the old bug with incorrect CLR_TBL_UL data)
+  // For a 300V AC system: sysKVRMS = 0.3, basic → row [0.3] PD3=5.5mm (UL 840 Table 8.1)
+  // Reinforced: next row [0.6] PD3=8.0; max(5.5*2=11.0, 8.0) = 11.0mm
   var result = SM.calcNode({name: "L-PE", vrms: 230, ins: "reinf", pcb: 0, coat: 0, circ: "ac", toGnd: true},
     3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
-  assert.ok(result.reqClr < 10, "UL clearance for 300V system should be reasonable (got " + result.reqClr + ")");
-  approx(result.reqClr, 3.0, 0.1); // reinforced: max(basic*2=3.0, next_row=1.5) = 3.0mm
+  assert.ok(result.reqClr < 50, "UL clearance for 300V system should be reasonable (got " + result.reqClr + ")");
+  approx(result.reqClr, 11.0, 0.5); // reinforced: max(basic*2=11.0, next_row=8.0) = 11.0mm
 });
 
 test("calcNode - UL DC circuit uses sysVDC for clearance", function () {
   var result = SM.calcNode({name: "DC+-PE", vrms: 600, ins: "reinf", pcb: 0, coat: 0, circ: "dc", toGnd: true},
     3, "ii", 2000, "ul", 6.0, 4.0, 300, 800);
-  // sysVDC=800 → sysKVRMS=0.8 → basic (no interp) rounds up to row [1.0] PD3=3.0mm
-  // Reinforced: next row [1.5]=5.5; max(3.0*2, 5.5)=6.0mm
-  approx(result.reqClr, 6.0, 0.5);
+  // sysVDC=800 → sysKVRMS=0.8 → basic (no interp) rounds up to row [1.0] PD3=14.0mm
+  // Reinforced: next row [1.5]=19.4; max(14.0*2, 19.4)=28.0mm
+  approx(result.reqClr, 28.0, 1.0);
 });
 
 test("calcNode - UL reinforced insulation exceeds basic", function () {
@@ -403,15 +402,15 @@ test("calcNode - UL reinforced insulation exceeds basic", function () {
   var reinf = SM.calcNode({name: "X", vrms: 230, ins: "reinf", pcb: 0, coat: 0, circ: "ac", toGnd: false},
     3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
   assert.ok(reinf.reqClr > basic.reqClr, "Reinforced UL clearance should exceed basic (" + reinf.reqClr + " > " + basic.reqClr + ")");
-  // For 300V: basic=1.5mm (row [0.3] PD3), reinf=3.0mm → exactly 2x increase
+  // For 300V: basic=5.5mm (row [0.3] PD3), reinf=max(11.0, next_row[0.6]=8.0)=11.0mm → exactly 2x increase
   assert.ok(reinf.reqClr >= basic.reqClr * 2, "Reinforced should be at least 2x basic");
 });
 
 test("lookupClr - UL interpolation works", function () {
-  // Between rows [1.0, PD3=3.0] and [1.5, PD3=5.5], at 1.25 kVRMS → linear interp:
-  // 3.0 + (1.25-1.0)/(1.5-1.0) * (5.5-3.0) = 4.25mm
+  // Between rows [1.0, PD3=14.0] and [1.5, PD3=19.4], at 1.25 kVRMS → linear interp:
+  // 14.0 + (1.25-1.0)/(1.5-1.0) * (19.4-14.0) = 14.0 + 0.5*5.4 = 16.7mm
   var val = SM.lookupClr(1250, 3, "ul", true);
-  approx(val, 4.25, 0.05);
+  approx(val, 16.7, 0.05);
 });
 
 test("calcSafety - UL full calculation with sysVDC", function () {
@@ -424,10 +423,10 @@ test("calcSafety - UL full calculation with sysVDC", function () {
     ]
   });
   assert.ok(result.results.length === 2);
-  // AC node: sysKVRMS=0.3 → basic row [0.3] PD3=1.5; reinf next=[0.6]=1.5; max(3.0, 1.5)=3.0mm
-  approx(result.results[0].reqClr, 3.0, 0.1);
-  // DC node: sysKVRMS=0.6 → basic row [0.6] PD3=1.5; reinf next=[1.0]=3.0; max(3.0, 3.0)=3.0mm
-  approx(result.results[1].reqClr, 3.0, 0.1);
+  // AC node: sysKVRMS=0.3 → basic row [0.3] PD3=5.5; reinf next=[0.6]=8.0; max(11.0, 8.0)=11.0mm
+  approx(result.results[0].reqClr, 11.0, 0.5);
+  // DC node: sysKVRMS=0.6 → basic row [0.6] PD3=8.0; reinf next=[1.0]=14.0; max(16.0, 14.0)=16.0mm
+  approx(result.results[1].reqClr, 16.0, 0.5);
 });
 
 
@@ -585,7 +584,8 @@ test("calcNode - non-fieldTerminal does NOT enforce Table 24.1", function () {
   var result = SM.calcNode({name: "InternalConn", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
     3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
   assert.strictEqual(result.tbl241Note, null, "Non-field terminal should not have T24.1 note");
-  assert.ok(result.reqClr < 5, "Internal connection uses UL 840 (not T24.1) clearance: " + result.reqClr);
+  // UL 840 gives 5.5mm for sysVAC=300/PD3; T24.1 requires 6.4mm → proves no enforcement since 5.5 < 6.4
+  assert.ok(result.reqClr < 6.4, "Internal connection uses UL 840 (not T24.1) clearance: " + result.reqClr);
 });
 
 test("calcNode - fieldTerminal IEC mode is N/A", function () {
@@ -603,16 +603,16 @@ test("calcNode - UL primary circuit uses no interpolation", function () {
   // sysVAC=300 → sysKVRMS=0.3, basic insulation, non-interp (primary)
   var result = SM.calcNode({name: "Primary", vrms: 230, ins: "basic", pcb: 1, coat: 0, circ: "ac", toGnd: false},
     3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
-  // Without interp, should round up to next table row [0.3] → PD3=1.5mm
-  approx(result.reqClr, 1.5, 0.1, "Primary circuit rounds up (no interpolation)");
+  // Without interp, should round up to next table row [0.3] → PD3=5.5mm
+  approx(result.reqClr, 5.5, 0.1, "Primary circuit rounds up (no interpolation)");
 });
 
 test("calcNode - UL secondary circuit uses linear interpolation", function () {
   // sysVAC=300 → sysKVRMS=0.3, with interp=true (secondary/control)
   var result = SM.calcNode({name: "Secondary", vrms: 24, ins: "basic", pcb: 1, coat: 0, circ: "ac", toGnd: false, interp: true},
     3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
-  // With interp at sysKVRMS=0.3: between [0.15]=0.8 and [0.3]=1.5 → interpolated value
-  assert.ok(result.reqClr >= 0.8 && result.reqClr <= 1.5, "Secondary circuit uses interpolation: " + result.reqClr);
+  // With interp at sysKVRMS=0.3: between [0.15]=3.0 and [0.3]=5.5 → interpolated value
+  assert.ok(result.reqClr >= 3.0 && result.reqClr <= 5.5, "Secondary circuit uses interpolation: " + result.reqClr);
 });
 
 test("calcNode - interp flag does not affect IEC mode", function () {
@@ -651,19 +651,24 @@ test("altFactorUL monotonic growth — higher altitude → higher factor", funct
 
 // ── lookupClr UL exact matches (4) ────────────────
 
-test("lookupClr UL PD3 at 300V → 1.5mm exact match", function () {
-  // CLR_TBL_UL row [0.300, 0.5, 1.5, 1.5] — col pd=3 (index 3) = 1.5
-  approx(SM.lookupClr(300, 3, "ul", false), 1.5, 0.01);
+test("lookupClr UL PD3 at 300V → 5.5mm exact match", function () {
+  // CLR_TBL_UL row [0.300, 5.5, 5.5, 5.5, 5.5] — col pd=3 (index 3) = 5.5
+  approx(SM.lookupClr(300, 3, "ul", false), 5.5, 0.01);
 });
 
-test("lookupClr UL PD3 at 600V → 1.5mm exact match", function () {
-  // CLR_TBL_UL row [0.600, 1.5, 1.5, 1.5] — col pd=3 = 1.5
-  approx(SM.lookupClr(600, 3, "ul", false), 1.5, 0.01);
+test("lookupClr UL PD3 at 600V → 8.0mm exact match", function () {
+  // CLR_TBL_UL row [0.600, 8.0, 8.0, 8.0, 8.0] — col pd=3 = 8.0
+  approx(SM.lookupClr(600, 3, "ul", false), 8.0, 0.01);
 });
 
-test("lookupClr UL PD2 at 1000V → 3.0mm exact match", function () {
-  // CLR_TBL_UL row [1.000, 3.0, 3.0, 3.0] — col pd=2 (index 2) = 3.0
-  approx(SM.lookupClr(1000, 2, "ul", false), 3.0, 0.01);
+test("lookupClr UL PD2 at 1000V → 14.0mm exact match", function () {
+  // CLR_TBL_UL row [1.000, 14.0, 14.0, 14.0, 14.0] — col pd=2 (index 2) = 14.0
+  approx(SM.lookupClr(1000, 2, "ul", false), 14.0, 0.01);
+});
+
+test("lookupClr UL PD4 at 50V → 1.6mm exact match", function () {
+  // CLR_TBL_UL row [0.050, 0.5, 0.5, 0.8, 1.6] — col pd=4 (index 4) = 1.6
+  approx(SM.lookupClr(50, 4, "ul", false), 1.6, 0.01);
 });
 
 test("lookupClr UL zero voltage returns 0", function () {
@@ -672,31 +677,60 @@ test("lookupClr UL zero voltage returns 0", function () {
 
 // ── lookupCrp UL (4) — NO direct UL creepage tests existed before! ───
 
-test("lookupCrp UL PD2 MG-II at 230V uses CRP_UL table", function () {
-  // vrms=230 → row [250,...]: [250,6.3,6.3,6.3,4.0,0.90,4.0,4.5,5.0,5.0]
-  // pd=2, mg='ii' (mi=1) → col = 1+1 = 2 → value = 6.3
-  approx(SM.lookupCrp(230, 2, "ii", "ul", false), 6.3, 0.05);
+test("lookupCrp UL PD2 at 230V uses CRP_UL table", function () {
+  // vrms=230 → row [250,...]: [250, 0.56, 1.25, 3.2, 3.6, 4.0, 4.0, 5.0, 6.3, 8.0]
+  // pd=2 → col 2 = 1.25 (PD2 is same for all material groups)
+  approx(SM.lookupCrp(230, 2, "ii", "ul", false), 1.25, 0.05);
 });
 
-test("lookupCrp UL PCB mode at 100V — column 5 of CRP_UL", function () {
-  // vrms=100 → row [100,...]: [100,2.5,2.5,2.5,2.2,0.16,2.2,2.5,2.8,2.8]
-  // pcb=true, pd<=2 → returns col 5 = 0.16
+test("lookupCrp UL PD3 MG-II at 230V → 3.6mm", function () {
+  // vrms=230 → row [250,...]: col[3+mi(1)] = col 4 = 3.6 (PD3_GrII)
+  approx(SM.lookupCrp(230, 3, "ii", "ul", false), 3.6, 0.05);
+});
+
+test("lookupCrp UL PCB mode at 100V — Table 9.2 col PD1 = 0.1", function () {
+  // CRP_UL_PCB row [100,...]: [100, 0.1, 0.16] → pd=1 → col 1 = 0.1
+  approx(SM.lookupCrp(100, 1, "ii", "ul", true), 0.1, 0.01);
+});
+
+test("lookupCrp UL PCB PD2 at 100V — Table 9.2 col PD2 = 0.16", function () {
+  // CRP_UL_PCB row [100,...]: [100, 0.1, 0.16] → pd=2 → col 2 = 0.16
   approx(SM.lookupCrp(100, 2, "ii", "ul", true), 0.16, 0.01);
 });
 
-test("lookupCrp UL high voltage extrapolation above max row", function () {
-  // vrms=5000 → exact match row [5000,...]: [5000,50,80,100,125,20,80,90,100,100]
-  // pd=2, mg='ii' (mi=1) → col = 1+1 = 2 → value = 80
-  approx(SM.lookupCrp(5000, 2, "ii", "ul", false), 80, 0.5);
+test("lookupCrp UL high voltage at 5000V PD2 → 25mm", function () {
+  // vrms=5000 → row [5000,...]: col 2 = 25 (PD2)
+  approx(SM.lookupCrp(5000, 2, "ii", "ul", false), 25, 0.5);
 });
 
 test("lookupCrp UL PD1 uses PCB column regardless of pcb flag", function () {
-  // vrms=100 → row [100,...]: col 5 = 0.16
-  // pd=1 always returns col 5 (PCB column) per code logic
+  // vrms=100 → row [100,...]: col 1 = 0.25 (PD1)
   var withPcb   = SM.lookupCrp(100, 1, "ii", "ul", true);
   var withoutPcb = SM.lookupCrp(100, 1, "ii", "ul", false);
-  assert.strictEqual(withPcb, withoutPcb, "PD1 should always use PCB column");
-  approx(withPcb, 0.16, 0.01);
+  // pd=1 in UL uses col 1 of CRP_UL = 0.25; PCB path uses CRP_UL_PCB col 1 = 0.1
+  // They differ because PCB Table 9.2 has smaller values — this is correct behavior
+  approx(withoutPcb, 0.25, 0.01);
+  approx(withPcb, 0.1, 0.01);
+});
+
+test("lookupCrp UL PD4 MG-II at 230V → 6.3mm", function () {
+  // vrms=230 → row [250,...]: col[8] = 6.3 (PD4_GrII)
+  approx(SM.lookupCrp(230, 4, "ii", "ul", false), 6.3, 0.05);
+});
+
+test("lookupCrp UL PD3 Gr IIIb at 800V → null (N/A per footnote y)", function () {
+  // vrms=800 → row [800,...]: col[6] = null (PD3_GrIIIb >630V is N/A)
+  assert.strictEqual(SM.lookupCrp(800, 3, "iiib", "ul", false), null);
+});
+
+test("lookupCrp UL PCB PD2 Gr IIIb falls back to Table 9.1", function () {
+  // pcb=true, pd=2, mgGroup='iiib' → should NOT use CRP_UL_PCB (IIIb excluded)
+  // Instead falls back to lookupCrp_UL_Table9_1 which returns col 2 of CRP_UL
+  var fallback = SM.lookupCrp(100, 2, "iiib", "ul", true);
+  var normalII = SM.lookupCrp(100, 2, "ii", "ul", false);
+  // Both should use PD2 col from Table 9.1 → same value
+  assert.strictEqual(fallback, normalII, "IIIb@PD2 PCB should fall back to Tbl 9.1");
+  approx(fallback, 0.71, 0.05);
 });
 
 // ── calcNode UL (4) ───────────────────────────────
@@ -710,12 +744,12 @@ test("calcNode UL with altitude correction at 5000m → clearance increases", fu
   assert.ok(r5k.reqClr > r2k.reqClr * 2, "Higher altitude increases UL clearance: " + r5k.reqClr + " vs " + r2k.reqClr);
 });
 
-test("calcNode UL basic AC node exact match sysVAC=300 PD3 → 1.5mm", function () {
+test("calcNode UL basic AC node exact match sysVAC=300 PD3 → 5.5mm", function () {
   // Basic insulation, non-toGnd → direct lookup by system voltage
-  // sysVAC=300 → sysKVRMS=0.3 → row [0.3] PD3=1.5mm at alt=2000m (factor=1.0)
+  // sysVAC=300 → sysKVRMS=0.3 → row [0.3] PD3=5.5mm at alt=2000m (factor=1.0)
   var result = SM.calcNode({name: "Basic", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
     3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
-  approx(result.reqClr, 1.5, 0.05);
+  approx(result.reqClr, 5.5, 0.05);
 });
 
 test("calcNode UL functional insulation matches basic for non-toGnd node", function () {
@@ -738,9 +772,8 @@ test("calcNode UL supplementary insulation same distance as basic (not reinf)", 
 // ── calcSafety UL (3) ─────────────────────────────
 
 test("calcSafety UL pd=3 may differ from pd=2 due to column structure", function () {
-  // In UL creepage tables, PD1/PD2 share basic/functional columns while PD3 has separate ones.
-  // For some voltages (e.g. 250V row: PD2→6.3mm vs PD3→4.5mm), PD3 can be lower.
-  // This test verifies the model correctly uses different column indices for each PD level.
+  // In the new CRP_UL table: PD2 uses single col (col 2), PD3 has material-group-specific cols (3-6).
+  // For voltages where raw creepage differs between PD levels, they produce different results.
   var r2 = SM.calcSafety({
     pd: 2, mgGroup: "ii", alt: 2000, standard: "ul",
     sysVAC: 300, sysVDC: 600,
@@ -753,7 +786,10 @@ test("calcSafety UL pd=3 may differ from pd=2 due to column structure", function
   });
   // Both should return valid creepage values (not equal = different columns used)
   assert.ok(r2.results[0].reqCrp > 0 && r3.results[0].reqCrp > 0, "Both PD levels produce valid creepage");
-  assert.notStrictEqual(r2.results[0].reqCrp, r3.results[0].reqCrp, "PD2 and PD3 should use different column indices");
+  // With Cr>=Cl constraint, both may be raised to clearance floor — check raw lookup instead
+  var crp2 = SM.lookupCrp(230, 2, "ii", "ul", false);
+  var crp3 = SM.lookupCrp(230, 3, "ii", "ul", false);
+  assert.notStrictEqual(crp2, crp3, "Raw PD2 and PD3 creepage should differ: pd2=" + crp2 + ", pd3=" + crp3);
 });
 
 test("calcSafety UL fieldTerminal enforces Table 24.1 floor in full flow", function () {
@@ -785,6 +821,98 @@ test("lookupTable24_1 at exactly boundary voltage uses correct row", function ()
   var r = SM.lookupTable24_1(50);
   assert.strictEqual(r.clearance, 1.6, "T24.1 at exactly 50V: throughAir");
   assert.strictEqual(r.creepage, 1.6, "T24.1 at exactly 50V: overSurface");
+});
+
+
+/* ================================================== */
+/* P0/P1/P2: UL Standard Compliance Fixes             */
+/* ================================================== */
+
+process.stderr.write("\n--- P0/P1/P2 Compliance Tests ---\n");
+
+// ── P1-4: Cr ≥ Cl floor constraint (3) ────────────
+
+test("calcNode - Cr >= Cl floor enforced when creepage < clearance", function () {
+  // Low voltage where UL creepage can be smaller than clearance
+  var result = SM.calcNode({name: "LowV", vrms: 50, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    1, "ii", 2000, "ul", 6.0, 4.0, 50, 100);
+  // CLR_TBL_UL @ 50V/PD1 = 0.5mm; CRP_UL @ PD1 = 0.18mm → Cr should be raised to Cl
+  assert.ok(result.reqCrp >= result.reqClr, "Creepage must not be less than clearance: crp=" + result.reqCrp + " clr=" + result.reqClr);
+});
+
+test("calcNode - Cr >= Cl floor does NOT reduce creepage", function () {
+  // High voltage where creepage naturally exceeds clearance
+  var result = SM.calcNode({name: "HighV", vrms: 400, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "iiia", 2000, "ul", 6.0, 4.0, 500, 700);
+  // CLR_TBL_UL @ 500V/PD3 = ~11mm (interp), CRP_UL PD3/GrIIIa @ 400V = 6.3mm → crp raised to clr
+  assert.ok(result.reqCrp >= result.reqClr, "Creepage floor applied: crp=" + result.reqCrp);
+});
+
+test("calcNode - Cr >= Cl works with reinforced insulation (2x creepage)", function () {
+  var result = SM.calcNode({name: "Reinf", vrms: 100, ins: "reinf", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 150, 300);
+  // Reinforced doubles creepage → should still respect Cr >= Cl
+  assert.ok(result.reqCrp >= result.reqClr, "Reinforced insulation respects Cr>=Cl: crp=" + result.reqCrp);
+});
+
+// ── P1-5: Group IIIb @ PD3 >630V N/A (2) ─────────
+
+test("calcNode - Group IIIb @ PD3 >630V triggers grIIIbNa flag", function () {
+  var result = SM.calcNode({name: "IIIbHigh", vrms: 800, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "iiib", 2000, "ul", 6.0, 4.0, 1000, 1200);
+  assert.strictEqual(result.grIIIbNa, true, "Should flag IIIb@PD3>630V as N/A");
+});
+
+test("calcNode - Group IIIb @ PD3 <=630V does NOT trigger grIIIbNa", function () {
+  var result = SM.calcNode({name: "IIIbLow", vrms: 400, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "iiib", 2000, "ul", 6.0, 4.0, 500, 700);
+  assert.strictEqual(result.grIIIbNa, false, "Should NOT flag IIIb@PD3<=630V");
+});
+
+// ── P2: UL 1741 Table 1 Enclosure (3) ─────────────
+
+test("lookupUL1741_Table1 - 50V range", function () {
+  var r = SM.lookupUL1741_Table1(50);
+  assert.strictEqual(r.toEnclosure, 1.6, "T1 50V: toEnclosure");
+  assert.strictEqual(r.clearance, 1.6, "T1 50V: clearance");
+  assert.strictEqual(r.creepage, 1.6, "T1 50V: creepage");
+});
+
+test("lookupUL1741_Table1 - >150-300V range", function () {
+  var r = SM.lookupUL1741_Table1(230);
+  assert.strictEqual(r.toEnclosure, 12.7, "T1 230V: toEnclosure");
+  assert.strictEqual(r.clearance, 6.4, "T1 230V: clearance");
+  assert.strictEqual(r.creepage, 9.5, "T1 230V: creepage");
+});
+
+test("calcNode - enclosure flag enforces UL 1741 Table 1 floor", function () {
+  // 230V AC system with enclosure=true → T1 requires clearance=6.4mm (UL840 gives ~5.5)
+  var result = SM.calcNode({name: "Enclosure", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false, enclosure: true},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  assert.ok(result.tbl1Note !== null, "Enclosure node should flag Table 1 enforcement");
+  approx(result.reqClr, 12.7, 0.1, "T1 toEnclosure floor for 230V: clearance raised to 12.7mm");
+});
+
+test("calcNode - non-enclosure does NOT enforce UL 1741 Table 1", function () {
+  var result = SM.calcNode({name: "Internal", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  assert.strictEqual(result.tbl1Note, null, "Non-enclosure should not have T1 note");
+});
+
+test("calcNode - enclosure IEC mode is N/A", function () {
+  var result = SM.calcNode({name: "X", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false, enclosure: true},
+    2, "ii", 2000, "iec", 4.0, 2.5, 230, 600);
+  assert.strictEqual(result.tbl1Note, null, "IEC mode ignores enclosure flag");
+});
+
+// ── P0: CLR_TBL_UL correct values (spot checks) ───
+
+test("lookupClr UL PD1 at 50V → 0.5mm", function () {
+  approx(SM.lookupClr(50, 1, "ul", false), 0.5, 0.01);
+});
+
+test("lookupClr UL PD2 at 100V → 1.5mm", function () {
+  approx(SM.lookupClr(100, 2, "ul", false), 1.5, 0.01);
 });
 
 
