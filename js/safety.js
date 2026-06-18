@@ -91,6 +91,14 @@
     var alt = +document.getElementById("sAlt").value||2000;
     var std = document.getElementById("sStd").value||"iec";
 
+    /* ── P1-4: Input validation helpers ─── */
+    var warns=[];
+    function w(msg){warns.push(msg)}
+    function cl(v,lo,hi,name){if(v<lo||v>hi){w(name+" "+v+" → 修正为"+Math.max(lo,Math.min(hi,v)));return Math.max(lo,Math.min(hi,v))}return v}
+
+    // P1-4: Validate altitude
+    alt = cl(alt,0,20000,"海拔");
+
     /* ── UL mode: PD and material group are fixed by standard ─── */
     if(std === 'ul'){
       pd = 3; // UL 1741 §25.4a: default PD3
@@ -106,6 +114,10 @@
     var sysVDC_el = std === 'ul' ? document.getElementById('sSysV_DC_ul') : document.getElementById('sSysV_DC');
     var sysVAC = +(sysVAC_el?sysVAC_el.value:0) || 300;
     var sysVDC = +(sysVDC_el?sysVDC_el.value:0) || 600;
+
+    // P1-4: Validate system voltages
+    sysVAC = cl(sysVAC,0,15000,"AC系统电压");
+    sysVDC = cl(sysVDC,0,15000,"DC系统电压");
 
     /* ── Impulse withstand voltage per IEC 62109-1 Table 12 ──── */
     var IMPULSE_TBL = [
@@ -191,9 +203,12 @@
     // Build nodes array for model
     var nodeArr=[];
     nodes.forEach(function(seg,i){
+      var vrms = +seg.querySelector(".svrms").value || 0;
+      // P1-4: Validate node vrms
+      vrms = cl(vrms,0,15000,"节点"+(i+1)+"电压");
       nodeArr.push({
         name: seg.querySelector(".sname").value || "节点"+(i+1),
-        vrms: +seg.querySelector(".svrms").value || 0,
+        vrms: vrms,
         ins:  seg.querySelector(".sins").value || "basic",
         pcb:  +seg.querySelector(".spcb").value || 0,
         coat: +seg.querySelector(".scoat").value || 0,
@@ -213,8 +228,10 @@
         sysVAC:sysVAC, sysVDC:sysVDC, nodes:nodeArr
       });
     } catch(e) {
+      // P1-7: Error boundary — show error in #safeWarn
       console.error("SafetyModel.calcSafety error:", e);
-      document.getElementById("sMa").innerHTML = '<p style="color:#ef4444">计算错误: '+e.message+'</p>';
+      var swn=document.getElementById("safeWarn");
+      if(swn){swn.textContent="⚠ 计算错误: "+e.message;swn.style.display="block"}
       return;
     }
     if(!result){
@@ -222,6 +239,9 @@
       document.getElementById("sMa").innerHTML="<p>请检查节点配置。</p>";
       return;
     }
+
+    // P1-4: Show warnings if any clamping occurred
+    (function(){var el=document.getElementById("safeWarn");if(warns.length){el.textContent="⚠ "+warns.join("; ");el.style.display="block"}else{el.style.display="none"}})();
 
     // Render results to DOM
     var tb="";

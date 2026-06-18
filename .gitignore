@@ -10,6 +10,7 @@ node_modules/
 
 # Large reference files (keep in repo but don't track changes accidentally)
 IEC_62109-1_2010.pdf
+standards/*.pdf
 
 # Backup versions - not needed for production
 v2/

@@ -27,9 +27,18 @@ function approx(a, b, delta, msg) {
 }
 
 /* --- Load models into a fake global (browser -> node) -- */
+function loadModel(filePath, fakeGlobal) {
+  var src = fs.readFileSync(filePath, "utf-8");
+  // Replace })(window) with })(__model__) to inject our fake global
+  src = src.replace(/\}\)\(window\)/, "})(__model__)");
+  // Use Function constructor instead of eval() — safer and more explicit
+  var fn = new Function("__model__", src);
+  fn(fakeGlobal);
+}
+
 var G = {};
-eval(fs.readFileSync(path.join(__dirname, "../js/models/capacitor-model.js"), "utf-8").replace("})(window)", "})(G)"));
-eval(fs.readFileSync(path.join(__dirname, "../js/models/safety-model.js"), "utf-8").replace("})(window)", "})(G)"));
+loadModel(path.join(__dirname, "../js/models/capacitor-model.js"), G);
+loadModel(path.join(__dirname, "../js/models/safety-model.js"), G);
 
 var CM = G.CapacitorModel;
 var SM = G.SafetyModel;
@@ -612,6 +621,170 @@ test("calcNode - interp flag does not affect IEC mode", function () {
   var rYes = SM.calcNode({name: "A", vrms: 230, ins: "basic", pcb: 1, coat: 0, circ: "ac", toGnd: false, interp: true},
     2, "ii", 2000, "iec", 4.0, 2.5, 230, 600);
   assert.strictEqual(rNo.reqClr, rYes.reqClr, "IEC mode ignores interp flag");
+});
+
+
+/* ================================================== */
+/* P1-5: Extended UL Test Coverage                    */
+/* ================================================== */
+
+process.stderr.write("\n--- UL Extended Tests ---\n");
+
+// ── altFactorUL (3) ───────────────────────────────
+
+test("altFactorUL at 3000m ≈ 1.35", function () {
+  // e^((3000-2000)/3300) = e^(1/3.3) ≈ e^0.303 ≈ 1.354 → rounds to 1.35
+  approx(SM.altFactorUL(3000), 1.35, 0.01);
+});
+
+test("altFactorUL above 20000m extrapolates correctly", function () {
+  // No cap in UL exponential model: e^((25000-2000)/3300) ≈ e^6.97 ≈ 1064
+  var k = SM.altFactorUL(25000);
+  assert.ok(k > 1000, "Should extrapolate to ~1064 at 25000m, got: " + k);
+});
+
+test("altFactorUL monotonic growth — higher altitude → higher factor", function () {
+  var k3 = SM.altFactorUL(3000); // ≈ 1.35
+  var k5 = SM.altFactorUL(5000); // ≈ 2.48
+  assert.ok(k5 > k3, "Altitude factor should increase with altitude");
+});
+
+// ── lookupClr UL exact matches (4) ────────────────
+
+test("lookupClr UL PD3 at 300V → 1.5mm exact match", function () {
+  // CLR_TBL_UL row [0.300, 0.5, 1.5, 1.5] — col pd=3 (index 3) = 1.5
+  approx(SM.lookupClr(300, 3, "ul", false), 1.5, 0.01);
+});
+
+test("lookupClr UL PD3 at 600V → 1.5mm exact match", function () {
+  // CLR_TBL_UL row [0.600, 1.5, 1.5, 1.5] — col pd=3 = 1.5
+  approx(SM.lookupClr(600, 3, "ul", false), 1.5, 0.01);
+});
+
+test("lookupClr UL PD2 at 1000V → 3.0mm exact match", function () {
+  // CLR_TBL_UL row [1.000, 3.0, 3.0, 3.0] — col pd=2 (index 2) = 3.0
+  approx(SM.lookupClr(1000, 2, "ul", false), 3.0, 0.01);
+});
+
+test("lookupClr UL zero voltage returns 0", function () {
+  assert.strictEqual(SM.lookupClr(0, 3, "ul", false), 0);
+});
+
+// ── lookupCrp UL (4) — NO direct UL creepage tests existed before! ───
+
+test("lookupCrp UL PD2 MG-II at 230V uses CRP_UL table", function () {
+  // vrms=230 → row [250,...]: [250,6.3,6.3,6.3,4.0,0.90,4.0,4.5,5.0,5.0]
+  // pd=2, mg='ii' (mi=1) → col = 1+1 = 2 → value = 6.3
+  approx(SM.lookupCrp(230, 2, "ii", "ul", false), 6.3, 0.05);
+});
+
+test("lookupCrp UL PCB mode at 100V — column 5 of CRP_UL", function () {
+  // vrms=100 → row [100,...]: [100,2.5,2.5,2.5,2.2,0.16,2.2,2.5,2.8,2.8]
+  // pcb=true, pd<=2 → returns col 5 = 0.16
+  approx(SM.lookupCrp(100, 2, "ii", "ul", true), 0.16, 0.01);
+});
+
+test("lookupCrp UL high voltage extrapolation above max row", function () {
+  // vrms=5000 → exact match row [5000,...]: [5000,50,80,100,125,20,80,90,100,100]
+  // pd=2, mg='ii' (mi=1) → col = 1+1 = 2 → value = 80
+  approx(SM.lookupCrp(5000, 2, "ii", "ul", false), 80, 0.5);
+});
+
+test("lookupCrp UL PD1 uses PCB column regardless of pcb flag", function () {
+  // vrms=100 → row [100,...]: col 5 = 0.16
+  // pd=1 always returns col 5 (PCB column) per code logic
+  var withPcb   = SM.lookupCrp(100, 1, "ii", "ul", true);
+  var withoutPcb = SM.lookupCrp(100, 1, "ii", "ul", false);
+  assert.strictEqual(withPcb, withoutPcb, "PD1 should always use PCB column");
+  approx(withPcb, 0.16, 0.01);
+});
+
+// ── calcNode UL (4) ───────────────────────────────
+
+test("calcNode UL with altitude correction at 5000m → clearance increases", function () {
+  var r2k = SM.calcNode({name: "A", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  var r5k = SM.calcNode({name: "A", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 5000, "ul", 6.0, 4.0, 300, 600);
+  // altFactorUL(5000) ≈ 2.48 → clearance should be ~2.48x higher
+  assert.ok(r5k.reqClr > r2k.reqClr * 2, "Higher altitude increases UL clearance: " + r5k.reqClr + " vs " + r2k.reqClr);
+});
+
+test("calcNode UL basic AC node exact match sysVAC=300 PD3 → 1.5mm", function () {
+  // Basic insulation, non-toGnd → direct lookup by system voltage
+  // sysVAC=300 → sysKVRMS=0.3 → row [0.3] PD3=1.5mm at alt=2000m (factor=1.0)
+  var result = SM.calcNode({name: "Basic", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  approx(result.reqClr, 1.5, 0.05);
+});
+
+test("calcNode UL functional insulation matches basic for non-toGnd node", function () {
+  // Both func and basic go through the same direct lookup path in UL mode (neither is 'reinf')
+  var basic = SM.calcNode({name: "A", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  var func  = SM.calcNode({name: "A", vrms: 230, ins: "func", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  assert.strictEqual(basic.reqClr, func.reqClr, "Functional and basic UL clearance should be identical");
+});
+
+test("calcNode UL supplementary insulation same distance as basic (not reinf)", function () {
+  var basic = SM.calcNode({name: "A", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  var supp  = SM.calcNode({name: "A", vrms: 230, ins: "supp", pcb: 0, coat: 0, circ: "ac", toGnd: false},
+    3, "ii", 2000, "ul", 6.0, 4.0, 300, 600);
+  assert.strictEqual(basic.reqClr, supp.reqClr, "Supplementary UL clearance should equal basic");
+});
+
+// ── calcSafety UL (3) ─────────────────────────────
+
+test("calcSafety UL pd=3 may differ from pd=2 due to column structure", function () {
+  // In UL creepage tables, PD1/PD2 share basic/functional columns while PD3 has separate ones.
+  // For some voltages (e.g. 250V row: PD2→6.3mm vs PD3→4.5mm), PD3 can be lower.
+  // This test verifies the model correctly uses different column indices for each PD level.
+  var r2 = SM.calcSafety({
+    pd: 2, mgGroup: "ii", alt: 2000, standard: "ul",
+    sysVAC: 300, sysVDC: 600,
+    nodes: [{name: "X", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac"}]
+  });
+  var r3 = SM.calcSafety({
+    pd: 3, mgGroup: "ii", alt: 2000, standard: "ul",
+    sysVAC: 300, sysVDC: 600,
+    nodes: [{name: "X", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac"}]
+  });
+  // Both should return valid creepage values (not equal = different columns used)
+  assert.ok(r2.results[0].reqCrp > 0 && r3.results[0].reqCrp > 0, "Both PD levels produce valid creepage");
+  assert.notStrictEqual(r2.results[0].reqCrp, r3.results[0].reqCrp, "PD2 and PD3 should use different column indices");
+});
+
+test("calcSafety UL fieldTerminal enforces Table 24.1 floor in full flow", function () {
+  var result = SM.calcSafety({
+    pd: 3, mgGroup: "ii", alt: 2000, standard: "ul",
+    sysVAC: 300, sysVDC: 600,
+    nodes: [{name: "FieldTerm", vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac", fieldTerminal: true}]
+  });
+  // T24.1 for >150-300V: clearance=6.4mm, creepage=9.5mm
+  assert.strictEqual(result.results[0].tbl241Note, 'both', "Field terminal should flag Table 24.1 enforcement");
+  approx(result.results[0].reqClr, 6.4, 0.1);
+  approx(result.results[0].reqCrp, 9.5, 0.1);
+});
+
+test("calcSafety UL coating=2 cancels creepage (same as IEC)", function () {
+  var result = SM.calcSafety({
+    pd: 3, mgGroup: "ii", alt: 2000, standard: "ul",
+    sysVAC: 300, sysVDC: 600,
+    nodes: [{name: "X", vrms: 400, ins: "basic", pcb: 0, coat: 2, circ: "ac"}]
+  });
+  // IEC 60664-3 Table 1: Type 2 potting → minimum spacing 0.15mm (rounded to 0.2)
+  approx(result.results[0].reqCrp, 0.2, 0.01);
+});
+
+// ── lookupTable24_1 boundary test (1) ─────────────
+
+test("lookupTable24_1 at exactly boundary voltage uses correct row", function () {
+  // vrms=50 → should match first row [50, 1.6, 1.6] since 50 <= 50
+  var r = SM.lookupTable24_1(50);
+  assert.strictEqual(r.clearance, 1.6, "T24.1 at exactly 50V: throughAir");
+  assert.strictEqual(r.creepage, 1.6, "T24.1 at exactly 50V: overSurface");
 });
 
 

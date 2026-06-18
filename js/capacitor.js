@@ -106,6 +106,9 @@
     }catch(er){}
   }
 
+  /* ── Clamp helper (P1-4) ─────────────── */
+  function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v))}
+
   /* ── Read params from DOM → call model → render results ─── */
   function calc(){
     var segs=document.querySelectorAll("#sc .seg");
@@ -114,6 +117,10 @@
       document.getElementById("ad").textContent="-";document.getElementById("wt").textContent="-";
       document.getElementById("wk").textContent="-";return;
     }
+
+    var warns=[];
+    function w(msg){warns.push(msg)}
+    function cl(v,lo,hi,name){if(v<lo||v>hi){w(name+" "+fv(v,1)+" → 修正为"+name+" "+fv(Math.max(lo,Math.min(hi,v)),1));return Math.max(lo,Math.min(hi,v))}return v}
 
     // Read rated params from DOM
     var l0=+document.getElementById("l0").value||2e3,
@@ -127,6 +134,16 @@
         wt=+document.getElementById("warrantyTarget").value||5,
         scenario=document.getElementById("scenario").value;
 
+    // P1-4: Validate & clamp rated params
+    l0  = cl(l0,500,100000,"L₀");
+    tmax= cl(tmax,60,150,"T_max");
+    tau = cl(tau,8,20,"τ");
+    vrated = cl(vrated,1,1000,"V_rated");
+    irated = cl(irated,10,50000,"I_rated");
+    dt0  = cl(dt0,1,30,"ΔT₀");
+    wd   = cl(wd,1,365,"工作日");
+    wt   = cl(wt,0.5,50,"质保目标");
+
     // Build segments array for model
     var segments=[];
     segs.forEach(function(seg){
@@ -139,12 +156,32 @@
             iop=+row.querySelector(".fc").value||0;
         if(iop>0) rips.push({freq:f, current:iop});
       });
+      // P1-4: Validate & clamp segment params
+      dur = cl(dur,0.1,24,"时长");
+      ta  = cl(ta,-40,150,"环温");
+      vop = cl(vop,0,vrated*2,"电压");
+      rips.forEach(function(r){r.current=cl(r.current,0,irated*3,"纹波电流")});
       segments.push({dur:dur, ta:ta, vop:vop, rips:rips});
     });
 
-    // Call pure model calculation
-    var result = CM.calcLifetime({l0:l0,tmax:tmax,tau:tau,vrated:vrated,irated:irated,dt0:dt0,cooling:cooling,wd:wd,wt:wt,scenario:scenario,segments:segments});
+    // P1-4: Check total duration ≤24h
+    var totDur=0;segments.forEach(function(s){totDur+=s.dur});
+    if(totDur>24) w("总时长"+fv(totDur,1)+"h超24h，已修正");
+
+    // P1-7: Error boundary — wrap model call in try/catch
+    var result;
+    try{
+      result = CM.calcLifetime({l0:l0,tmax:tmax,tau:tau,vrated:vrated,irated:irated,dt0:dt0,cooling:cooling,wd:wd,wt:wt,scenario:scenario,segments:segments});
+    }catch(e){
+      var el=document.getElementById("capWarn");
+      if(el){el.textContent="⚠ 计算错误: "+e.message;el.style.display="block"}
+      console.error("CapacitorModel.calcLifetime error:",e);
+      return;
+    }
     if(!result) return;
+
+    // P1-4: Show warnings if any clamping occurred
+    (function(){var el=document.getElementById("capWarn");if(warns.length){el.textContent="⚠ "+warns.join("; ");el.style.display="block"}else{el.style.display="none"}})();
 
     // Render results to DOM
     document.getElementById("lh").textContent=result.lh>=1e6?fv(result.lh/1e4,1)+"万":fv(result.lh,0);

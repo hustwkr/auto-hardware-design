@@ -619,6 +619,9 @@ table.data-tbl tbody tr:hover {
 /* Hide from print */
 ._np { /* kept in HTML, controlled here for print */ }
 
+.input-warn { background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 6px 10px; border-radius: 4px; margin: 8px 0; font-size: .8rem; }
+[data-theme="dark"] .input-warn { background: #422006; border-color: #92400e; color: #fbbf24; }
+
 /* ============================================================
    Print Styles
    ============================================================ */
