@@ -1,0 +1,19 @@
+{
+  "name": "auto-hardware-design",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Auto Hardware Design Tool - electrolytic capacitor lifetime & safety distance calculators",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "npx http-server . -p 8080 -o --cors",
+    "lint": "eslint js/ tests/",
+    "test": "node tests/models.test.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "http-server": "^14.1.1"
+  }
+}

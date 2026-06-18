@@ -162,17 +162,17 @@
         if(!el) return;
         var ovcLabel = function(n){return {1:'I',2:'II',3:'III',4:'IV'}[n]||'II';};
         var tovAC_info = tovFor(sysVAC);
-        var isoNote = iso==='isolated'?'<span style="color:#64748b;font-size:.75rem">(隔离降档)</span>':'<span style="color:#64748b;font-size:.75rem">(无隔离取较高值)</span>';
+        var isoNote = iso==='isolated'?'<span class="imp-note">(隔离降档)</span>':'<span class="imp-note">(无隔离取较高值)</span>';
         el.innerHTML =
-          '<div><span style="font-weight:600;color:#1e293b">AC侧冲击电压:</span> ' +
-          '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+impAC+' kV</span> ' +
-          '<span style="color:#64748b">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
-          '<div><span style="font-weight:600;color:#1e293b">DC侧冲击电压:</span> ' +
-          '<span style="color:#2563eb;font-weight:700;font-size:.95rem">'+impDC+' kV</span> ' +
-          '<span style="color:#64748b">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span> '+isoNote+'</div>' +
-          '<div><span style="font-weight:600;color:#1e293b">AC侧暂态过电压:</span> ' +
-          '<span style="color:#7c3aed;font-size:.85rem">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span></div>' +
-          '<div style="margin-top:4px;padding-top:4px;border-top:1px solid #e0e7ff;font-size:.78rem;color:#64748b">' +
+          '<div><span class="imp-label">AC侧冲击电压:</span> ' +
+          '<span class="imp-val">'+impAC+' kV</span> ' +
+          '<span class="imp-sub">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
+          '<div><span class="imp-label">DC侧冲击电压:</span> ' +
+          '<span class="imp-val">'+impDC+' kV</span> ' +
+          '<span class="imp-sub">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span> '+isoNote+'</div>' +
+          '<div><span class="imp-label">AC侧暂态过电压:</span> ' +
+          '<span class="imp-tov">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span></div>' +
+          '<div class="imp-footer">' +
           '线间节点(电气间隙): 冲击电压降一档 → AC '+prevImpLevel(impAC)+' kV, DC '+Math.max(prevImpLevel(impDC), 2.5)+' kV' +
           '<br><span style="font-style:italic">依据 IEC 62109-1 §7.3.7 — 同一电路内部的功能绝缘比对地再降一档</span></div>';
       })();
@@ -182,10 +182,9 @@
         var el = document.getElementById("sImpulseInfo");
         if(!el) return;
         el.innerHTML =
-          '<div style="padding:8px 12px;background:#f0fdf4;border-radius:6px;font-size:.85rem;width:100%">' +
-          '<span style="font-weight:600;color:#1e293b">UL 1741 查表依据:</span><br>' +
+          '<span class="imp-label">UL 1741 查表依据:</span><br>' +
           'AC侧系统电压: <strong>'+sysVAC+' V</strong> → '+((sysVAC/1000).toFixed(2))+' kVRMS | DC侧系统电压: <strong>'+sysVDC+' V</strong> → '+((sysVDC/1000).toFixed(2))+' kVRMS<br>' +
-          '<span style="font-size:.78rem;color:#64748b">UL 电气间隙由相地额定系统电压查表确定 (§25.4g)，不使用冲击耐受电压</span></div>';
+          '<span class="imp-sub">UL 电气间隙由相地额定系统电压查表确定 (§25.4g)，不使用冲击耐受电压</span>';
       })();
     }
 

@@ -12,7 +12,8 @@ if (!ADMIN_PW) {
 }
 
 if (ADMIN_PW === "admin123" || ADMIN_PW.length < 8) {
-  console.warn("[SECURITY] Admin password is too weak. Use at least 8 characters with mixed types.");
+  console.error("[SECURITY] Refusing to start: admin password is too weak (<8 chars or 'admin123').");
+  process.exit(1);
 }
 
 const ROOT          = path.resolve(__dirname, "..");
@@ -259,6 +260,13 @@ function safePath(p) {
   return cleaned.startsWith("/") ? cleaned : "/";
 }
 
+// ── Security headers (applied to every response) ────────
+function addSecurityHeaders(res) {
+  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self'");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+}
+
 // ── Startup ─────────────────────────────────────────────
 console.log(`Server starting on port ${PORT}`);
 
@@ -268,6 +276,9 @@ http.createServer(async function (req, res) {
   const url      = new URL(req.url, "http://localhost");
   const p        = safePath(url.pathname);
   const tok      = getToken(req);
+
+  // ── Security headers on every response ────────────────
+  addSecurityHeaders(res);
 
   // ── OPTIONS / pre-flight (public) ────────────────────
   if (req.method === "OPTIONS") {
@@ -309,9 +320,9 @@ http.createServer(async function (req, res) {
     return;
   }
 
-  // ── PUBLIC defaults (CORS wildcard OK) ───────────────
+  // ── PUBLIC defaults (CORS restricted — local engineering tool) ───
   if (p === "/api/defaults" && req.method === "GET") {
-    json(res, 200, loadDefaults(), true);
+    json(res, 200, loadDefaults(), false);
     return;
   }
 

@@ -20,6 +20,8 @@ build_temp_*.html
 
 # Fix scripts, build temp, and backups (dev artifacts)
 _fix.js
+scripts/_fix_all.js
+scripts/apply_*.cjs
 _apply_fixes_*.cjs
 fix_*.py
 build*.py

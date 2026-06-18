@@ -1,0 +1,36 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "script"
+  },
+  "rules": {
+    "strict": ["warn", "global"],
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-console": "off",
+    "prefer-const": "warn",
+    "eqeqeq": ["warn", "always"]
+  },
+  "globals": {
+    "_defaults": "readonly",
+    "initSafety": "readonly",
+    "loadSegmentsFromDefaults": "readonly",
+    "loadNodesFromDefaults": "readonly",
+    "initCapacitor": "readonly",
+    "calc": "readonly",
+    "saveBlobWithDialog": "readonly"
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.js"],
+      "env": {
+        "node": true,
+        "browser": false
+      }
+    }
+  ]
+}

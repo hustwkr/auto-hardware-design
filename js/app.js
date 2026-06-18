@@ -41,7 +41,7 @@
     });
   });
 
-  /* ── Defaults loading (from server API) ─── */
+  /* ── Defaults loading (from server API → localStorage fallback) ─── */
   var _defaults = null; // Cache defaults for initSafety/initCapacitor
 
   async function loadDefaults(){
@@ -52,8 +52,49 @@
       _defaults = d;
       window._defaultsApplied = true; // FIX Bug #3: track defaults arrival for race condition prevention
       applyDefaults(d);
-    }catch(e){/* no server — use inline defaults */}
+    }catch(e){/* no server — try localStorage fallback */}
+
+    /* Restore from localStorage if server didn't provide defaults */
+    if(!_defaults || !_defaults.capacitor || !_defaults.safety){
+      try{
+        var saved = JSON.parse(localStorage.getItem('hw-design-state'));
+        if(saved && typeof saved === 'object'){
+          _defaults = saved;
+          applyDefaults(saved);
+        }
+      }catch(e){/* corrupt localStorage — ignore */}
+    }
   }
+
+  /* ── Auto-save to localStorage on input change ─── */
+  var _saveTimer = null;
+  function scheduleSave(){
+    if(_saveTimer)clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(function(){
+      // Collect current form state from both tabs
+      var state = {capacitor:{}, safety:{}};
+
+      /* Capacitor fields */
+      ['l0','tmax','tau','vrated','irated','dt0','workdays','warrantyTarget'].forEach(function(id){
+        var el=document.getElementById(id); if(el) state.capacitor[id]=el.value;
+      });
+      var coolingEl=document.getElementById('cooling'); if(coolingEl) state.capacitor.cooling=coolingEl.value;
+      var scenarioEl=document.getElementById('scenario'); if(scenarioEl) state.capacitor.scenario=scenarioEl.value;
+
+      /* Safety fields */
+      ['sStd','sPd','sMg','sAlt','sIsolation','sOvc_AC'].forEach(function(id){
+        var el=document.getElementById(id); if(el) state.safety[id]=el.value;
+      });
+      ['sSysV_AC','sSysV_DC'].forEach(function(id){
+        var el=document.getElementById(id); if(el) state.safety[id]=el.value;
+      });
+
+      try{localStorage.setItem('hw-design-state', JSON.stringify(state))}catch(e){/* quota exceeded — ignore */}
+    }, 500); // debounce 500ms
+  }
+
+  document.addEventListener('input', scheduleSave, true);
+  document.addEventListener('change', scheduleSave, true);
 
   function applyDefaults(d){
     if(!d||typeof d!=='object')return;
@@ -95,8 +136,8 @@
     var changed=String(el.value)!==String(val);
     el.value=val;
     if(changed){
-      try{el.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}
-      try{el.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}
+      try{el.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){/* IE compat */}
+      try{el.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){/* IE compat */}
     }
     return true;
   }
@@ -106,9 +147,43 @@
     var changed=String(el.value)!==String(val);
     el.value=val;
     if(changed)
-      try{el.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}
+      try{el.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){/* IE compat */}
 
     return true;
+  }
+
+  /* ── Dark mode toggle ──────────────────── */
+  (function(){
+    var theme = localStorage.getItem('hw-design-theme');
+    if(!theme){
+      theme = window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', theme);
+
+    function updateIcon(isDark){
+      var btn = document.getElementById('darkToggle');
+      if(btn) btn.textContent = isDark ? '☀️' : '🌙';
+    }
+    updateIcon(theme === 'dark');
+
+    document.addEventListener('click', function(e){
+      var btn = document.getElementById('darkToggle');
+      if(!btn || !btn.contains(e.target)) return;
+      var current = document.documentElement.getAttribute('data-theme');
+      var next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('hw-design-theme', next);
+      updateIcon(next === 'dark');
+    });
+  })();
+
+  /* ── Service Worker registration ───────── */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function (err) {
+        console.warn('[SW] Registration failed:', err);
+      });
+    });
   }
 
   /* ── Init on DOM ready ─────────────────── */

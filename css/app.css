@@ -42,6 +42,130 @@
   --space-lg: 24px;
 }
 
+/* Dark theme */
+[data-theme="dark"] {
+  --color-bg:        #0f172a;
+  --color-surface:   #1e293b;
+  --color-text:      #e2e8f0;
+  --color-text-mid:  #94a3b8;
+  --color-text-soft: #64748b;
+  --color-border:    #334155;
+  --color-border-lt: #1e293b;
+  --color-primary:   #3b82f6;
+  --color-primary-bg:#1e3a5f;
+}
+
+/* ── Report containers (#rc, #sRc) dark overrides ─── */
+[data-theme="dark"] #rc,
+[data-theme="dark"] #sRc {
+  color: var(--color-text) !important;
+}
+[data-theme="dark"] #rc h3,
+[data-theme="dark"] #sRc h3 {
+  color: var(--color-text) !important;
+}
+
+/* ── Report formula classes (light theme defaults) ─── */
+.rep-section { margin: 4px 0 2px 0; }
+.rep-formula { margin: 1px 0 1px 8px; font-size: .85rem; color: #475569; line-height: 1.8; }
+.rep-formula-sub { margin: 1px 0 3px 8px; font-size: .85rem; color: #64748b; line-height: 1.8; }
+.rep-result { margin: 1px 0 4px 8px; font-size: .85rem; color: #334155; line-height: 1.8; }
+.rep-model-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 4px; padding: 8px 12px; margin-bottom: 10px; font-size: .8rem; color: #0c4a6e; line-height: 1.7; }
+#sImpulseInfo.rep-model-box { display: flex; gap: 16px; flex-wrap: wrap; }
+.imp-label { font-weight: 600; color: #1e293b; }
+.imp-val { color: #2563eb; font-weight: 700; font-size: .95rem; }
+.imp-sub { color: #64748b; }
+.imp-tov { color: #7c3aed; font-size: .85rem; }
+.imp-note { color: #64748b; font-size: .75rem; }
+.imp-footer { margin-top: 4px; padding-top: 4px; border-top: 1px solid #e0e7ff; font-size: .78rem; color: #64748b; }
+.iso-legend { font-size: var(--fs-xs); font-weight: 600; color: var(--color-text-soft); padding: 0 6px; }
+.rep-footer { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; font-size: .8rem; color: var(--color-text-soft); }
+
+/* ── Report formula classes (dark theme) ─── */
+[data-theme="dark"] .rep-formula { color: #94a3b8; }
+[data-theme="dark"] .rep-formula-sub { color: #64748b; }
+[data-theme="dark"] .rep-result { color: #cbd5e1; }
+[data-theme="dark"] .rep-model-box { background: #0c2d4a; border-color: #1e3a5f; color: #7dd3fc; }
+[data-theme="dark"] .imp-label { color: #e2e8f0; }
+[data-theme="dark"] .imp-val { color: #60a5fa; }
+[data-theme="dark"] .imp-sub, [data-theme="dark"] .imp-note { color: #94a3b8; }
+[data-theme="dark"] .imp-tov { color: #c4b5fd; }
+[data-theme="dark"] .imp-footer { border-top-color: #1e3a5f; color: #94a3b8; }
+[data-theme="dark"] .rep-footer { border-top-color: var(--color-border); color: var(--color-text-soft); }
+
+/* ── KaTeX dark mode — aggressive override for ALL katex elements ─── */
+[data-theme="dark"] .katex,
+[data-theme="dark"] .katex-html,
+[data-theme="dark"] .katex-html > *,
+[data-theme="dark"] .katex-html [aria-hidden],
+[data-theme="dark"] .katex .base,
+[data-theme="dark"] .katex .mord,
+[data-theme="dark"] .katex .mbin,
+[data-theme="dark"] .katex .mrel,
+[data-theme="dark"] .katex .minner,
+[data-theme="dark"] .katex .msupsub > *,
+[data-theme="dark"] .katex .mfrac > *,
+[data-theme="dark"] .katex .mtable * {
+  color: #e2e8f0 !important;
+}
+
+/* ── Form inputs dark overrides ─── */
+[data-theme="dark"] .fgl input,
+[data-theme="dark"] .fgl select,
+[data-theme="dark"] .fgi input,
+[data-theme="dark"] .fgi select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .seg { background: #162032; }
+[data-theme="dark"] .seg-body input[type=number] {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+/* Measurement node inputs (safety section) */
+[data-theme="dark"] .node-tbl input,
+[data-theme="dark"] .node-tbl select {
+  background: #0f172a;
+  border-color: #334155 !important;
+  color: #e2e8f0;
+}
+/* Ripple table inputs (operation profile) */
+[data-theme="dark"] .rt input[type=number] {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .ri { background: #162032; border-color: #334155; }
+[data-theme="dark"] table.data-tbl thead th,
+[data-theme="dark"] .sg-tbl thead th,
+[data-theme="dark"] .node-tbl thead th { background: #162032; }
+[data-theme="dark"] .rt thead th { background: #162032; }
+/* Higher specificity for report containers (#rc, #sRc) */
+[data-theme="dark"] #rc thead th,
+[data-theme="dark"] #sRc thead th { background: #162032 !important; color: var(--color-text-mid) !important; }
+[data-theme="dark"] #rc tbody tr:hover,
+[data-theme="dark"] #sRc tbody tr:hover { background: #1e293b !important; }
+[data-theme="dark"] table.data-tbl tbody tr:hover,
+[data-theme="dark"] .sg-tbl tbody tr:hover { background: #1e293b; }
+[data-theme="dark"] .tab-btn:hover { background: #334155; }
+[data-theme="dark"] .btn-sm:hover,
+[data-theme="dark"] .btn:hover { background: #334155; border-color: #475569; color: #e2e8f0; }
+
+/* Dark mode toggle button */
+.dark-toggle {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: var(--fs-xs);
+  color: var(--color-text-mid);
+  transition: all .15s ease;
+}
+.dark-toggle:hover { background: #f8fafc; border-color: #cbd5e1; }
+
 /* ============================================================
    Reset & Base
    ============================================================ */
@@ -499,10 +623,38 @@ table.data-tbl tbody tr:hover {
    Print Styles
    ============================================================ */
 @media print {
-  body              { padding: 0; background: #fff; }
+  body              { padding: 0; background: #fff; color: #000; }
   .tab-nav           { display: none !important; }
   ._np               { display: none !important; }
   .layout            { display: block; }
-  .card              { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
-  #rc, #sRc          { box-shadow: none; }
+  .card              { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+  #rc, #sRc          { box-shadow: none; break-inside: avoid; page-break-inside: avoid; }
+
+  /* Show all tab content for full report */
+  .tab-content       { display: block !important; page-break-before: always; }
+  .tab-content:first-of-type { page-break-before: auto; }
+
+  /* Force light theme colors for print */
+  [data-theme="dark"] body,
+  [data-theme="dark"] *,
+  [data-theme="dark"] *::before,
+  [data-theme="dark"] *::after {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #ddd !important;
+  }
+
+  /* Tables print-friendly */
+  table.data-tbl, .sg-tbl, .node-tbl, #rc table, #sRc table {
+    font-size: 10pt;
+    border-color: #999 !important;
+  }
+  table.data-tbl thead th, .sg-tbl thead th, .node-tbl thead th,
+  #rc thead th, #sRc thead th { background: #f0f0f0 !important; color: #333 !important; }
+
+  /* Hide interactive elements */
+  button, .btn-sm, .btn, .btn-p, .dark-toggle, .info-icon, .export-dropdown { display: none !important; }
+
+  /* Ensure links show URLs */
+  a[href]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #666; }
 }

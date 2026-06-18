@@ -186,7 +186,7 @@ ight'){i=j;continue;}o+=(G_LW[w.slice(1)]||O_LW[w.slice(1)]||w.slice(1));i=j;con
     var d=window._cd;if(!d||!d.sr||!d.sr.length)return '';
     var ir=d.irated;
     var fs='';
-    fs+='<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:.8rem;color:#0c4a6e">';
+    fs+='<div class="rep-model-box">';
     fs+='<b>计算模型说明</b><br>';
     fs+='• <b>温度加速</b>：Arrhenius 模型 K_T = 2^((T_max - T_hs) / τ)，τ='+d.tau+'°C<br>';
     fs+='• <b>电压修正</b>：Nichicon 指数模型 K_V = exp[a·((V_r/V_op)^b - 1)]，a=0.56, b=1.0<br>';
@@ -195,48 +195,47 @@ ight'){i=j;continue;}o+=(G_LW[w.slice(1)]||O_LW[w.slice(1)]||w.slice(1));i=j;con
     fs+='• <b>EOL 判据</b>：容量下降 ≥20% 或 ESR ≥2× 初始值<br>';
     fs+='• 参考标准：Nichicon Technical Manual §"How to Calculate Life Time"<br></div>';
     d.sr.forEach(function(r){
-      fs+='<p style="margin:4px 0 2px 0"><b>时段'+r.i+' — ① 温升计算</b></p>';
+      fs+='<p class="rep-section"><b>时段'+r.i+' — ① 温升计算</b></p>';
       if(r.rd&&r.rd.length){
-        fs+='<p style="margin:1px 0 1px 8px;font-size:.85rem;color:#444">';
+        fs+='<p class="rep-formula">';
         fs+='<span class=latex data-l="\\Delta T_i = \\Delta T_0 \\times \\sum_j \\left(\\frac{I_{op,j}}{I_{rated} \\cdot K_{freq,j}}\\right)^2"></span></p>';
         /* Build substitution as single LaTeX string, then wrap in one span */
         var sub='';sub+=d.dt0+' \\times (';
         r.rd.forEach(function(x,j){if(j>0)sub+=' + ';sub+='\\left(\\frac{'+x.iop+'}{'+ir+' \\cdot '+x.k.toFixed(2)+'}\\right)^2'});
         sub+=')';
-        fs+='<p style="margin:1px 0 3px 8px;font-size:.85rem;color:#666">=';
+        fs+='<p class="rep-formula-sub">=';
         fs+='<span class=latex data-l="'+sub+'"></span></p>';
-        fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#333">=';
+        fs+='<p class="rep-result">=';
         fs+='<span class=latex data-l="\\Delta T_'+r.i+' = '+r.dt.toFixed(2)+' \\text{°C}"></span></p>';
       } else {
-        fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#666">无纹波输入, ΔT = 0°C</p>';
+        fs+='<p class="rep-formula-sub">无纹波输入, ΔT = 0°C</p>';
       }
       /* Ths line as single KaTeX span — no mixed HTML/LaTeX */
-      fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#333">';
+      fs+='<p class="rep-result">';
       fs+='<span class=latex data-l="T_{hs,'+r.i+'} = T_a + \\Delta T = '+r.ta.toFixed(1)+' + '+(r.dt>0?r.dt.toFixed(2):'0')+' = '+r.ths.toFixed(1)+'\\text{°C}"></span></p>';
 
-      fs+='<p style="margin:4px 0 2px 0"><b>时段'+r.i+' — ② 寿命计算</b></p>';
-      fs+='<p style="margin:1px 0 1px 8px;font-size:.85rem;color:#444">';
+      fs+='<p class="rep-section"><b>时段'+r.i+' — ② 寿命计算</b></p>';
+      fs+='<p class="rep-formula">';
       fs+='<span class=latex data-l="L_i = L_0 \\cdot 2^{\\frac{T_{max} - T_{hs,i}}{' + d.tau + '}} \\cdot K_V"></span></p>';
-      fs+='<p style="margin:1px 0 3px 8px;font-size:.85rem;color:#666">=';
+      fs+='<p class="rep-formula-sub">=';
       fs+='<span class=latex data-l="L_'+r.i+' = '+d.l0+' \\cdot 2^{\\frac{'+d.tmax+' - '+r.ths.toFixed(1)+'}{' + d.tau + '}} \\cdot '+r.kv.toFixed(3)+'"></span></p>';
-      fs+='<p style="margin:1px 0 6px 8px;font-size:.85rem;color:#333">=';
+      fs+='<p class="rep-result">=';
       fs+='<span class=latex data-l="L_'+r.i+' = '+r.Li.toFixed(0)+' \\text{h}"></span></p>';
     });
 
-    fs+='<p style="margin:6px 0 2px 0"><b>累计损伤 (Miner准则)</b></p>';
-    fs+='<p style="margin:1px 0 1px 8px;font-size:.85rem;color:#444">';
+    fs+='<p class="rep-section"><b>累计损伤 (Miner准则)</b></p>';
+    fs+='<p class="rep-formula">';
     fs+='<span class=latex data-l="D = \\sum_i \\frac{t_i \\cdot N_{days}}{L_i}"></span></p>';
     /* Build Miner sum as single LaTeX string */
     var miner='';var ft=true;
     d.sr.forEach(function(r){if(!ft)miner+=' + ';ft=false;miner+='\\frac{'+r.dur.toFixed(1)+' \\cdot '+d.wd+'}{'+r.Li.toFixed(0)+'}'});
-    fs+='<p style="margin:1px 0 3px 8px;font-size:.85rem;color:#666">=';
+    fs+='<p class="rep-formula-sub">=';
     fs+='<span class=latex data-l="'+miner+'"></span></p>';
-    fs+='<p style="margin:1px 0 4px 8px;font-size:.85rem;color:#333">=';
+    fs+='<p class="rep-result">=';
     fs+='<span class=latex data-l="D = '+(d.dmg*100).toFixed(3)+'\\% / \\text{年}, \\quad \\text{寿命} = 1/'+d.dmg.toFixed(6)+' = '+d.ly.toFixed(1)+' \\text{年}"></span></p>';
     return fs;
   }
-
-  /* ── Report generation (DOM-only) ───────── */
+/* ── Report generation (DOM-only) ───────── */
   function genRep(){
     var d=window._cd;
     if(!d||!d.sr||!d.sr.length){
@@ -256,67 +255,25 @@ ight'){i=j;continue;}o+=(G_LW[w.slice(1)]||O_LW[w.slice(1)]||w.slice(1));i=j;con
 
     var pn=document.getElementById("projName").value||"-", cm=document.getElementById("capModel").value||"-";
     document.getElementById("rc").innerHTML=
-      "<h3>1. 项目信息</h3><table style='border-collapse:collapse;width:100%;margin:8px 0'><tr>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>项目名称</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>器件型号</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>应用场景</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>散热</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>年工作天数</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>质保期</td></tr><tr>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+pn+"</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+cm+"</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+d.mi.l+"</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+document.getElementById("cooling").selectedOptions[0].text+"</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+d.wd+"</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+d.wt+"年</td></tr></table>"
-      +"<h3>2. 额定参数</h3><table style='border-collapse:collapse;width:auto;margin:8px 0'><tr>"
+      "<h3>1. 项目信息</h3><table class=\"data-tbl\"><thead><tr>"
+        +"<th>项目名称</th><th>器件型号</th><th>应用场景</th><th>散热</th><th>年工作天数</th><th>质保期</th></tr></thead><tbody><tr>"
+        +"<td>"+pn+"</td><td>"+cm+"</td><td>"+d.mi.l+"</td>"
+        +"<td>"+document.getElementById("cooling").selectedOptions[0].text+"</td>"
+        +"<td>"+d.wd+"</td><td>"+d.wt+"年</td></tr></tbody></table>"
+      +"<h3>2. 额定参数</h3><table class=\"data-tbl\"><thead><tr>"
+        +"<th>L<sub>0</sub></th><th>T<sub>max</sub></th><th>V<sub>rated</sub></th><th>I<sub>rated</sub></th><th>ΔT<sub>0</sub></th></tr></thead><tbody><tr>"
+        +"<td>"+d.l0+" h</td><td>"+d.tmax+" °C</td><td>"+(d.vr||d.vrated)+" V</td>"
+        +"<td>"+(d.ir||d.irated)+" mA</td><td>"+d.dt0+" °C</td></tr></tbody></table>"
 
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>L<sub>0</sub></td>"
-
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>T<sub>max</sub></td>"
-
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>V<sub>rated</sub></td>"
-
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>I<sub>rated</sub></td>"
-
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>ΔT<sub>0</sub></td></tr>"
-
-        +"<tr><td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+d.l0+" h</td>"
-
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+d.tmax+" °C</td>"
-
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+(d.vr||d.vrated)+" V</td>"
-
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+(d.ir||d.irated)+" mA</td>"
-
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+d.dt0+" °C</td></tr></table>"
-
-      +"<h3>3. 运行剖面</h3><table style='border-collapse:collapse;width:100%;margin:8px 0'><tr>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>时段</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>h/天</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>Ta C</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>Vop V</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>DT C</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>Ths C</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>KT</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>KV</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>Li h</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>纹波</td></tr>"+sr+"</table>"
+      +"<h3>3. 运行剖面</h3><table class=\"data-tbl\"><thead><tr>"
+        +"<th>时段</th><th>h/天</th><th>Ta C</th><th>Vop V</th><th>DT C</th><th>Ths C</th><th>KT</th><th>KV</th><th>Li h</th><th>纹波</th></tr></thead><tbody>"+sr+"</tbody></table>"
       +"<h3>4. 计算过程</h3>"+calcFormulas()
 
-      +"<h3>5. 结论</h3><table style='border-collapse:collapse;width:auto;margin:8px 0'><tr>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>年损伤 D</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>预计寿命</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>质保期</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>裕量</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center;background:#f5f5f5;font-weight:bold'>判定</td></tr><tr>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+fv(d.dmg*100,3)+"%</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+fv(d.ly,1)+" 年</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+d.wt+" 年</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'>"+fv(d.margin,2)+"x</td>"
-        +"<td style='padding:4px 10px;border:1px solid #ddd;text-align:center'><strong>"+d.ws+"</strong></td></tr></table>"
-      +"<div style=margin-top:14px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.8rem;color:#64748b>"
-        +"<span>电解电容寿命计算器 v2.0</span><span>报告: "+ds+" "+ts+"</span></div>";
+      +"<h3>5. 结论</h3><table class=\"data-tbl\"><thead><tr>"
+        +"<th>年损伤 D</th><th>预计寿命</th><th>质保期</th><th>裕量</th><th>判定</th></tr></thead><tbody><tr>"
+        +"<td>"+fv(d.dmg*100,3)+"%</td><td>"+fv(d.ly,1)+" 年</td><td>"+d.wt+" 年</td>"
+        +"<td>"+fv(d.margin,2)+"x</td><td><strong>"+d.ws+"</strong></td></tr></tbody></table>"
+      +"<div class=\"rep-footer\"><span>电解电容寿命计算器 v2.0</span><span>报告: "+ds+" "+ts+"</span></div>";
 
     setTimeout(renderLatex,200);
   }
