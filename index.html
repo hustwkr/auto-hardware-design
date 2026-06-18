@@ -88,9 +88,7 @@
   <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
     <h2 style="font-size:1.1rem;font-weight:600">设计报告</h2>
     <div style="display:flex;gap:8px">
-      <button class="btn" onclick="genRep()">刷新报告</button>
-      <button class="btn" onclick="exportWord()">导出 Word</button>
-      <button class="btn btn-p" onclick="window.print()">打印/导出 PDF</button>
+      <div class="btn-export-group"><button class="btn" onclick="cExportReport('word')" id="exportCapBtn">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'cap')">▼</button><div class="export-dropdown" id="exportCapDropdown"><div onclick="cExportReport('word')">Word (.doc)</div><div onclick="cExportReport('pdf')">PDF</div></div></div>
     </div>
   </div>
   <div id="rc"><h3>电解电容寿命评估报告</h3><p>请调整参数后刷新。</p></div>

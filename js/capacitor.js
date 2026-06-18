@@ -315,6 +315,12 @@ ight'){i=j;continue;}o+=(G_LW[w.slice(1)]||O_LW[w.slice(1)]||w.slice(1));i=j;con
     setTimeout(renderLatex,200);
   }
 
+  /* ── Export report (Word / PDF) ─────────── */
+  function cExportReport(mode){
+    if(mode==='pdf'){window.print();return}
+    exportWord();
+  }
+
   /* ── Word export (DOM-only) ─────────────── */
   function exportWord(){
     var d=window._cd;if(!d||!d.sr||!d.sr.length)return;
@@ -443,7 +449,7 @@ ight'){i=j;continue;}o+=(G_LW[w.slice(1)]||O_LW[w.slice(1)]||w.slice(1));i=j;con
   var expose = [
     'fv','mU','mSeg','sdChange','updT','addSeg','rmSeg','reNum',
     'addRR','removeRippleRow','l2r','renderLatex','calc','calcFormulas',
-    'genRep','exportWord','loadSegmentsFromDefaults'
+    'genRep','exportWord','cExportReport','loadSegmentsFromDefaults'
   ];
   expose.forEach(function(n){global[n] = global[n] || eval('('+n+')')});
 
