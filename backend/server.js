@@ -2,12 +2,24 @@ const http = require("http"), fs = require("fs"), path = require("path"), crypto
 
 // ── Config ──────────────────────────────────────────────
 const PORT          = parseInt(process.env.PORT || "8080", 10);
+
+// Read ADMIN_PASSWORD: env var > .env file > error
 let ADMIN_PW        = process.env.ADMIN_PASSWORD;
+if (!ADMIN_PW) {
+  try {
+    const envPath = path.join(__dirname, ".env");
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, "utf8");
+      const match = envContent.match(/^ADMIN_PASSWORD\s*=\s*(.+)$/m);
+      if (match) ADMIN_PW = match[1].trim();
+    }
+  } catch (_) {}
+}
 
 if (!ADMIN_PW) {
-  console.error("[SECURITY] ADMIN_PASSWORD environment variable is required.");
-  console.error("   Export it before starting: export ADMIN_PASSWORD=your-strong-password");
-  console.error("   Or set it in a .env file loaded by your process manager (PM2, docker, etc.)");
+  console.error("[SECURITY] No admin password found.");
+  console.error("   Option 1: export ADMIN_PASSWORD=your-strong-password");
+  console.error("   Option 2: create backend/.env with ADMIN_PASSWORD=your-strong-password");
   process.exit(1);
 }
 
