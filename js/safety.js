@@ -286,7 +286,6 @@
     var ovc_AC_val = document.getElementById('sOvc_AC').value;
     var ovc_DC_val = document.getElementById('sOvc_DC').value;
     window._sd={results:result.results,pd:pd,mg:mg,alt:alt,altk:altk,std:std,impAC:impAC,impDC:impDC,ovc_AC:ovc_AC_val,ovc_DC:ovc_DC_val,isolation:iso};
-    sGenRep();
   }
 
   /* ── Report generation (DOM-only) ───────── */
@@ -348,6 +347,9 @@
   function sGenRep(){
     var d=window._sd;
     if(!d||!d.results||!d.results.length){document.getElementById("sRc").innerHTML="<h3>安规距离评估报告</h3><p>请添加测量节点。</p>";return;}
+
+    // Show export button after report generation
+    var eg=document.getElementById('exportSafeGroup');if(eg)eg.style.display='';
     var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
     var sr="";d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间,降档)';var f=r.forcedReinforced?' ⚠强制加强':'';var pw=(r.recurringPeakOk===false)?' 🔴峰值超限':'';var t241=r.tbl241Note?' ⚠T24.1':'';sr+="<tr><td>"+(d.results.indexOf(r)+1)+"</td><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
 
@@ -531,13 +533,11 @@
     sCalc();
   }
 
-  /* ── Expose to global scope ────────────── */
-  var expose = [
-    'mNode','sNChange','sAddNode',
-    'sRmNode','sReNum','sCalc','buildCalcChains','sGenRep','sExportReport',
-    'loadNodesFromDefaults'
-  ];
-  expose.forEach(function(n){global[n]=eval('('+n+')')});
+  /* ── Expose to global scope (no eval) ───── */
+  global.mNode = mNode; global.sNChange = sNChange; global.sAddNode = sAddNode;
+  global.sRmNode = sRmNode; global.sReNum = sReNum; global.sCalc = sCalc;
+  global.buildCalcChains = buildCalcChains; global.sGenRep = sGenRep;
+  global.sExportReport = sExportReport; global.loadNodesFromDefaults = loadNodesFromDefaults;
 
   /* ── Wire static inputs via event delegation ─── */
   document.addEventListener('input', function(e){

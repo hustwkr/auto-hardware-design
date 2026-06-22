@@ -177,11 +177,12 @@
     });
   })();
 
-  /* ── Service Worker registration ───────── */
+  /* ── Unregister stale Service Workers ───── */
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/sw.js').catch(function (err) {
-        console.warn('[SW] Registration failed:', err);
+    navigator.serviceWorker.getRegistrations().then(function(registrations){
+      registrations.forEach(function(reg){
+        reg.unregister();
+        console.log('[app.js] Unregistered stale SW: ' + reg.scope);
       });
     });
   }

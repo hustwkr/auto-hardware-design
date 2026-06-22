@@ -207,7 +207,6 @@
 
     // Store for report/export
     window._cd=result;
-    genRep();
   }
 
   /* ── LaTeX → Unicode/HTML for Word export ─── */
@@ -279,6 +278,9 @@ ight'){i=j;continue;}o+=(G_LW[w.slice(1)]||O_LW[w.slice(1)]||w.slice(1));i=j;con
       document.getElementById("rc").innerHTML="<h3>电解电容寿命评估报告</h3><p>请先定义运行剖面</p>";
       setTimeout(renderLatex,200);return;
     }
+
+    // Show export button after report generation
+    var eg=document.getElementById('exportCapGroup');if(eg)eg.style.display='';
 
     var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
     var sr="";
@@ -446,12 +448,13 @@ ight'){i=j;continue;}o+=(G_LW[w.slice(1)]||O_LW[w.slice(1)]||w.slice(1));i=j;con
   }
 
   /* ── Expose to global scope (for inline handlers) ── */
-  var expose = [
-    'fv','mU','mSeg','sdChange','updT','addSeg','rmSeg','reNum',
-    'addRR','removeRippleRow','l2r','renderLatex','calc','calcFormulas',
-    'genRep','exportWord','cExportReport','loadSegmentsFromDefaults'
-  ];
-  expose.forEach(function(n){global[n] = global[n] || eval('('+n+')')});
+  // Direct assignment — no eval() needed (all funcs in same scope)
+  global.fv = fv; global.mU = mU; global.mSeg = mSeg; global.sdChange = sdChange;
+  global.updT = updT; global.addSeg = addSeg; global.rmSeg = rmSeg; global.reNum = reNum;
+  global.addRR = addRR; global.removeRippleRow = removeRippleRow; global.l2r = l2r;
+  global.renderLatex = renderLatex; global.calc = calc; global.calcFormulas = calcFormulas;
+  global.genRep = genRep; global.exportWord = exportWord; global.cExportReport = cExportReport;
+  global.loadSegmentsFromDefaults = loadSegmentsFromDefaults;
 
   /* ── Wire static inputs via event delegation ─── */
   document.addEventListener('input', function(e){

@@ -87,11 +87,12 @@
 <div style="margin-top:16px">
   <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
     <h2 style="font-size:1.1rem;font-weight:600">设计报告</h2>
-    <div style="display:flex;gap:8px">
-      <div class="btn-export-group"><button class="btn" onclick="cExportReport('word')" id="exportCapBtn">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'cap')">▼</button><div class="export-dropdown" id="exportCapDropdown"><div onclick="cExportReport('word')">Word (.doc)</div><div onclick="cExportReport('pdf')">PDF</div></div></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn" onclick="genRep()" id="generateCapBtn">生成报告</button>
+      <div class="btn-export-group" id="exportCapGroup" style="display:none"><button class="btn" onclick="cExportReport('word')" id="exportCapBtn">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'cap')">▼</button><div class="export-dropdown" id="exportCapDropdown"><div onclick="cExportReport('word')">Word (.doc)</div><div onclick="cExportReport('pdf')">PDF</div></div></div>
     </div>
   </div>
-  <div id="rc"><h3>电解电容寿命评估报告</h3><p>请调整参数后刷新。</p></div>
+  <div id="rc"><h3>电解电容寿命评估报告</h3><p>点击"生成报告"按钮后显示。</p></div>
 </div>
 
 </div><!-- /tab-capacitor -->
@@ -156,11 +157,12 @@
 <div style="margin-top:24px">
   <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <h2 style="font-size:1.1rem;font-weight:600">安距设计报告</h2>
-    <div style="display:flex;gap:8px">
-      <div class="btn-export-group"><button class="btn" onclick="sExportReport('word')" id="exportSafeBtn">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'safe')">▼</button><div class="export-dropdown" id="exportSafeDropdown"><div onclick="sExportReport('word')">Word (.doc)</div><div onclick="sExportReport('pdf')">PDF</div></div></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn" onclick="sGenRep()" id="generateSafeBtn">生成报告</button>
+      <div class="btn-export-group" id="exportSafeGroup" style="display:none"><button class="btn" onclick="sExportReport('word')" id="exportSafeBtn">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'safe')">▼</button><div class="export-dropdown" id="exportSafeDropdown"><div onclick="sExportReport('word')">Word (.doc)</div><div onclick="sExportReport('pdf')">PDF</div></div></div>
     </div>
   </div>
-  <div id="sRc"><h3>安规距离评估报告</h3><p>请添加测量节点后刷新。</p></div>
+  <div id="sRc"><h3>安规距离评估报告</h3><p>点击"生成报告"按钮后显示。</p></div>
 </div>
 
 </div><!-- /tab-safety -->
@@ -170,8 +172,8 @@
 <!-- ── Scripts (order: models → ui modules → app) ──────── -->
 <script src="js/models/capacitor-model.js?v=10"></script>
 <script src="js/models/safety-model.js?v=10"></script>
-<script src="js/capacitor.js?v=10"></script>
-<script src="js/safety.js?v=11"></script>
-<script src="js/app.js?v=10"></script>
+<script src="js/capacitor.js?v=12"></script>
+<script src="js/safety.js?v=13"></script>
+<script src="js/app.js?v=12"></script>
 </body>
 </html>
