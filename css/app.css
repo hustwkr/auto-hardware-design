@@ -29,12 +29,12 @@
 
   /* Typography */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
-  --fs-xs:   .72rem;
-  --fs-sm:   .8rem;
-  --fs-base: .88rem;
-  --fs-md:   .95rem;
-  --fs-lg:   1.05rem;
-  --fs-xl:   1.35rem;
+  --fs-xs:   .78rem;
+  --fs-sm:   .85rem;
+  --fs-base: .93rem;
+  --fs-md:   1rem;
+  --fs-lg:   1.1rem;
+  --fs-xl:   1.45rem;
 
   /* Spacing */
   --space-xs: 6px;
@@ -238,7 +238,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.container { max-width: 740px; margin: 0 auto; }
+.container { max-width: 960px; margin: 0 auto; }
 
 /* ============================================================
    Page Header (H1 + subtitle)
@@ -307,17 +307,16 @@ h1.page-title, .tab-content > h1 {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 8px 12px;
-  margin-bottom: 6px;
-  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  margin-bottom: 12px;
 }
 
 .card h2 {
   font-size: var(--fs-base);
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 4px;
-  padding-bottom: 3px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -349,7 +348,8 @@ h1.page-title, .tab-content > h1 {
 .fgl select,
 .fgi input,
 .fgi select {
-  padding: 5px 8px;
+  padding: 6px 10px;
+  min-height: 32px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-size: var(--fs-base);
@@ -360,9 +360,9 @@ h1.page-title, .tab-content > h1 {
 
 .fgi input,
 .fgi select {
-  width: 120px;
+  width: 130px;
   min-width: 0;
-  padding: 4px 6px;
+  padding: 6px 8px;
   font-size: var(--fs-sm);
 }
 
@@ -392,7 +392,7 @@ h1.page-title, .tab-content > h1 {
   background: #fafbfd;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: 6px 8px;
+  padding: 10px 12px;
 }
 
 /* Ripple table keeps natural height; "+ 纹波分量" button pushed down, narrow & left */
@@ -414,7 +414,7 @@ h1.page-title, .tab-content > h1 {
 .seg-body { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
 .seg-body input[type=number] {
-  width: 52px; padding: 3px 4px; font-size: var(--fs-xs);
+  width: 56px; padding: 4px 6px; font-size: var(--fs-xs); min-height: 28px;
   border: 1px solid var(--color-border); border-radius: 4px; text-align: right;
 }
 
@@ -479,7 +479,7 @@ table.data-tbl tbody tr:hover {
    Buttons
    ============================================================ */
 .btn-sm {
-  padding: 4px 12px;
+  padding: 6px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -492,7 +492,7 @@ table.data-tbl tbody tr:hover {
 .btn-sm:hover { background: #f8fafc; border-color: #cbd5e1; }
 
 .btn {
-  padding: 6px 14px;
+  padding: 8px 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -520,10 +520,10 @@ table.data-tbl tbody tr:hover {
 /* ============================================================
    Result Cards (KPI grid)
    ============================================================ */
-.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 .ri {
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: #fafbfd;
   border: 1px solid var(--color-border-lt);
   border-radius: var(--radius-sm);
@@ -555,10 +555,9 @@ table.data-tbl tbody tr:hover {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 16px 20px;
+  padding: 20px;
   font-size: var(--fs-base);
   line-height: 1.55;
-  box-shadow: var(--shadow-sm);
 }
 
 #rc h3, #sRc h3 {
