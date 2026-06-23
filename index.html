@@ -136,4 +136,46 @@
   </div>
 
   <div class="card"><h2 data-i18n="safe.nodes">测量节点定义</h2>
-    <p style="font-size:.78rem;color:#64748b;margin-bottom:8px" data-i18n="safe.nodes.hint"
+    <p style="font-size:.78rem;color:#64748b;margin-bottom:8px" data-i18n="safe.nodes.hint">定义逆变器中各需要计算安规距离的节点及其电气参数</p>
+    <div style="overflow-x:auto"><table class="node-tbl" id="sNt"><thead><tr><th>#</th><th data-i18n="safe.nodeHdr.name">节点名称</th><th data-i18n="safe.nodeHdr.gnd">是否对地</th><th data-i18n="safe.nodeHdr.vrms">工作电压Vrms(V)</th><th data-i18n="safe.nodeHdr.ins">绝缘类型</th><th data-i18n="safe.nodeHdr.pcb">PCB走线</th><th data-i18n="safe.nodeHdr.coat">三防漆</th><th data-i18n="safe.nodeHdr.circ">电路</th><th></th></tr></thead><tbody id="sN"></tbody></table></div>
+    <button class="btn-sm" id="addNodeBtn" data-i18n="safe.addNode">+ 添加测量节点</button>
+  </div>
+</div>
+
+<!-- Right column -->
+<div>
+  <div class="card"><h2 data-i18n="safe.res.title">计算结果</h2><div class="result-grid">
+  </div>
+  <h3 style="margin-top:14px;font-size:.88rem;font-weight:600;margin-bottom:6px" data-i18n="safe.res.req">各节点所需安规距离</h3>
+  <table class="sg-tbl"><thead><tr><th>#</th><th data-i18n="safe.res.node">节点</th><th data-i18n="safe.nodeHdr.vrms">工作电压Vrms(V)</th><th data-i18n="safe.res.ins">绝缘类型</th><th>Clearance(mm)</th><th>Creepage(mm)</th></tr></thead><tbody id="sRtb"></tbody></table>
+  </div>
+<div id="safeWarn" class="input-warn" style="display:none"></div>
+  <div class="card"><h2 data-i18n="safe.res.assess">评估详情</h2><div id="sMa" style="font-size:.88rem"><p>-</p></div></div>
+</div>
+</div><!-- /layout -->
+
+<!-- Report section -->
+<div style="margin-top:24px">
+  <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <h2 style="font-size:1.1rem;font-weight:600" data-i18n="safe.report.title">安距设计报告</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn" onclick="sGenRep()" id="generateSafeBtn" data-i18n="safe.report.gen">生成报告</button>
+      <div class="btn-export-group" id="exportSafeGroup" style="display:none"><button class="btn" onclick="sExportReport('word')" id="exportSafeBtn" data-i18n="safe.report.export">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'safe')">▼</button><div class="export-dropdown" id="exportSafeDropdown"><div onclick="sExportReport('word')">Word (.doc)</div><div onclick="sExportReport('pdf')">PDF</div></div></div>
+    </div>
+  </div>
+  <div id="sRc"><h3 data-i18n="safe.report.rptTitle">安规距离评估报告</h3><p data-i18n="safe.report.empty">点击"生成报告"按钮后显示。</p></div>
+</div>
+
+</div><!-- /tab-safety -->
+
+</div><!-- /container -->
+
+<!-- ── Scripts (order: i18n → models → ui modules → app) ── -->
+<script src="js/i18n.js?v=1"></script>
+<script src="js/models/capacitor-model.js?v=10"></script>
+<script src="js/models/safety-model.js?v=10"></script>
+<script src="js/capacitor.js?v=14"></script>
+<script src="js/safety.js?v=14"></script>
+<script src="js/app.js?v=13"></script>
+</body>
+</html>
