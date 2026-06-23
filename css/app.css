@@ -362,6 +362,9 @@ h1.page-title, .tab-content > h1 {
 .param-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 28px; }
 /* Align inputs in same column: fix label width */
 .param-grid .fgi label { min-width: 110px; }
+/* Hints inside inline fields wrap below the input row */
+.param-grid .fgi { flex-wrap: wrap; }
+.param-grid > .fgi > .hint, .param-grid .fgl > .hint, .param-grid [id$="_hint"]:not(label *) { min-width: 100%; order: 99; margin-top: 2px; font-size: .7rem; color: #94a3b8; line-height: 1.3; }
 
 .fgl input,
 .fgl select,
@@ -384,11 +387,9 @@ h1.page-title, .tab-content > h1 {
   padding: 6px 8px;
   font-size: var(--fs-sm);
 }
-
-.fgl input,
-.fgl select {
-  font-size: var(--fs-sm);
-}
+/* Inputs stretch in param-grid columns */
+.param-grid .fgi input,
+.param-grid .fgi select { width: auto; flex: 1; }
 
 .fgl input:focus,
 .fgl select:focus,
