@@ -248,7 +248,7 @@
     result.results.forEach(function(r,i){
       var gndMark = r.toGnd ? '<span style="color:#2563eb;font-size:.7rem" title="'+_t("safe.tip.gndIns")+'">⊕</span>' : '';
       var withinNote = !r.toGnd ? ' <span style="color:#64748b;font-size:.65rem" title="'+_t("safe.tip.lineDerate")+'">↓1OVC</span>' : '';
-      var warnNote = r.forcedReinforced ? ' <span style="color:#f59e0b;font-size:.7rem" title="'+_t("safe.tip.forced")+'">⚠ '+_t("safe.chain.forcedReinf")+'</span>' : '';
+      var warnNote = r.forcedReinforced ? ' <span style="color:#f59e0b;font-size:.7rem" title="'+_t("safe.tip.forced")+'">'+_t("safe.chain.forcedReinf")+'</span>' : '';
       var peakWarn = (r.recurringPeakOk === false) ? ' <span style="color:#ef4444;font-size:.7rem" title="'+_t("safe.tip.peakOver")+'">🔴 '+_t("safe.chain.warnPeak")+'</span>' : '';
       var t241Warn = r.tbl241Note ? ' <span style="color:#f59e0b;font-size:.7rem" title="'+_t("safe.tip.t241")+'">⚠T24.1</span>' : '';
       tb+="<tr><td>"+(i+1)+"</td><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+r.insL+warnNote+withinNote+"</td><td>"+r.reqClr+t241Warn+"</td><td>"+r.reqCrp+peakWarn+"</td></tr>";
