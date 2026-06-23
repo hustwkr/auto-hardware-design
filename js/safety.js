@@ -83,7 +83,6 @@
     var nodes=document.querySelectorAll("#sN .snode");
     if(!nodes.length){
       document.getElementById("sRtb").innerHTML="";
-      document.getElementById("sMa").innerHTML="<p>"+_t("safe.msg.addNode")+"</p>";
       return;
     }
 
@@ -238,7 +237,6 @@
     }
     if(!result){
       document.getElementById("sRtb").innerHTML="";
-      document.getElementById("sMa").innerHTML="<p>"+_t("safe.msg.checkNode")+"</p>";
       return;
     }
 
@@ -257,33 +255,10 @@
     });
     document.getElementById("sRtb").innerHTML=tb;
 
-    var altk = SM.altFactor(alt);
-    var ah="<p style=margin-bottom:6px><strong>"+_t("safe.res.req")+"</strong></p>";
-    ah+="<p style=font-size:.85rem>"+_t("safe.report.std")+": "+sot("sStd")+" | PD: "+pd+" | "+_t("safe.report.mg")+": "+sot("sMg")+" | "+_t("safe.report.alt")+": "+alt+"m (k="+altk+")</p>";
-    if(std === 'iec'){
-      var isoLabel = iso==='isolated'?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
-      ah+="<p style=font-size:.82rem;color:#64748b>"+_t("safe.report.iso")+": "+isoLabel+"</p>";
-      ah+="<p style=font-size:.82rem;color:#64748b>"+_t("safe.report.conclusion")+":</p><ul style=font-size:.82rem;color:#64748b;margin:2px 0 0 16px;line-height:1.7>";
-      ah+='<li><strong>'+_t("safe.note.gnd")+'</strong>(⊕): '+_t("safe.note.clrIec")+'</li>';
-      ah+='<li><strong>'+_t("safe.note.line")+'</strong>(↓1OVC): '+_t("safe.note.reinfIec")+'</li>';
-      ah+='<li>'+_t("safe.note.crpIec")+'</li>';
-      ah+='<li style="color:#f59e0b;font-weight:500">'+_t("safe.note.warnIns")+'</li>';
-      ah+='</ul>';
-    } else {
-      ah+="<p style=font-size:.82rem;color:#64748b>"+_t("safe.report.conclusion")+":</p><ul style=font-size:.82rem;color:#64748b;margin:2px 0 0 16px;line-height:1.7>";
-      ah+='<li><strong>'+_t("safe.note.clrUl")+'</strong></li>';
-      ah+='<li>'+_t("safe.note.reinfUl")+'</li>';
-      ah+='<li>'+_t("safe.note.crpUl")+'</li>';
-      ah+='<li style="color:#f59e0b;font-weight:500">'+_t("safe.note.warnUl")+'</li>';
-      ah+='<li style="color:#ef4444;font-weight:500">'+_t("safe.note.peakUl")+'</li>';
-      ah+='<li style="color:#f59e0b;font-weight:500">'+_t("safe.note.t241")+'</li>';
-      ah+='</ul>';
-    }
-    document.getElementById("sMa").innerHTML=ah;
-
     // Store for report/export
     var ovc_AC_val = document.getElementById('sOvc_AC').value;
     var ovc_DC_val = document.getElementById('sOvc_DC').value;
+    var altk = SM.altFactor(alt);
     window._sd={results:result.results,pd:pd,mg:mg,alt:alt,altk:altk,std:std,impAC:impAC,impDC:impDC,ovc_AC:ovc_AC_val,ovc_DC:ovc_DC_val,isolation:iso};
   }
 
