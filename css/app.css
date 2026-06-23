@@ -190,7 +190,9 @@
 .nav-dropdown-menu {
   display: none;
   position: absolute;
-  top: calc(100% + 2px);
+  top: 100%;
+  margin-top: -4px;
+  padding-top: 4px;
   right: 0;
   z-index: 200;
   background: var(--color-surface);
