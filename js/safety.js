@@ -296,47 +296,79 @@
       var mult = SM.INS_K[r.effIns] || SM.INS_K[r.ins] || 1;
       var txt="<div style=margin:6px 0;padding:10px 14px;border-left:3px solid #2563eb;background:#f8fafc;font-size:.85rem;line-height:1.7>";
       // Node header + input params
-      txt += "<strong>" + (i+1) + ". " + r.name + "</strong>, ";
-      txt += _t("safe.chain.workV") + " " + r.vrms + " Vrms, " + r.insL + " ("+_t("safe.chain.mul")+"×" + mult + "), ";
+      var gndMark = r.toGnd ? ' ⊕' : ' ↓';
+      txt += "<strong>" + (i+1) + ". " + r.name + gndMark + "</strong><br>";
+      txt += _t("safe.chain.workV") + ": " + r.vrms + " Vrms | " + r.insL + " ("+_t("safe.chain.mul")+": ×" + mult + ")<br>";
+
       // ── Clearance chain ──
       if(d.std === 'ul'){
         var sysKV = (r.circ === 'dc' ? d.sysVDC : d.sysVAC);
         var sysKVRMS = (sysKV / 1000).toFixed(3);
-        txt += "Clearance: "+_t("safe.chain.sysV") + " " + sysKV + " V (" + sysKVRMS + " kVRMS), "+_t("safe.chain.ulTable");
+        txt += "<strong>电气间隙:</strong> "+_t("safe.chain.sysV") + " " + sysKV + " V (" + sysKVRMS + " kVRMS), " + _t("safe.chain.ulTable");
         if(r.interpUsed) txt += " <span style=\"color:#2563eb;font-weight:600\">("+_t("safe.chain.interpUsed")+")</span>";
-        txt += ", ";
-        if(mult > 1) txt += _t("safe.chain.insMult")+"×" + mult + ", ";
+        if(mult > 1) txt += ", " + _t("safe.chain.insMult")+": ×" + mult;
         var clrBase = (r.reqClr / d.altk).toFixed(2);
-        txt += _t("safe.chain.altK") + " k=" + d.altk + " (" + d.alt + " m), reqClearance = " + clrBase + " × " + d.altk + " = " + r.reqClr + " mm.";
+        txt += "<br>" + _t("safe.chain.altK") + ": k=" + d.altk + " (" + d.alt + " m) → reqClearance = " + clrBase + " × " + d.altk + " = <strong>" + r.reqClr + " mm</strong>";
       } else {
-        var impKV = (r.circ === 'dc' ? d.impDC : d.impAC);
-        if(!r.toGnd){ impKV = Math.round((impKV * 0.6) * 10) / 10; }
-        txt += "Clearance: ";
-        txt += _t("safe.chain.impulseV") + " " + impKV + " kV";
-        if(!r.toGnd) txt += " ("+_t("safe.chain.lineDerate")+")";
-        txt += ", "+_t("safe.chain.iecTable")+", ";
-        if(mult > 1) txt += _t("safe.chain.insMult")+"×" + mult + ", ";
-        var clrBase = (r.reqClr / d.altk).toFixed(2);
-        txt += _t("safe.chain.altK") + " k=" + d.altk + " (" + d.alt + " m), reqClearance = " + clrBase + " × " + d.altk + " = " + r.reqClr + " mm.";
+        // IEC clearance with full detail chain
+        var det = r.clrDetail;
+        txt += "<strong>电气间隙 (IEC):</strong><br>";
+        if(det){
+          if(det.type === 'reinf'){
+            txt += "&nbsp;&nbsp;(a) 冲击电压升一档: " + det.impKV + " kV → T13查表 = <span style=\"font-weight:600\">" + det.clrA + " mm</span><br>";
+            txt += "&nbsp;&nbsp;(b) 1.6×工作峰值: " + det.wrkPeak + " V × 1.6 → T13查表 = <span style=\"font-weight:600\">" + det.clrB + " mm</span><br>";
+            if(det.clrC !== undefined){
+              txt += "&nbsp;&nbsp;(c) 1.6×TOV峰值: " + (det.tovPeakV/1000).toFixed(2) + " kV × 1.6 → T13查表 = <span style=\"font-weight:600\">" + det.clrC + " mm</span><br>";
+            } else {
+              txt += "&nbsp;&nbsp;(c) TOV峰值: N/A (非电网电路)<br>";
+            }
+          } else if(det.type === 'func'){
+            txt += "&nbsp;&nbsp;冲击电压: " + det.impKV + " kV → T13查表 = <span style=\"font-weight:600\">" + det.cImp + " mm</span><br>";
+            if(det.cWk !== undefined){
+              txt += "&nbsp;&nbsp;工作峰值: " + det.wrkPeak + " V → T13查表 = <span style=\"font-weight:600\">" + det.cWk + " mm</span><br>";
+            }
+          } else {
+            // basic/supp
+            txt += "&nbsp;&nbsp;冲击电压: " + det.impKV + " kV → T13查表 = <span style=\"font-weight:600\">" + det.cImp + " mm</span><br>";
+            if(det.cTov !== undefined){
+              txt += "&nbsp;&nbsp;TOV峰值: " + (det.tovPeakV/1000).toFixed(2) + " kV → T13查表 = <span style=\"font-weight:600\">" + det.cTov + " mm</span><br>";
+            } else {
+              txt += "&nbsp;&nbsp;TOV峰值: N/A<br>";
+            }
+            txt += "&nbsp;&nbsp;工作峰值: " + det.wrkPeak + " V → T13查表 = <span style=\"font-weight:600\">" + det.cWk + " mm</span><br>";
+          }
+          // Final clearance with altitude factor
+          var clrBase = (r.reqClr / d.altk).toFixed(2);
+          txt += "&nbsp;&nbsp;→ 取最严苛值 <strong>" + clrBase + " mm</strong> × 海拔系数 k=" + d.altk + " (" + d.alt + " m) = <strong>" + r.reqClr + " mm</strong>";
+        } else {
+          // Fallback for UL or missing detail
+          var impKV = (r.circ === 'dc' ? d.impDC : d.impAC);
+          if(!r.toGnd){ impKV = Math.round((impKV * 0.6) * 10) / 10; }
+          txt += _t("safe.chain.impulseV") + " " + impKV + " kV" + ", " + _t("safe.chain.iecTable");
+          var clrBase = (r.reqClr / d.altk).toFixed(2);
+          txt += ", " + _t("safe.chain.altK") + " k=" + d.altk + " → reqClearance = " + clrBase + " × " + d.altk + " = <strong>" + r.reqClr + " mm</strong>";
+        }
       }
+
       // ── Creepage chain ──
       if(d.std === 'ul'){
-        txt += "Creepage: "+_t("safe.chain.workV") + " " + r.vrms + " V, "+_t("safe.chain.pd")+"PD" + d.pd + ", "+_t("safe.chain.mg")+"II, "+_t("safe.chain.ulTableBase");
+        txt += "<br><strong>爬电距离:</strong> "+_t("safe.chain.workV") + " " + r.vrms + " V, PD" + d.pd + ", MG-II, " + _t("safe.chain.ulTableBase");
         var crpBase = (r.reqCrp / mult).toFixed(2);
-        txt += " ~" + crpBase + " mm, ";
-        if(mult > 1) txt += _t("safe.chain.insMult")+"×" + mult + ", ";
-        txt += "reqCreepage = " + r.reqCrp + " mm.";
+        txt += " ~" + crpBase + " mm";
+        if(mult > 1) txt += " × " + _t("safe.chain.insMult") + "×" + mult;
+        txt += " → reqCreepage = <strong>" + r.reqCrp + " mm</strong>";
       } else {
-        txt += "Creepage: "+_t("safe.chain.workV") + " " + r.vrms + " V, "+_t("safe.chain.pd")+"PD" + d.pd + ", "+_t("safe.chain.mg")+(d.mg||'II')+", "+_t("safe.chain.iecTable");
+        txt += "<br><strong>爬电距离 (IEC):</strong> "+_t("safe.chain.workV") + " " + r.vrms + " V, PD" + d.pd + ", MG-" + (d.mg||'II').toUpperCase() + ", " + _t("safe.chain.iecTable");
         var crpBase = (r.reqCrp / mult).toFixed(2);
-        txt += " ~" + crpBase + " mm, ";
-        if(mult > 1) txt += _t("safe.chain.insMult")+"×" + mult + ", ";
-        txt += "reqCreepage = " + r.reqCrp + " mm.";
+        txt += " ~" + crpBase + " mm";
+        if(mult > 1) txt += " × " + _t("safe.chain.insMult") + "×" + mult;
+        txt += " → reqCreepage = <strong>" + r.reqCrp + " mm</strong>";
       }
+
       // ── Warnings/notes ──
-      if(r.forcedReinforced) txt += "<br><span style=color:#f59e0b>"+_t("safe.chain.warnGnd2")+"</span>";
-      if(r.tbl241Note) txt += "<br><span style=color:#f59e0b>"+_t("safe.chain.warnT241b")+"</span>";
-      if(r.recurringPeakOk === false) txt += "<br><span style=color:#ef4444>"+_t("safe.chain.warnPeakB")+"</span>";
+      if(r.forcedReinforced) txt += "<br><span style=color:#f59e0b>" + _t("safe.chain.warnGnd2") + "</span>";
+      if(r.tbl241Note) txt += "<br><span style=color:#f59e0b>" + _t("safe.chain.warnT241b") + "</span>";
+      if(r.recurringPeakOk === false) txt += "<br><span style=color:#ef4444>" + _t("safe.chain.warnPeakB") + "</span>";
       txt += "</div>";
       html += txt;
     });

@@ -465,6 +465,7 @@
 
     var impPeak = impKV * 1000;            // kV → V
     var wrkPeak = vrms * Math.sqrt(2);     // working voltage peak
+    var detail = null;                     // intermediate values for report
 
     if (insType === 'reinf') {
       /* ── REINFORCED INSULATION ───────────────────────────── */
@@ -482,10 +483,12 @@
       if (isMains && tovPeakV) {
         var clrC  = clrFromPeak(tovPeakV * 1.6, pd, 1);  // criterion (c): col 1 = tov_peak
         reqClr    = Math.max(clrA, clrB, clrC);       // most stringent of all three
+        detail = { type:'reinf', impKV: impNext, clrA: Math.round(clrA*10)/10, wrkPeak: Math.round(wrkPeak), clrB: Math.round(clrB*10)/10, tovPeakV: tovPeakV, clrC: Math.round(clrC*10)/10 };
       } else {
         reqClr    = Math.max(clrA, clrB);              // only (a) and (b) for non-mains
+        detail = { type:'reinf', impKV: impNext, clrA: Math.round(clrA*10)/10, wrkPeak: Math.round(wrkPeak), clrB: Math.round(clrB*10)/10 };
       }
-      return reqClr;
+      return { reqClr, detail };
 
     } else if (insType === 'func') {
       /* ── FUNCTIONAL INSULATION ───────────────────────────── */
@@ -497,9 +500,11 @@
       var clrImp = clrFromPeak(impPeak, pd);
       if (isMains) {
         var wrkClr = clrFromPeak(wrkPeak, pd);
-        return Math.max(clrImp, wrkClr);
+        detail = { type:'func', impKV: impKV, cImp: Math.round(clrImp*10)/10, wrkPeak: Math.round(wrkPeak), cWk: Math.round(wrkClr*10)/10 };
+        return { reqClr: Math.max(clrImp, wrkClr), detail };
       }
-      return clrImp; // non-mains: impulse voltage
+      detail = { type:'func', impKV: impKV, cImp: Math.round(clrImp*10)/10 };
+      return { reqClr: clrImp, detail }; // non-mains: impulse voltage
 
     } else {
       /* ── BASIC / SUPPLEMENTARY INSULATION ────────────────── */
@@ -509,14 +514,17 @@
         var cWk    = clrFromPeak(wrkPeak, pd);
         if (tovPeakV) {
           var cTov  = clrFromPeak(tovPeakV, pd);
-          return Math.max(cImp, cWk, cTov);
+          detail = { type:'basic', impKV: impKV, cImp: Math.round(cImp*10)/10, wrkPeak: Math.round(wrkPeak), cWk: Math.round(cWk*10)/10, tovPeakV: tovPeakV, cTov: Math.round(cTov*10)/10 };
+          return { reqClr: Math.max(cImp, cWk, cTov), detail };
         }
-        return Math.max(cImp, cWk);
+        detail = { type:'basic', impKV: impKV, cImp: Math.round(cImp*10)/10, wrkPeak: Math.round(wrkPeak), cWk: Math.round(cWk*10)/10 };
+        return { reqClr: Math.max(cImp, cWk), detail };
       } else {
         // Non-mains (PV/DC): most stringent of impulse or working voltage recurring peak
         var cI = clrFromPeak(impPeak, pd);
         var cW = clrFromPeak(wrkPeak, pd);
-        return Math.max(cI, cW);
+        detail = { type:'basic', impKV: impKV, cImp: Math.round(cI*10)/10, wrkPeak: Math.round(wrkPeak), cWk: Math.round(cW*10)/10 };
+        return { reqClr: Math.max(cI, cW), detail };
       }
     }
   }
@@ -561,6 +569,7 @@
 
     /* ── Clearance distances ─────────────── */
     var reqClr;
+    var clrDetail = null;  // intermediate values for detailed report (IEC only)
     var interpUsed = false;  // true when linear interpolation was applied (UL secondary circuits)
     if (standard === 'iec') {
       // sysVAC: AC system voltage for TOV lookup (from calcSafety)
@@ -571,7 +580,9 @@
         tovPeak = tovInfo ? tovInfo.peak : null;
       }
 
-      reqClr = calcClearance(vrms, impKV, tovPeak, isMains, effIns, pd);
+      var clrResult = calcClearance(vrms, impKV, tovPeak, isMains, effIns, pd);
+      reqClr = clrResult.reqClr;
+      clrDetail = clrResult.detail;
     } else {
       /* ── UL 840 clearance: based on system voltage (kVRMS) ─── */
       // Per UL 1741 §25.4g and UL 840 §6.3:
@@ -719,6 +730,7 @@
       forcedReinforced: forcedReinforced,
       reqClr: reqClr,
       reqCrp: reqCrp,
+      clrDetail: clrDetail,              // IEC clearance intermediate values for report
       recurringPeakOk: recurringPeakOk,   // UL §9.6 PCB check: null=NA, true=pass, false=exceeds
       tbl241Note: tbl241Note,            // UL §25.3 Table 24.1 floor: null/clr/crp/both
       tbl1Note: tbl1Note,                // UL 1741 Table 1 enclosure floor: null/clr/crp/both

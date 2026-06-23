@@ -284,13 +284,13 @@ test("prevImpLevel - steps down correctly", function () {
 });
 
 test("calcClearance - reinforced insulation uses most stringent", function () {
-  var clr = SM.calcClearance(230, 2.5, null, false, "reinf", 2);
-  assert.ok(clr >= 0.8, "Reinforced clearance should be substantial");
+  var res = SM.calcClearance(230, 2.5, null, false, "reinf", 2);
+  assert.ok(res.reqClr >= 0.8, "Reinforced clearance should be substantial");
 });
 
 test("calcClearance - functional insulation for mains", function () {
-  var clr = SM.calcClearance(230, 2.5, null, true, "func", 2);
-  assert.ok(clr > 0);
+  var res = SM.calcClearance(230, 2.5, null, true, "func", 2);
+  assert.ok(res.reqClr > 0);
 });
 
 test("calcNode - toGnd forces reinforced insulation", function () {
