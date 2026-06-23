@@ -327,12 +327,20 @@ h1.page-title, .tab-content > h1 {
 }
 
 .card h2 {
-  font-size: var(--fs-base);
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: 8px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--color-border);
+}
+
+.card h3, .section-h3 {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 12px;
+  margin-bottom: 5px;
 }
 
 /* ============================================================
