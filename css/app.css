@@ -360,8 +360,8 @@ h1.page-title, .tab-content > h1 {
 
 /* Compact param grid — 2-col, inline fields */
 .param-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 28px; }
-/* Align inputs in same column: fix label width */
-.param-grid .fgi label { min-width: 110px; }
+/* Align inputs in same column: fixed label width for strict left-right alignment */
+.param-grid .fgi label { min-width: 0; flex: 0 0 120px; }
 /* Hints inside inline fields wrap below the input row */
 .param-grid .fgi { flex-wrap: wrap; }
 .param-grid > .fgi > .hint, .param-grid .fgl > .hint, .param-grid [id$="_hint"]:not(label *) { min-width: 100%; order: 99; margin-top: 2px; font-size: .7rem; color: #94a3b8; line-height: 1.3; }
