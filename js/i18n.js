@@ -39,15 +39,15 @@
     /* Capacitor — device params */
     "cap.device":        { zh: "器件参数", en: "Device Parameters" },
     "cap.l0":            { zh: "额定寿命(h)", en: "Rated Life (h)" },
-    "cap.tmax":          { zh: "最高温度(C)", en: "Max Temp (°C)" },
+    "cap.tmax":          { zh: "最高温度(°C)", en: "Max Temp (°C)" },
     "cap.tau":           { zh: "Arrhenius τ(℃)", en: "Arrhenius τ (°C)" },
     "cap.tau.8":         { zh: "8 (长寿命型)", en: "8 (Long-life)" },
     "cap.tau.9":         { zh: "9 (高可靠型)", en: "9 (High-reliability)" },
     "cap.tau.10":        { zh: "10 (标准品)", en: "10 (Standard)" },
     "cap.vrated":        { zh: "额定电压(V)", en: "Rated Voltage (V)" },
     "cap.irated":        { zh: "额定纹波电流(mA)", en: "Rated Ripple Current (mA)" },
-    "cap.dt0":           { zh: "最大芯温升(C)", en: "Max Core Temp Rise (°C)" },
-    "cap.capval":        { zh: "电容量(uF)", en: "Capacitance (μF)" },
+    "cap.dt0":           { zh: "最大芯温升(°C)", en: "Max Core Temp Rise (°C)" },
+    "cap.capval":        { zh: "电容量(μF)", en: "Capacitance (μF)" },
 
     /* Capacitor — mission profile */
     "cap.profile":       { zh: "运行剖面", en: "Mission Profile" },

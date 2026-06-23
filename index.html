@@ -69,12 +69,12 @@
 
 <div class="card"><h2 style="font-size:.82rem" data-i18n="cap.device">器件参数</h2><div class="param-grid">
     <div class="fgi"><label data-i18n="cap.l0">额定寿命(h)</label><input type="number" id="l0" value="2000" min="100" step="100"></div>
-    <div class="fgi"><label data-i18n="cap.tmax">最高温度(C)</label><input type="number" id="tmax" value="105" min="60" max="150"></div>
+    <div class="fgi"><label data-i18n="cap.tmax">最高温度(°C)</label><input type="number" id="tmax" value="105" min="60" max="150"></div>
     <div class="fgi" style="position:relative"><label><span data-i18n="cap.tau">Arrhenius τ(℃)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="tau" data-i18n-opts='{"8":"cap.tau.8","9":"cap.tau.9","10":"cap.tau.10"}'><option value="8">8 (长寿命型)</option><option value="9">9 (高可靠型)</option><option value="10" selected>10 (标准品)</option></select><div class="info-popup" style="width:260px"><strong>Arrhenius 温度系数 τ</strong><br>寿命公式中每降低 τ°C，寿命翻倍的参数。反映电解液蒸发速率对温度的敏感度。<br><br><strong>如何选取：</strong><br>• <b>τ=10</b>：标准品（大多数常规铝电解电容）<br>• <b>τ=9</b>：高可靠型（如 Nichicon PW/PWJ 系列）<br>• <b>τ=8</b>：超长寿命型（12000h+ 系列，如 Rubycon ZLH/ZSH）<br>• 以制造商 datasheet 为准</div></div>
     <div class="fgi"><label data-i18n="cap.vrated">额定电压(V)</label><input type="number" id="vrated" value="50" min="1" step="1"></div>
     <div class="fgi"><label data-i18n="cap.irated">额定纹波电流(mA)</label><input type="number" id="irated" value="500" min="1" step="10"></div>
-    <div class="fgi" style="position:relative"><label><span data-i18n="cap.dt0">最大芯温升(C)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><input type="number" id="dt0" value="10" min="1" max="30" step="1"><div class="info-popup" style="width:260px"><strong>最大芯温升 ΔT₀</strong><br>电容在额定纹波电流 Irated 下，芯部相对于外壳的最大允许温升。决定纹波发热计算基准。<br><br><strong>如何选取：</strong><br>• <b>标准型</b>：ΔT₀ = 10°C（大多数常规品）<br>• <b>长寿命型</b>：ΔT₀ = 5~6°C（低ESR设计，芯温更低，寿命更长）<br>• 具体数值以制造商数据手册为准</div></div>
-    <div class="fgi"><label data-i18n="cap.capval">电容量(uF)</label><input type="number" id="cap" value="470" min="1" step="1"></div>
+    <div class="fgi" style="position:relative"><label><span data-i18n="cap.dt0">最大芯温升(°C)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><input type="number" id="dt0" value="10" min="1" max="30" step="1"><div class="info-popup" style="width:260px"><strong>最大芯温升 ΔT₀</strong><br>电容在额定纹波电流 Irated 下，芯部相对于外壳的最大允许温升。决定纹波发热计算基准。<br><br><strong>如何选取：</strong><br>• <b>标准型</b>：ΔT₀ = 10°C（大多数常规品）<br>• <b>长寿命型</b>：ΔT₀ = 5~6°C（低ESR设计，芯温更低，寿命更长）<br>• 具体数值以制造商数据手册为准</div></div>
+    <div class="fgi"><label data-i18n="cap.capval">电容量(μF)</label><input type="number" id="cap" value="470" min="1" step="1"></div>
   </div></div>
 
 <div class="layout">
@@ -201,7 +201,7 @@
 </div><!-- /container -->
 
 <!-- ── Scripts (order: i18n → models → ui modules → app) ── -->
-<script src="js/i18n.js?v=4"></script>
+<script src="js/i18n.js?v=5"></script>
 <script src="js/models/capacitor-model.js?v=10"></script>
 <script src="js/models/safety-model.js?v=10"></script>
 <script src="js/capacitor.js?v=18"></script>
