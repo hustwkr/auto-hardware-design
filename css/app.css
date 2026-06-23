@@ -431,6 +431,7 @@ h1.page-title, .tab-content > h1 {
 }
 
 .seg-head .sh { color: #64748b; font-weight: 400; }
+.seg-head .btn-sm { margin-left: auto; }
 
 /* Segment body — inline fields row */
 .seg-body { display: flex; align-items: center; gap: 6px; min-width: 0; }
