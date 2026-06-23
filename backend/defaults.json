@@ -7,7 +7,6 @@
     "dt0": "10",
     "workdays": "365",
     "warrantyTarget": "10",
-    "cooling": "1.0",
     "scenario": "industrial",
     "segments": [
       {

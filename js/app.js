@@ -78,7 +78,6 @@
       ['l0','tmax','tau','vrated','irated','dt0','workdays','warrantyTarget'].forEach(function(id){
         var el=document.getElementById(id); if(el) state.capacitor[id]=el.value;
       });
-      var coolingEl=document.getElementById('cooling'); if(coolingEl) state.capacitor.cooling=coolingEl.value;
       var scenarioEl=document.getElementById('scenario'); if(scenarioEl) state.capacitor.scenario=scenarioEl.value;
 
       /* Safety fields */
@@ -103,7 +102,6 @@
     var c=d.capacitor;if(c&&typeof c==='object'){
       setVal('l0',c.l0);setVal('tmax',c.tmax);setVal('tau',c.tau||'10');setVal('vrated',c.vrated);setVal('irated',c.irated);
       setVal('dt0',c.dt0);setVal('workdays',c.workdays);setVal('warrantyTarget',c.warrantyTarget);
-      if(c.cooling)document.getElementById('cooling').value=c.cooling;
       if(c.scenario)document.getElementById('scenario').value=c.scenario;
 
       /* Load segments from defaults — replaces initCapacitor placeholders */
