@@ -1,14 +1,13 @@
 {
   "capacitor": {
-    "l0": 5000,
-    "tmax": 105,
-    "tau": 10,
-    "vrated": 450,
-    "irated": 2000,
-    "dt0": 10,
-    "workdays": 365,
-    "warrantyTarget": 10,
-    "cooling": 1.0,
+    "l0": "5000",
+    "tmax": "105",
+    "vrated": "450",
+    "irated": "2000",
+    "dt0": "10",
+    "workdays": "365",
+    "warrantyTarget": "10",
+    "cooling": "1.0",
     "scenario": "industrial",
     "segments": [
       {
@@ -41,14 +40,13 @@
   },
   "safety": {
     "sStd": "iec",
-    "sPd": 2,
+    "sPd": "2",
     "sMg": "ii",
-    "sAlt": 3000,
+    "sAlt": "3000",
     "sIsolation": "isolated",
     "sOvc_AC": "ii",
-    "sOvc_DC": "i",
-    "sSysV_AC": 300,
-    "sSysV_DC": 600,
+    "sSysV_AC": "300",
+    "sSysV_DC": "600",
     "nodes": [
       {
         "name": "L-N",

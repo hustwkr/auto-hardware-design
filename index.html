@@ -61,7 +61,6 @@
 <div class="card"><h2 data-i18n="cap.basic">基本信息</h2><div class="param-grid">
     <div class="fgi"><label data-i18n="cap.projName">项目名称</label><input type="text" id="projName" placeholder="选填" data-i18n-placeholder="cap.projName"></div>
     <div class="fgi"><label data-i18n="cap.capModel">器件型号</label><input type="text" id="capModel" placeholder="选填"></div>
-    <div class="fgi"><label data-i18n="cap.cooling">散热条件</label><select id="cooling" data-i18n-opts='{"1.0":"cap.opt.natural","1.15":"cap.opt.fan1","1.30":"cap.opt.fan2"}'><option value="1.0" selected>自然对流</option><option value="1.15">强制风冷 1-2m/s</option><option value="1.30">强制风冷 &gt;2m/s</option></select></div>
     <div class="fgi"><label data-i18n="cap.workdays">每年工作天数</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"></div>
     <div class="fgi"><label data-i18n="cap.warranty">质保期(年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
     <div class="fgi"><label data-i18n="cap.scenario">场景</label><select id="scenario" data-i18n-opts='{"consumer":"cap.opt.consumer","industrial":"cap.opt.industrial","automotive":"cap.opt.automotive","medical":"cap.opt.medical"}'><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select></div>
@@ -201,9 +200,9 @@
 
 <!-- ── Scripts (order: i18n → models → ui modules → app) ── -->
 <script src="js/i18n.js?v=6"></script>
-<script src="js/models/capacitor-model.js?v=10"></script>
+<script src="js/models/capacitor-model.js?v=11"></script>
 <script src="js/models/safety-model.js?v=11"></script>
-<script src="js/capacitor.js?v=18"></script>
+<script src="js/capacitor.js?v=19"></script>
 <script src="js/safety.js?v=18"></script>
 <script src="js/app.js?v=16"></script>
 </body>

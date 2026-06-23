@@ -130,7 +130,6 @@
         vrated=+document.getElementById("vrated").value||50,
         irated=+document.getElementById("irated").value||500,
         dt0=+document.getElementById("dt0").value||10,
-        cooling=+document.getElementById("cooling").value||1,
         wd=+document.getElementById("workdays").value||365,
         wt=+document.getElementById("warrantyTarget").value||5,
         scenario=document.getElementById("scenario").value;
@@ -172,7 +171,7 @@
     // P1-7: Error boundary — wrap model call in try/catch
     var result;
     try{
-      result = CM.calcLifetime({l0:l0,tmax:tmax,tau:tau,vrated:vrated,irated:irated,dt0:dt0,cooling:cooling,wd:wd,wt:wt,scenario:scenario,segments:segments});
+      result = CM.calcLifetime({l0:l0,tmax:tmax,tau:tau,vrated:vrated,irated:irated,dt0:dt0,wd:wd,wt:wt,scenario:scenario,segments:segments});
     }catch(e){
       var el=document.getElementById("capWarn");
       if(el){el.textContent=_t("cap.warn.calcErr")+" "+e.message;el.style.display="block"}
@@ -297,11 +296,9 @@
     var pn=document.getElementById("projName").value||"-", cm=document.getElementById("capModel").value||"-";
     document.getElementById("rc").innerHTML=
       "<h3>1. "+_t("cap.report.projInfo")+"</h3><table class=\"data-tbl\"><thead><tr>"
-        +"<th>"+_t("cap.report.projName")+"</th><th>"+_t("cap.report.model")+"</th><th>"+_t("cap.report.scene")+"</th><th>"+_t("cap.report.cool")+"</th><th>"+_t("cap.report.days")+"</th><th>"+_t("cap.report.warr")+"</th></tr></thead><tbody><tr>"
+        +"<th>"+_t("cap.report.projName")+"</th><th>"+_t("cap.report.model")+"</th><th>"+_t("cap.report.scene")+"</th><th>"+_t("cap.report.days")+"</th><th>"+_t("cap.report.warr")+"</th></tr></thead><tbody><tr>"
         +"<td>"+pn+"</td><td>"+cm+"</td><td>"+_t("cap.opt."+d.scenario)+"</td>"
-        +"<td>"+sot("cooling")+"</td>"
         +"<td>"+d.wd+"</td><td>"+d.wt+_t("cap.r.unit.yr")+"</td></tr></tbody></table>"
-      +"<h3>2. "+_t("cap.report.rated")+"</h3><table class=\"data-tbl\"><thead><tr>"
         +"<th>L<sub>0</sub></th><th>T<sub>max</sub></th><th>V<sub>rated</sub></th><th>I<sub>rated</sub></th><th>ΔT<sub>0</sub></th></tr></thead><tbody><tr>"
         +"<td>"+d.l0+" h</td><td>"+d.tmax+" °C</td><td>"+(d.vr||d.vrated)+" V</td>"
         +"<td>"+(d.ir||d.irated)+" mA</td><td>"+d.dt0+" °C</td></tr></tbody></table>"
@@ -372,10 +369,9 @@
 
     h+='<h3>1. '+_t("cap.report.projInfo")+'</h3>';
     h+='<table class="data-tbl"><thead><tr>'
-      +'<th>'+_t("cap.report.projName")+'</th><th>'+_t("cap.report.model")+'</th><th>'+_t("cap.report.scene")+'</th><th>'+_t("cap.calc.coolCond")+'</th><th>'+_t("cap.report.days")+'</th><th>'+_t("cap.report.warr")+'</th>'
+      +'<th>'+_t("cap.report.projName")+'</th><th>'+_t("cap.report.model")+'</th><th>'+_t("cap.report.scene")+'</th><th>'+_t("cap.report.days")+'</th><th>'+_t("cap.report.warr")+'</th>'
       +'</tr></thead><tbody><tr>';
     h+='<td>'+pn+'</td><td>'+cm+'</td><td>'+_t("cap.opt."+d.scenario)+'</td>';
-    h+='<td>'+sot("cooling")+'</td>';
     h+='<td>'+d.wd+'</td><td>'+d.wt+yU+'</td></tr></tbody></table>';
 
     h+='<h3>2. '+_t("cap.calc.ratedParam")+'</h3>';
@@ -482,7 +478,7 @@
   });
   document.addEventListener('change', function(e){
     var t=e.target;
-    if(t.id && ['cooling','scenario'].includes(t.id)){calc()}
+    if(t.id && ['scenario'].includes(t.id)){calc()}
   });
 
   global.initCapacitor = initCapacitor;

@@ -100,10 +100,10 @@ test("calcDeltaT - frequency correction applied", function () {
   approx(dt[0].dt, 14.4, 0.5);
 });
 
-test("calcDeltaT - cooling factor reduces temperature rise", function () {
+test("calcDeltaT - natural convection (cooling=1)", function () {
   var segs = [{rips: [{freq: 120, current: 500}]}];
-  var dt2 = CM.calcDeltaT(segs, 500, 10, 1.3);
-  approx(dt2[0].dt, 10 / 1.3, 0.1);
+  var dt2 = CM.calcDeltaT(segs, 500, 10);
+  approx(dt2[0].dt, 10, 0.1);
 });
 
 test("calcDeltaT - deltaT capped at 3*dt0", function () {

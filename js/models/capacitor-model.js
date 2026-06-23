@@ -30,7 +30,8 @@
   }
 
   /* ── Ripple → ΔT calculation (pure) ───────────── */
-  function calcDeltaT(segments, irated, dt0, cooling) {
+  function calcDeltaT(segments, irated, dt0) {
+    var cooling = 1; // Natural convection only
     return segments.map(function (seg) {
       var sq = 0;
       var rd = [];
@@ -48,8 +49,9 @@
   }
 
   /* ── Per-segment lifetime (pure Arrhenius + Miner) */
-  function calcSegments(segments, l0, tmax, tau, vrated, irated, dt0, cooling, kva, kvb, wd) {
-    var deltas = calcDeltaT(segments, irated, dt0, cooling);
+  function calcSegments(segments, l0, tmax, tau, vrated, irated, dt0, kva, kvb, wd) {
+    var cooling = 1; // Natural convection only
+    var deltas = calcDeltaT(segments, irated, dt0);
     return segments.map(function (seg, i) {
       var dur = seg.dur || 0;
       var ta  = seg.ta  || 25;
@@ -79,7 +81,7 @@
     var vrated   = params.vrated   || 50;
     var irated   = params.irated   || 500;
     var dt0      = params.dt0      || 10;
-    var cooling  = params.cooling  || 1;
+    var cooling = 1; // Natural convection only
     var wd       = params.wd       || 365;
     var wt       = params.wt       || 5;
     var scenario = params.scenario || "industrial";
@@ -90,7 +92,7 @@
     if (!segments.length) return null;
 
     var mi   = MG[scenario] || MG.industrial;
-    var sr   = calcSegments(segments, l0, tmax, tau, vrated, irated, dt0, cooling, kva, kvb, wd);
+    var sr   = calcSegments(segments, l0, tmax, tau, vrated, irated, dt0, kva, kvb, wd);
     var dmg  = sr.reduce(function (s, r) { return s + r.d; }, 0);
     var ly   = dmg > 0 ? 1 / dmg : Infinity;
     var lh   = ly * wd * segments.reduce(function (s, seg) { return s + (seg.dur || 0); }, 0);
@@ -111,7 +113,8 @@
 
     return {
       l0: l0, tmax: tmax, tau: tau, vrated: vrated, irated: irated, dt0: dt0,
-      cooling: cooling, wd: wd, wt: wt, scenario: scenario, mi: mi,
+      // cooling removed — always natural convection (coefficient = 1)
+      wd: wd, wt: wt, scenario: scenario, mi: mi,
       sr: sr, dmg: dmg, lh: lh, ly: ly, margin: margin,
       ws: ws, wc: wc, wd2: wd2, req: req,
       wsFull: ws + "(" + fv(margin,1) + "x,需" + req + "x)",
