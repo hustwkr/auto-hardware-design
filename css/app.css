@@ -190,7 +190,7 @@
 .nav-dropdown-menu {
   display: none;
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 2px);
   right: 0;
   z-index: 200;
   background: var(--color-surface);
@@ -715,4 +715,5 @@ table.data-tbl tbody tr:hover {
   button, .btn-sm, .btn, .btn-p, .nav-dropdown, .info-icon, .export-dropdown { display: none !important; }
 
   /* Ensure links show URLs */
-  a[href]::after { content: " (" attr(href) ")
+  a[href]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #666; }
+}
