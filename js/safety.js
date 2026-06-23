@@ -11,13 +11,15 @@
   var snid = 0;
   var dcManualOverride = false; // Track whether user manually changed DC OVC
 
+  function sot(id){var el=document.getElementById(id);return el&&el.selectedOptions&&el.selectedOptions[0]?el.selectedOptions[0].text:''}
+
   /* ── Node markup (DOM-only) ─────────────── */
   function mNode(id,idx,name,vrms,ins,pcb,coat,interp,circ,toGnd){
     ins=ins||'basic';pcb=pcb||0;coat=coat||0;interp=interp||false;circ=circ||'ac';toGnd=!!toGnd;
-    var io='<option value="func" '+(ins=='func'?'selected':'')+'>功能</option><option value="basic" '+(ins=='basic'?'selected':'')+'>基本</option><option value="supp" '+(ins=='supp'?'selected':'')+'>附加</option><option value="reinf" '+(ins=='reinf'?'selected':'')+'>加强</option>';
-    var po='<option value="0" '+(pcb==0?'selected':'')+'>否(端子)</option><option value="1" '+(pcb==1?'selected':'')+'>是(PCB)</option>';
-    var co='<option value="0" '+(coat==0?'selected':'')+'>无</option><option value="1" '+(coat==1?'selected':'')+'>Type 1 (降PD)</option><option value="2" '+(coat==2?'selected':'')+'>Type 2/灌封</option>';
-    var go='<option value="0" '+(!toGnd?'selected':'')+'>否(线间)</option><option value="1" '+(toGnd?'selected':'')+'>是(对地)</option>';
+    var io='<option value="func" '+(ins=='func'?'selected':'')+'>'+_t("safe.ins.func")+'</option><option value="basic" '+(ins=='basic'?'selected':'')+'>'+_t("safe.ins.basic")+'</option><option value="supp" '+(ins=='supp'?'selected':'')+'>'+_t("safe.ins.supp")+'</option><option value="reinf" '+(ins=='reinf'?'selected':'')+'>'+_t("safe.ins.reinf")+'</option>';
+    var po='<option value="0" '+(pcb==0?'selected':'')+'>'+_t("safe.pcb.no")+'</option><option value="1" '+(pcb==1?'selected':'')+'>'+_t("safe.pcb.yes")+'</option>';
+    var co='<option value="0" '+(coat==0?'selected':'')+'>'+_t("safe.coat.no")+'</option><option value="1" '+(coat==1?'selected':'')+'>'+_t("safe.coat.t1")+'</option><option value="2" '+(coat==2?'selected':'')+'>'+_t("safe.coat.t2")+'</option>';
+    var go='<option value="0" '+(!toGnd?'selected':'')+'>'+_t("safe.gnd.no")+'</option><option value="1" '+(toGnd?'selected':'')+'>'+_t("safe.gnd.yes")+'</option>';
     return '<tr class="snode" data-id='+id+'>'
       +'<td style="text-align:center;color:#94a3b8;font-size:.72rem">'+(idx+1)+'</td>'
       +'<td><input class=sname type=text value="'+name+'" style="width:80px;border:1px solid #e2e8f0;border-radius:3px;padding:2px 4px;font-size:.78rem"></td>'
@@ -81,7 +83,7 @@
     var nodes=document.querySelectorAll("#sN .snode");
     if(!nodes.length){
       document.getElementById("sRtb").innerHTML="";
-      document.getElementById("sMa").innerHTML="<p>请添加测量节点。</p>";
+      document.getElementById("sMa").innerHTML="<p>"+_t("safe.msg.addNode")+"</p>";
       return;
     }
 
@@ -94,10 +96,10 @@
     /* ── P1-4: Input validation helpers ─── */
     var warns=[];
     function w(msg){warns.push(msg)}
-    function cl(v,lo,hi,name){if(v<lo||v>hi){w(name+" "+v+" → 修正为"+Math.max(lo,Math.min(hi,v)));return Math.max(lo,Math.min(hi,v))}return v}
+    function cl(v,lo,hi,name){if(v<lo||v>hi){w(name+" "+v+" → "+_t("param.corrected")+" "+Math.max(lo,Math.min(hi,v)));return Math.max(lo,Math.min(hi,v))}return v}
 
     // P1-4: Validate altitude
-    alt = cl(alt,0,20000,"海拔");
+    alt = cl(alt,0,20000,_t("param.altitude"));
 
     /* ── UL mode: PD and material group are fixed by standard ─── */
     if(std === 'ul'){
@@ -116,8 +118,8 @@
     var sysVDC = +(sysVDC_el?sysVDC_el.value:0) || 600;
 
     // P1-4: Validate system voltages
-    sysVAC = cl(sysVAC,0,15000,"AC系统电压");
-    sysVDC = cl(sysVDC,0,15000,"DC系统电压");
+    sysVAC = cl(sysVAC,0,15000,_t("param.acv"));
+    sysVDC = cl(sysVDC,0,15000,_t("param.dcv"));
 
     /* ── Impulse withstand voltage per IEC 62109-1 Table 12 ──── */
     var IMPULSE_TBL = [
@@ -174,19 +176,19 @@
         if(!el) return;
         var ovcLabel = function(n){return {1:'I',2:'II',3:'III',4:'IV'}[n]||'II';};
         var tovAC_info = tovFor(sysVAC);
-        var isoNote = iso==='isolated'?'<span class="imp-note">(隔离降档)</span>':'<span class="imp-note">(无隔离取较高值)</span>';
+        var isoNote = iso==='isolated'?'<span class="imp-note">'+_t("safe.imp.isoDown")+'</span>':'<span class="imp-note">'+_t("safe.imp.noIso")+'</span>';
         el.innerHTML =
-          '<div><span class="imp-label">AC侧冲击电压:</span> ' +
+          '<div><span class="imp-label">'+_t("safe.imp.acLbl")+'</span> ' +
           '<span class="imp-val">'+impAC+' kV</span> ' +
           '<span class="imp-sub">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
-          '<div><span class="imp-label">DC侧冲击电压:</span> ' +
+          '<div><span class="imp-label">'+_t("safe.imp.dcLbl")+'</span> ' +
           '<span class="imp-val">'+impDC+' kV</span> ' +
           '<span class="imp-sub">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span> '+isoNote+'</div>' +
-          '<div><span class="imp-label">AC侧暂态过电压:</span> ' +
+          '<div><span class="imp-label">'+_t("safe.imp.tovLbl")+'</span> ' +
           '<span class="imp-tov">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span></div>' +
           '<div class="imp-footer">' +
-          '线间节点(电气间隙): 冲击电压降一档 → AC '+prevImpLevel(impAC)+' kV, DC '+Math.max(prevImpLevel(impDC), 2.5)+' kV' +
-          '<br><span style="font-style:italic">依据 IEC 62109-1 §7.3.7 — 同一电路内部的功能绝缘比对地再降一档</span></div>';
+          _t("safe.imp.lineNote")+': AC '+prevImpLevel(impAC)+' kV, DC '+Math.max(prevImpLevel(impDC), 2.5)+' kV' +
+          '<br><span style="font-style:italic">'+_t("safe.imp.iecRef")+'</span></div>';
       })();
     } else {
       /* ── UL mode: show system voltage info instead of impulse/TOV ─── */
@@ -194,9 +196,9 @@
         var el = document.getElementById("sImpulseInfo");
         if(!el) return;
         el.innerHTML =
-          '<span class="imp-label">UL 1741 查表依据:</span><br>' +
-          'AC侧系统电压: <strong>'+sysVAC+' V</strong> → '+((sysVAC/1000).toFixed(2))+' kVRMS | DC侧系统电压: <strong>'+sysVDC+' V</strong> → '+((sysVDC/1000).toFixed(2))+' kVRMS<br>' +
-          '<span class="imp-sub">UL 电气间隙由相地额定系统电压查表确定 (§25.4g)，不使用冲击耐受电压</span>';
+          '<span class="imp-label">'+_t("safe.imp.ulTitle")+'</span><br>' +
+          _t("safe.imp.ulAc")+': <strong>'+sysVAC+' V</strong> → '+((sysVAC/1000).toFixed(2))+' kVRMS | '+_t("safe.imp.ulDc")+': <strong>'+sysVDC+' V</strong> → '+((sysVDC/1000).toFixed(2))+' kVRMS<br>' +
+          '<span class="imp-sub">'+_t("safe.imp.ulNote")+'</span>';
       })();
     }
 
@@ -205,9 +207,9 @@
     nodes.forEach(function(seg,i){
       var vrms = +seg.querySelector(".svrms").value || 0;
       // P1-4: Validate node vrms
-      vrms = cl(vrms,0,15000,"节点"+(i+1)+"电压");
+      vrms = cl(vrms,0,15000,_t("param.nodeV",{n:i+1}));
       nodeArr.push({
-        name: seg.querySelector(".sname").value || "节点"+(i+1),
+        name: seg.querySelector(".sname").value || _t("param.node")+(i+1),
         vrms: vrms,
         ins:  seg.querySelector(".sins").value || "basic",
         pcb:  +seg.querySelector(".spcb").value || 0,
@@ -231,12 +233,12 @@
       // P1-7: Error boundary — show error in #safeWarn
       console.error("SafetyModel.calcSafety error:", e);
       var swn=document.getElementById("safeWarn");
-      if(swn){swn.textContent="⚠ 计算错误: "+e.message;swn.style.display="block"}
+      if(swn){swn.textContent=_t("common.warn.calcErr")+" "+e.message;swn.style.display="block"}
       return;
     }
     if(!result){
       document.getElementById("sRtb").innerHTML="";
-      document.getElementById("sMa").innerHTML="<p>请检查节点配置。</p>";
+      document.getElementById("sMa").innerHTML="<p>"+_t("safe.msg.checkNode")+"</p>";
       return;
     }
 
@@ -246,38 +248,35 @@
     // Render results to DOM
     var tb="";
     result.results.forEach(function(r,i){
-      var gndMark = r.toGnd ? '<span style="color:#2563eb;font-size:.7rem" title="对地节点，IEC 62109-1 §7.3.7 强制加强绝缘">⊕</span>' : '';
-      var withinNote = !r.toGnd ? ' <span style="color:#64748b;font-size:.65rem" title="线间节点：冲击电压按标准降一档计算">↓1OVC</span>' : '';
-      var warnNote = r.forcedReinforced ? ' <span style="color:#f59e0b;font-size:.7rem" title="该节点为对地连接，标准强制要求加强绝缘(×2)，已自动应用">⚠ 已强制加强</span>' : '';
-      var peakWarn = (r.recurringPeakOk === false) ? ' <span style="color:#ef4444;font-size:.7rem" title="UL 840 §9.6: PCB反复峰值电压超出Table 9.3限制，请增大爬电距离或降低工作电压">🔴 峰值超限</span>' : '';
-      var t241Warn = r.tbl241Note ? ' <span style="color:#f59e0b;font-size:.7rem" title="UL 1741 §25.3: 现场接线端子强制使用Table 24.1基线间距(非UL 840替代方案)">⚠ T24.1</span>' : '';
+      var gndMark = r.toGnd ? '<span style="color:#2563eb;font-size:.7rem" title="'+_t("safe.tip.gndIns")+'">⊕</span>' : '';
+      var withinNote = !r.toGnd ? ' <span style="color:#64748b;font-size:.65rem" title="'+_t("safe.tip.lineDerate")+'">↓1OVC</span>' : '';
+      var warnNote = r.forcedReinforced ? ' <span style="color:#f59e0b;font-size:.7rem" title="'+_t("safe.tip.forced")+'">⚠ '+_t("safe.chain.forcedReinf")+'</span>' : '';
+      var peakWarn = (r.recurringPeakOk === false) ? ' <span style="color:#ef4444;font-size:.7rem" title="'+_t("safe.tip.peakOver")+'">🔴 '+_t("safe.chain.warnPeak")+'</span>' : '';
+      var t241Warn = r.tbl241Note ? ' <span style="color:#f59e0b;font-size:.7rem" title="'+_t("safe.tip.t241")+'">⚠T24.1</span>' : '';
       tb+="<tr><td>"+(i+1)+"</td><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+r.insL+warnNote+withinNote+"</td><td>"+r.reqClr+t241Warn+"</td><td>"+r.reqCrp+peakWarn+"</td></tr>";
     });
     document.getElementById("sRtb").innerHTML=tb;
 
     var altk = SM.altFactor(alt);
-    var ah="<p style=margin-bottom:6px><strong>安规距离计算结果</strong></p>";
-    ah+="<p style=font-size:.85rem>标准: "+document.getElementById("sStd").selectedOptions[0].text+" | PD: "+pd+" | 材料: "+document.getElementById("sMg").selectedOptions[0].text+" | 海拔: "+alt+"m(系数"+altk+")</p>";
+    var ah="<p style=margin-bottom:6px><strong>"+_t("safe.res.req")+"</strong></p>";
+    ah+="<p style=font-size:.85rem>"+_t("safe.report.std")+": "+sot("sStd")+" | PD: "+pd+" | "+_t("safe.report.mg")+": "+sot("sMg")+" | "+_t("safe.report.alt")+": "+alt+"m (k="+altk+")</p>";
     if(std === 'iec'){
-      var isoLabel = iso==='isolated'?'有隔离':'无隔离';
-      ah+="<p style=font-size:.82rem;color:#64748b>隔离架构: "+isoLabel+"</p>";
-      ah+="<p style=font-size:.82rem;color:#64748b>注:</p><ul style=font-size:.82rem;color:#64748b;margin:2px 0 0 16px;line-height:1.7>";
-      ah+='<li><strong>对地节点</strong>(⊕): 使用电路完整OVC冲击电压 — IEC 62109-1 §7.3.7 强制要求加强绝缘</li>';
-      ah+='<li><strong>线间节点</strong>(↓1OVC): 同一电路内部的功能绝缘比对地再降一档 (§7.3.7) — 冲击电压取低一档计算电气间隙</li>';
-      ah+='<li>电气间隙(IEC): 取冲击电压、暂态过电压(TOV)、工作电压峰值三者查表后最严苛值，再乘海拔系数</li>';
-      ah+='<li>加强绝缘(IEC): 取三项中最严 — (a)冲击电压升一档 (b)1.6×工作峰值 (c)1.6×TOV峰值(仅电网电路)</li>';
-      ah+='<li>爬电距离已乘绝缘倍率，非PCB走线按污染等级选取</li>';
-      ah+='<li style="color:#f59e0b;font-weight:500">⚠ = 用户选择了非加强绝缘但对地连接，系统已自动按加强绝缘计算</li>';
+      var isoLabel = iso==='isolated'?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
+      ah+="<p style=font-size:.82rem;color:#64748b>"+_t("safe.report.iso")+": "+isoLabel+"</p>";
+      ah+="<p style=font-size:.82rem;color:#64748b>"+_t("safe.report.conclusion")+":</p><ul style=font-size:.82rem;color:#64748b;margin:2px 0 0 16px;line-height:1.7>";
+      ah+='<li><strong>'+_t("safe.note.gnd")+'</strong>(⊕): '+_t("safe.note.clrIec")+'</li>';
+      ah+='<li><strong>'+_t("safe.note.line")+'</strong>(↓1OVC): '+_t("safe.note.reinfIec")+'</li>';
+      ah+='<li>'+_t("safe.note.crpIec")+'</li>';
+      ah+='<li style="color:#f59e0b;font-weight:500">'+_t("safe.note.warnIns")+'</li>';
       ah+='</ul>';
     } else {
-      /* ── UL mode assessment notes ─── */
-      ah+="<p style=font-size:.82rem;color:#64748b>注:</p><ul style=font-size:.82rem;color:#64748b;margin:2px 0 0 16px;line-height:1.7>";
-      ah+='<li><strong>电气间隙(UL)</strong>: 由相地额定系统电压(kVRMS)查表确定 (§25.4g)，不使用冲击耐受电压</li>';
-      ah+='<li>加强绝缘(UL): 取基本绝缘距离×2 或表中上一行，以较大值为准 (§6.3)</li>';
-      ah+='<li>爬电距离(UL): 由工作电压Vrms查表确定，加强绝缘翻倍</li>';
-      ah+='<li style="color:#f59e0b;font-weight:500">⚠ = 对地节点强制加强绝缘，系统已自动应用</li>';
-      ah+='<li style="color:#ef4444;font-weight:500">🔴 = PCB反复峰值电压超限 (UL 840 §9.6)，需增大爬电距离或降低工作电压</li>';
-      ah+='<li style="color:#f59e0b;font-weight:500">⚠T24.1 = 现场接线端子强制使用Table 24.1基线间距 (UL 1741 §25.3)，不使用UL 840替代方案</li>';
+      ah+="<p style=font-size:.82rem;color:#64748b>"+_t("safe.report.conclusion")+":</p><ul style=font-size:.82rem;color:#64748b;margin:2px 0 0 16px;line-height:1.7>";
+      ah+='<li><strong>'+_t("safe.note.clrUl")+'</strong></li>';
+      ah+='<li>'+_t("safe.note.reinfUl")+'</li>';
+      ah+='<li>'+_t("safe.note.crpUl")+'</li>';
+      ah+='<li style="color:#f59e0b;font-weight:500">'+_t("safe.note.warnUl")+'</li>';
+      ah+='<li style="color:#ef4444;font-weight:500">'+_t("safe.note.peakUl")+'</li>';
+      ah+='<li style="color:#f59e0b;font-weight:500">'+_t("safe.note.t241")+'</li>';
       ah+='</ul>';
     }
     document.getElementById("sMa").innerHTML=ah;
@@ -297,47 +296,47 @@
       var mult = SM.INS_K[r.effIns] || SM.INS_K[r.ins] || 1;
       var txt="<div style=margin:6px 0;padding:10px 14px;border-left:3px solid #2563eb;background:#f8fafc;font-size:.85rem;line-height:1.7>";
       // Node header + input params
-      txt += "<strong>" + (i+1) + ". " + r.name + "</strong>，";
-      txt += "工作电压 " + r.vrms + " Vrms，" + r.insL + "（倍率×" + mult + "），";
+      txt += "<strong>" + (i+1) + ". " + r.name + "</strong>, ";
+      txt += _t("safe.chain.workV") + " " + r.vrms + " Vrms, " + r.insL + " ("+_t("safe.chain.mul")+"×" + mult + "), ";
       // ── Clearance chain ──
       if(d.std === 'ul'){
         var sysKV = (r.circ === 'dc' ? d.sysVDC : d.sysVAC);
         var sysKVRMS = (sysKV / 1000).toFixed(3);
-        txt += "Clearance：系统电压 " + sysKV + " V（" + sysKVRMS + " kVRMS），查UL 840表";
-        if(r.interpUsed) txt += "<span style=\"color:#2563eb;font-weight:600\">（差值法）</span>";
-        txt += "得基准值，";
-        if(mult > 1) txt += "绝缘倍率×" + mult + "，";
+        txt += "Clearance: "+_t("safe.chain.sysV") + " " + sysKV + " V (" + sysKVRMS + " kVRMS), "+_t("safe.chain.ulTable");
+        if(r.interpUsed) txt += " <span style=\"color:#2563eb;font-weight:600\">("+_t("safe.chain.interpUsed")+")</span>";
+        txt += ", ";
+        if(mult > 1) txt += _t("safe.chain.insMult")+"×" + mult + ", ";
         var clrBase = (r.reqClr / d.altk).toFixed(2);
-        txt += "海拔修正系数 k=" + d.altk + "（" + d.alt + " m），reqClearance = " + clrBase + " × " + d.altk + " = " + r.reqClr + " mm。";
+        txt += _t("safe.chain.altK") + " k=" + d.altk + " (" + d.alt + " m), reqClearance = " + clrBase + " × " + d.altk + " = " + r.reqClr + " mm.";
       } else {
         var impKV = (r.circ === 'dc' ? d.impDC : d.impAC);
         if(!r.toGnd){ impKV = Math.round((impKV * 0.6) * 10) / 10; }
-        txt += "Clearance：";
-        txt += "冲击电压 " + impKV + " kV";
-        if(!r.toGnd) txt += "（线间降档）";
-        txt += "，查IEC 60664-1表得基准值，";
-        if(mult > 1) txt += "绝缘倍率×" + mult + "，";
+        txt += "Clearance: ";
+        txt += _t("safe.chain.impulseV") + " " + impKV + " kV";
+        if(!r.toGnd) txt += " ("+_t("safe.chain.lineDerate")+")";
+        txt += ", "+_t("safe.chain.iecTable")+", ";
+        if(mult > 1) txt += _t("safe.chain.insMult")+"×" + mult + ", ";
         var clrBase = (r.reqClr / d.altk).toFixed(2);
-        txt += "海拔修正系数 k=" + d.altk + "（" + d.alt + " m），reqClearance = " + clrBase + " × " + d.altk + " = " + r.reqClr + " mm。";
+        txt += _t("safe.chain.altK") + " k=" + d.altk + " (" + d.alt + " m), reqClearance = " + clrBase + " × " + d.altk + " = " + r.reqClr + " mm.";
       }
       // ── Creepage chain ──
       if(d.std === 'ul'){
-        txt += "Creepage：工作电压 " + r.vrms + " V，污染等级PD" + d.pd + "，材料组II，查UL 840表得基准值";
+        txt += "Creepage: "+_t("safe.chain.workV") + " " + r.vrms + " V, "+_t("safe.chain.pd")+"PD" + d.pd + ", "+_t("safe.chain.mg")+"II, "+_t("safe.chain.ulTableBase");
         var crpBase = (r.reqCrp / mult).toFixed(2);
-        txt += "约 " + crpBase + " mm，";
-        if(mult > 1) txt += "绝缘倍率×" + mult + "，";
-        txt += "reqCreepage = " + r.reqCrp + " mm。";
+        txt += " ~" + crpBase + " mm, ";
+        if(mult > 1) txt += _t("safe.chain.insMult")+"×" + mult + ", ";
+        txt += "reqCreepage = " + r.reqCrp + " mm.";
       } else {
-        txt += "Creepage：工作电压 " + r.vrms + " V，污染等级PD" + d.pd + "，材料组" + (d.mg||'II') + "，查IEC 60664-1表得基准值";
+        txt += "Creepage: "+_t("safe.chain.workV") + " " + r.vrms + " V, "+_t("safe.chain.pd")+"PD" + d.pd + ", "+_t("safe.chain.mg")+(d.mg||'II')+", "+_t("safe.chain.iecTable");
         var crpBase = (r.reqCrp / mult).toFixed(2);
-        txt += "约 " + crpBase + " mm，";
-        if(mult > 1) txt += "绝缘倍率×" + mult + "，";
-        txt += "reqCreepage = " + r.reqCrp + " mm。";
+        txt += " ~" + crpBase + " mm, ";
+        if(mult > 1) txt += _t("safe.chain.insMult")+"×" + mult + ", ";
+        txt += "reqCreepage = " + r.reqCrp + " mm.";
       }
       // ── Warnings/notes ──
-      if(r.forcedReinforced) txt += "<br><span style=color:#f59e0b>⚠ 对地节点，标准强制要求加强绝缘</span>";
-      if(r.tbl241Note) txt += "<br><span style=color:#f59e0b>⚠ UL Table 24.1最小值约束生效</span>";
-      if(r.recurringPeakOk === false) txt += "<br><span style=color:#ef4444>🔴 UL §9.6 PCB峰值电压超限</span>";
+      if(r.forcedReinforced) txt += "<br><span style=color:#f59e0b>"+_t("safe.chain.warnGnd2")+"</span>";
+      if(r.tbl241Note) txt += "<br><span style=color:#f59e0b>"+_t("safe.chain.warnT241b")+"</span>";
+      if(r.recurringPeakOk === false) txt += "<br><span style=color:#ef4444>"+_t("safe.chain.warnPeakB")+"</span>";
       txt += "</div>";
       html += txt;
     });
@@ -346,14 +345,14 @@
 
   function sGenRep(){
     var d=window._sd;
-    if(!d||!d.results||!d.results.length){document.getElementById("sRc").innerHTML="<h3>安规距离评估报告</h3><p>请添加测量节点。</p>";return;}
+    if(!d||!d.results||!d.results.length){document.getElementById("sRc").innerHTML="<h3>"+_t("safe.report.rptTitle")+"</h3><p>"+_t("safe.report.hint")+"</p>";return;}
 
     // Show export button after report generation
     var eg=document.getElementById('exportSafeGroup');if(eg)eg.style.display='';
     var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
-    var sr="";d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间,降档)';var f=r.forcedReinforced?' ⚠强制加强':'';var pw=(r.recurringPeakOk===false)?' 🔴峰值超限':'';var t241=r.tbl241Note?' ⚠T24.1':'';sr+="<tr><td>"+(d.results.indexOf(r)+1)+"</td><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
+    var sr="";d.results.forEach(function(r){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLine");var f=r.forcedReinforced?' '+_t("safe.chain.forcedReinf"):'';var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';sr+="<tr><td>"+(d.results.indexOf(r)+1)+"</td><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
 
-    var isoLabel = (d.isolation==='isolated')?'有隔离':'无隔离';
+    var isoLabel = (d.isolation==='isolated')?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
 
     /* ── Read system voltage from correct input based on standard ─── */
     var sysVAC_el = d.std === 'ul' ? document.getElementById('sSysV_AC_ul') : document.getElementById('sSysV_AC');
@@ -365,38 +364,37 @@
     var baseTable;
     if(d.std === 'iec'){
       baseTable=
-        "<tr><td>标准</td><td>"+document.getElementById('sStd').selectedOptions[0].text+"</td></tr>"
-        +"<tr><td>污染等级</td><td>PD "+d.pd+"</td></tr>"
-        +"<tr><td>材料组别</td><td>"+document.getElementById('sMg').selectedOptions[0].text+"</td></tr>"
-        +"<tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr>"
-        +"<tr><td>隔离架构</td><td>"+isoLabel+"</td></tr>"
-        +"<tr><td>AC侧过电压类别</td><td>OVC "+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+" (冲击电压 "+(d.impAC||'-')+' kV)'+"</td></tr>"
-        +"<tr><td>DC侧过电压类别</td><td>OVC "+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+" (冲击电压 "+(d.impDC||'-')+' kV)' +(d.isolation==='isolated'?' <em>(隔离降档)</em>':'')+ "</td></tr>"
-        +"<tr><td>AC系统电压</td><td>"+sysVAC_val+' V'+'</td></tr>'
-        +"<tr><td>DC系统电压</td><td>"+sysVDC_val+' V'+'</td></tr>';
+        "<tr><td>"+_t("safe.report.std")+"</td><td>"+sot("sStd")+"</td></tr>"
+        +"<tr><td>"+_t("safe.report.pd")+"</td><td>PD "+d.pd+"</td></tr>"
+        +"<tr><td>"+_t("safe.report.mg")+"</td><td>"+sot("sMg")+"</td></tr>"
+        +"<tr><td>"+_t("safe.report.alt")+"</td><td>"+d.alt+"m (k="+d.altk+")</td></tr>"
+        +"<tr><td>"+_t("safe.report.iso")+"</td><td>"+isoLabel+"</td></tr>"
+        +"<tr><td>"+_t("safe.report.acOvc")+"</td><td>OVC "+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+" ("+d.impAC+' kV)'+"</td></tr>"
+        +"<tr><td>"+_t("safe.report.dcOvc")+"</td><td>OVC "+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+" ("+d.impDC+' kV)' +(d.isolation==='isolated'?' <em>'+_t("safe.word.addNote")+'</em>':'')+ "</td></tr>"
+        +"<tr><td>"+_t("safe.report.acV")+"</td><td>"+sysVAC_val+' V'+'</td></tr>'
+        +"<tr><td>"+_t("safe.report.dcV")+"</td><td>"+sysVDC_val+' V'+'</td></tr>';
     } else {
-      /* ── UL mode base params ─── */
       baseTable=
-        "<tr><td>标准</td><td>"+document.getElementById('sStd').selectedOptions[0].text+"</td></tr>"
-        +" <tr><td>污染等级</td><td>PD "+d.pd+" (UL §25.4a)</td></tr>"
-        +" <tr><td>材料组别</td><td>II 组 CTI >= 100 (UL §25.4d)</td></tr>"
-        +" <tr><td>过电压类别</td><td>OVC IV (UL §25.4b)</td></tr>"
-        +" <tr><td>海拔</td><td>"+d.alt+"m (系数 "+d.altk+")</td></tr>"
-        +" <tr><td>AC系统电压</td><td>"+sysVAC_val+' V ('+((+sysVAC_val/1000).toFixed(2))+' kVRMS)'+ "</td></tr>"
-        +" <tr><td>DC系统电压</td><td>"+sysVDC_val+' V ('+((+sysVDC_val/1000).toFixed(2))+' kVRMS)'+ "</td></tr>";
+        "<tr><td>"+_t("safe.report.std")+"</td><td>"+sot("sStd")+"</td></tr>"
+        +"<tr><td>"+_t("safe.report.pd")+"</td><td>PD "+d.pd+" (UL §25.4a)</td></tr>"
+        +"<tr><td>"+_t("safe.report.mg")+"</td><td>II (CTI >= 100, UL §25.4d)</td></tr>"
+        +"<tr><td>"+_t("safe.ovc.ac")+"</td><td>OVC IV (UL §25.4b)</td></tr>"
+        +"<tr><td>"+_t("safe.report.alt")+"</td><td>"+d.alt+"m (k="+d.altk+")</td></tr>"
+        +"<tr><td>"+_t("safe.report.acV")+"</td><td>"+sysVAC_val+' V ('+((+sysVAC_val/1000).toFixed(2))+' kVRMS)'+ "</td></tr>"
+        +"<tr><td>"+_t("safe.report.dcV")+"</td><td>"+sysVDC_val+' V ('+((+sysVDC_val/1000).toFixed(2))+' kVRMS)'+ "</td></tr>";
     }
 
     document.getElementById("sRc").innerHTML=
-      (document.getElementById('sProjName').value?'<p><strong>项目: </strong>'+document.getElementById('sProjName').value+'</p>':'')
-      +" <h3>1. 项目信息</h3><table><tr><th>项目</th><th>内容</th></tr>"
-        +" <tr><td>报告编号</td><td>SA-"+ds.replace(/\//g,"")+"-" +(1e3+Math.floor(9e3*Math.random()))+"</td></tr>"
-        +"<tr><td>生成日期</td><td>"+ds+" "+ts+"</td></tr>"
-        +"<tr><td>项目名称</td><td>"+(document.getElementById('sProjName').value||'-')+"</td></tr></table>"
-      +" <h3>2. 基础参数</h3><table><tr><th>参数</th><th>值</th></tr>"+baseTable+"</table>"
-      +" <h3>3. 各节点所需安规距离</h3><table><tr><th>#</th><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>Clearance(mm)</th><th>Creepage(mm)</th></tr>"+sr+"</table>"
-      +" <h3>4. 各节点计算过程</h3>" + buildCalcChains(d)
-      +" <p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>结论:</strong> 各节点安规距离计算结果如上表所示，实际工程设计中应确保实际距离大于所需值，并留足设计裕量。</p>"
-      +" <div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b><span>安规距离计算工具 v1.0</span><span>报告: "+ds+" "+ts+"</span></div>";
+      (document.getElementById('sProjName').value?'<p><strong>'+_t("safe.report.proj")+': </strong>'+document.getElementById('sProjName').value+'</p>':'')
+      +"<h3>1. "+_t("safe.report.projInfo")+"</h3><table><tr><th>"+_t("safe.report.proj")+"</th><th>"+_t("safe.report.content")+"</th></tr>"
+        +"<tr><td>"+_t("cap.report.warr")+"</td><td>SA-"+ds.replace(/\//g,"")+"-" +(1e3+Math.floor(9e3*Math.random()))+"</td></tr>"
+        +"<tr><td>"+_t("safe.report.std")+"</td><td>"+ds+" "+ts+"</td></tr>"
+        +"<tr><td>"+_t("safe.projName")+"</td><td>"+(document.getElementById('sProjName').value||'-')+"</td></tr></table>"
+      +"<h3>2. "+_t("safe.report.basic")+"</h3><table><tr><th>"+_t("safe.report.params")+"</th><th>"+_t("safe.report.val")+"</th></tr>"+baseTable+"</table>"
+      +"<h3>3. "+_t("safe.report.nodes")+"</h3><table><tr><th>#</th><th>"+_t("safe.res.node")+"</th><th>"+_t("safe.nodeHdr.vrms")+"</th><th>"+_t("safe.res.ins")+"</th><th>Clearance(mm)</th><th>Creepage(mm)</th></tr>"+sr+"</table>"
+      +"<h3>4. "+_t("safe.report.calcProc")+"</h3>" + buildCalcChains(d)
+      +"<p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>"+_t("safe.report.conclusion")+":</strong> "+_t("safe.report.conclusionText")+"</p>"
+      +"<div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b><span>"+_t("safe.report.footer")+" v1.0</span><span>"+ds+" "+ts+"</span></div>";
   }
 
   /* ── Word export (DOM-only) ─────────────── */
@@ -423,9 +421,9 @@
     css+='</style>';
 
     /* ── Results rows ─── */
-    d.results.forEach(function(r){var g=r.toGnd?' (对地)':' (线间)';var pw=(r.recurringPeakOk===false)?' 🔴峰值超限':'';var t241=r.tbl241Note?' ⚠T24.1':'';sr+='<tr><td>'+i+'</td><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+pw+'</td></tr>'});
+    d.results.forEach(function(r,i){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLineShort");var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';sr+='<tr><td>'+(i+1)+'</td><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+pw+'</td></tr>'});
 
-    var isoLabel = (d.isolation==='isolated')?'有隔离':'无隔离';
+    var isoLabel = (d.isolation==='isolated')?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
     var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"});
 
     /* ── Read system voltage from correct input based on standard ─── */
@@ -438,60 +436,55 @@
     var projInfo, baseParams;
     if(d.std === 'iec'){
       projInfo=
-        (pn?'<tr><td>'+pn+'</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>':'')
-        +'<tr><td>标准</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>'
-        +'<tr><td>隔离架构</td><td>'+isoLabel+'</td></tr>';
+        (pn?'<tr><td>'+pn+'</td><td>'+sot("sStd")+'</td></tr>':'')
+        +'<tr><td>'+_t("safe.report.std")+'</td><td>'+sot("sStd")+'</td></tr>'
+        +'<tr><td>'+_t("safe.report.iso")+'</td><td>'+isoLabel+'</td></tr>';
       baseParams=
-        '<tr><td>污染等级</td><td>PD '+d.pd+'</td></tr>'
-        +'<tr><td>材料组别</td><td>'+document.getElementById('sMg').selectedOptions[0].text+'</td></tr>'
-        +'<tr><td>海拔</td><td>'+d.alt+'m (系数 '+d.altk+')</td></tr>'
-        +'<tr><td>AC侧过电压类别</td><td>OVC '+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+' ('+d.impAC+' kV)</td></tr>'
-        +'<tr><td>DC侧过电压类别</td><td>OVC '+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+' ('+d.impDC+' kV)' +(d.isolation==='isolated'?' (隔离降档)':'')+'</td></tr>'
-        +'<tr><td>AC系统电压</td><td>'+sysVAC_val+' V</td></tr>'
-        +'<tr><td>DC系统电压</td><td>'+sysVDC_val+' V</td></tr>'
-        +'<tr><td>说明</td><td>线间节点按IEC 62109-1 §7.3.7降一档计算电气间隙</td></tr>';
+        '<tr><td>'+_t("safe.report.pd")+'</td><td>PD '+d.pd+'</td></tr>'
+        +'<tr><td>'+_t("safe.report.mg")+'</td><td>'+sot("sMg")+'</td></tr>'
+        +'<tr><td>'+_t("safe.report.alt")+'</td><td>'+d.alt+'m ('+d.altk+')</td></tr>'
+        +'<tr><td>'+_t("safe.report.acOvc")+'</td><td>OVC '+(d.ovc_AC?d.ovc_AC.toUpperCase():'II')+' ('+d.impAC+' kV)</td></tr>'
+        +'<tr><td>'+_t("safe.report.dcOvc")+'</td><td>OVC '+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+' ('+d.impDC+' kV)' +(d.isolation==='isolated'?' '+_t("safe.word.addNote"):'')+'</td></tr>'
+        +'<tr><td>'+_t("safe.report.acV")+'</td><td>'+sysVAC_val+' V</td></tr>'
+        +'<tr><td>'+_t("safe.report.dcV")+'</td><td>'+sysVDC_val+' V</td></tr>'
+        +'<tr><td>'+_t("safe.word.note")+'</td><td>'+_t("safe.word.noteIec")+'</td></tr>';
     } else {
-      /* ── UL mode project info + base params ─── */
       projInfo=
-        (pn?'<tr><td>'+pn+'</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>':'')
-        +'<tr><td>标准</td><td>'+document.getElementById('sStd').selectedOptions[0].text+'</td></tr>';
+        (pn?'<tr><td>'+pn+'</td><td>'+sot("sStd")+'</td></tr>':'')
+        +'<tr><td>'+_t("safe.report.std")+'</td><td>'+sot("sStd")+'</td></tr>';
       baseParams=
-        '<tr><td>污染等级</td><td>PD '+d.pd+' (UL §25.4a)</td></tr>'
-        +'<tr><td>材料组别</td><td>II 组 CTI >= 100 (UL §25.4d)</td></tr>'
-        +'<tr><td>过电压类别</td><td>OVC IV (UL §25.4b)</td></tr>'
-        +'<tr><td>海拔</td><td>'+d.alt+'m (系数 '+d.altk+')</td></tr>'
-        +'<tr><td>AC系统电压</td><td>'+sysVAC_val+' V ('+((+sysVAC_val/1000).toFixed(2))+' kVRMS)</td></tr>'
-        +'<tr><td>DC系统电压</td><td>'+sysVDC_val+' V ('+((+sysVDC_val/1000).toFixed(2))+' kVRMS)</td></tr>'
-        +'<tr><td>说明</td><td>UL 电气间隙由相地额定系统电压(kVRMS)查表确定 (§25.4g)</td></tr>';
+        '<tr><td>'+_t("safe.report.pd")+'</td><td>PD '+d.pd+' (UL §25.4a)</td></tr>'
+        +'<tr><td>'+_t("safe.report.mg")+'</td><td>II (CTI >= 100, UL §25.4d)</td></tr>'
+        +'<tr><td>'+_t("safe.report.alt")+'</td><td>'+d.alt+'m ('+d.altk+')</td></tr>'
+        +'<tr><td>'+_t("safe.ovc.ac")+'</td><td>OVC IV (UL §25.4b)</td></tr>'
+        +'<tr><td>'+_t("safe.report.acV")+'</td><td>'+sysVAC_val+' V ('+((+sysVAC_val/1000).toFixed(2))+' kVRMS)</td></tr>'
+        +'<tr><td>'+_t("safe.report.dcV")+'</td><td>'+sysVDC_val+' V ('+((+sysVDC_val/1000).toFixed(2))+' kVRMS)</td></tr>'
+        +'<tr><td>'+_t("safe.word.note")+'</td><td>'+_t("safe.word.noteUl")+'</td></tr>';
     }
 
-    var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>安规距离评估报告'+ts+'</title>';
+    var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>'+_t("safe.word.title")+ts+'</title>';
     h+=css;
     h+='</head><body>';
 
-    /* Title */
-    h+='<h2 class="title">安规距离评估报告'+ts+'</h2>';
-    h+='<p class="meta">报告编号: SA-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
-    h+='<p class="meta">生成日期: '+ds+'</p>';
+    h+='<h2 class="title">'+_t("safe.word.title")+ts+'</h2>';
+    h+='<p class="meta">'+_t("safe.word.rptNum")+': SA-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
+    h+='<p class="meta">'+_t("safe.word.genDate")+': '+ds+'</p>';
 
-    /* 1. Project info */
-    h+='<h3>1. 项目信息</h3>';
-    h+='<table class="compact"><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody>'+projInfo+'</tbody></table>';
+    h+='<h3>1. '+_t("safe.word.projInfo")+'</h3>';
+    h+='<table class="compact"><thead><tr><th>'+_t("safe.report.proj")+'</th><th>'+_t("safe.report.content")+'</th></tr></thead><tbody>'+projInfo+'</tbody></table>';
 
-    /* 2. Base parameters */
-    h+='<h3>2. 基础参数</h3>';
-    h+='<table class="compact"><thead><tr><th>参数</th><th>值</th></tr></thead><tbody>'+baseParams+'</tbody></table>';
+    h+='<h3>2. '+_t("safe.word.basic")+'</h3>';
+    h+='<table class="compact"><thead><tr><th>'+_t("safe.report.params")+'</th><th>'+_t("safe.report.val")+'</th></tr></thead><tbody>'+baseParams+'</tbody></table>';
 
-    /* 3. Results table */
-    h+='<h3>3. 评估结果</h3>';
+    h+='<h3>3. '+_t("safe.word.results")+'</h3>';
     h+='<table class="data-tbl"><thead><tr>'
-      +'<th>节点名称</th><th>Vrms (V)</th><th>绝缘等级</th><th>Clearance mm</th><th>Creepage mm</th>'
+      +'<th>#</th><th>'+_t("safe.word.node")+'</th><th>Vrms (V)</th><th>'+_t("safe.word.insLvl")+'</th><th>Clearance mm</th><th>Creepage mm</th>'
       +'</tr></thead><tbody>'+sr+'</tbody></table>';
 
     /* Footer */
-    h+='<div class="footer">安规距离计算工具 v1.0 &nbsp;|&nbsp; 报告自动生成 '+ds+'</div>';
+    h+='<div class="footer">'+_t("safe.word.footer")+' | '+_t("safe.word.autoGen")+' '+ds+'</div>';
     h+='</body></html>';
-    var b=new Blob([h],{type:'application/msword'});var dn='安规距离评估报告'+(te.length?'('+te.join('-')+')':'')+'.doc';saveBlobWithDialog(b,dn);
+    var b=new Blob([h],{type:'application/msword'});var dn=_t("safe.word.title")+(te.length?'('+te.join('-')+')':'')+'.doc';saveBlobWithDialog(b,dn);
   }
 
   /* ── Load nodes from defaults.json (called by app.js applyDefaults) ─── */

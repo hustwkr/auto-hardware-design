@@ -54,8 +54,10 @@ function hashPassword(pw) {
 const ADMIN_HASH = hashPassword(ADMIN_PW);
 
 function checkPassword(input) {
-  // Timing-safe comparison via scrypt (constant-time by nature of KDF)
-  try { return hashPassword(input) === ADMIN_HASH; }
+  try {
+    const inputHash = hashPassword(input);
+    return crypto.timingSafeEqual(Buffer.from(inputHash, "hex"), Buffer.from(ADMIN_HASH, "hex"));
+  }
   catch (_) { return false; }
 }
 
@@ -74,9 +76,11 @@ function verifyToken(tok) {
   if (dot <= 0) return false;
   const payload = tok.substring(0, dot);
   const sig     = tok.substring(dot + 1);
-  // Verify signature
+  // Verify signature (timing-safe)
   const expected = crypto.createHmac("sha256", TOKEN_SECRET).update(payload).digest("base64url");
-  if (sig !== expected) return false;
+  try {
+    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return false;
+  } catch (_) { return false; }
   // Check expiry
   try {
     const data = JSON.parse(payload);
@@ -130,8 +134,8 @@ function saveDefaults(d) {
 function createDefaults() {
   return {
     capacitor: {
-      l0: "5000", tmax: "105", tau: "10", vrated: "450", irated: "2000",
-      dt0: "10", cooling: "1.0", workdays: "365", warrantyTarget: "10",
+      l0: 5000, tmax: 105, tau: 10, vrated: 450, irated: 2000,
+      dt0: 10, cooling: 1.0, workdays: 365, warrantyTarget: 10,
       scenario: "industrial",
       segments: [
         { dur: 6, ta: 75, vop: 400, rips: [
@@ -144,8 +148,9 @@ function createDefaults() {
       ]
     },
     safety: {
-      sStd: "iec", sPd: "2", sMg: "ii", sAlt: "3000",
-      sOvc: "ii", sSysV_AC: "300", sSysV_DC: "600",
+      sStd: "iec", sPd: 2, sMg: "ii", sAlt: 3000,
+      sIsolation: "isolated", sOvc_AC: "ii", sOvc_DC: "i",
+      sSysV_AC: 300, sSysV_DC: 600,
       nodes: [
         { name: "L-N",    vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac",  interp: false },
         { name: "L-PE",   vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac",  interp: false },
@@ -185,7 +190,7 @@ function validateDefaults(d) {
   }
 
   if (d.safety && typeof d.safety === "object") {
-    const safeK = ["sStd","sPd","sMg","sAlt","sIsolation","sOvc","sOvc_AC","sOvc_DC","sSysV_AC","sSysV_DC","nodes"];
+    const safeK = ["sStd","sPd","sMg","sAlt","sIsolation","sOvc_AC","sOvc_DC","sSysV_AC","sSysV_DC","nodes"];
     for (const k of Object.keys(d.safety)) {
       if (!safeK.includes(k)) warnings.push("Unknown safety key: " + k);
     }

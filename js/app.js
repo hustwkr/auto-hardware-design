@@ -177,6 +177,15 @@
     });
   })();
 
+  /* ── Language toggle ───────────────────── */
+  function toggleLang(){
+    var next = (typeof _getLang === 'function' && _getLang() === 'zh') ? 'en' : 'zh';
+    if(typeof _applyLang === 'function') _applyLang(next);
+    var btn = document.getElementById('langToggle');
+    if(btn) btn.textContent = next === 'zh' ? 'EN' : '中';
+  }
+  window.toggleLang = toggleLang;
+
   /* ── Unregister stale Service Workers ───── */
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations){
@@ -189,6 +198,13 @@
 
   /* ── Init on DOM ready ─────────────────── */
   window.addEventListener("DOMContentLoaded", function(){
+    // Initialize language
+    var savedLang = 'zh';
+    try { savedLang = localStorage.getItem('hw-design-lang') || 'zh'; } catch(e) {}
+    if(typeof _applyLang === 'function') _applyLang(savedLang);
+    var langBtn = document.getElementById('langToggle');
+    if(langBtn) langBtn.textContent = savedLang === 'zh' ? 'EN' : '中';
+
     // Initialize capacitor tab (default active)
     if(typeof initCapacitor==='function')initCapacitor();
     // Load defaults from server

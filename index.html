@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>电解电容寿命计算工具</title>
 <link rel="icon" type="image/png" href="/hwlogo.png">
-<link rel="stylesheet" href="css/app.css?v=8">
+<link rel="stylesheet" href="css/app.css?v=9">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>
 </head>
@@ -14,9 +14,10 @@
 
 <!-- ── Tab Navigation ─────────────────────── -->
 <nav class="tab-nav">
-  <button class="tab-btn active" data-tab="capacitor">电解电容寿命计算</button>
-  <button class="tab-btn" data-tab="safety">安规距离计算</button>
-  <button class="tab-btn" style="margin-left:auto" onclick="window.location.href='/admin/login'">⚙ 后台</button>
+  <button class="tab-btn active" data-tab="capacitor" data-i18n="nav.capacitor">电解电容寿命计算</button>
+  <button class="tab-btn" data-tab="safety" data-i18n="nav.safety">安规距离计算</button>
+  <button class="tab-btn" style="margin-left:auto" onclick="window.location.href='/admin/login'" data-i18n="nav.admin">⚙ 后台</button>
+  <button class="lang-toggle" id="langToggle" onclick="toggleLang()" title="Switch Language">EN</button>
   <button class="dark-toggle" id="darkToggle" title="切换暗色模式">🌙</button>
 </nav>
 
@@ -24,35 +25,35 @@
 <!-- Tab: Capacitor Lifetime                  -->
 <!-- ════════════════════════════════════════ -->
 <div id="tab-capacitor" class="tab-content active">
-<h1 style="font-size:1.4rem;margin-bottom:2px">电解电容寿命计算工具 <span style="font-size:.82rem;font-weight:400;color:#64748b">Electrolytic Capacitor Lifetime Calculator</span></h1>
-<p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35">Arrhenius + Miner 累积损伤 + 多段运行剖面 + 多频率纹波叠加 + 质保期判定</p>
+<h1 style="font-size:1.4rem;margin-bottom:2px"><span data-i18n="cap.title">电解电容寿命计算工具</span> <span style="font-size:.82rem;font-weight:400;color:#64748b">Electrolytic Capacitor Lifetime Calculator</span></h1>
+<p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35" data-i18n="cap.subtitle">Arrhenius + Miner 累积损伤 + 多段运行剖面 + 多频率纹波叠加 + 质保期判定</p>
 
-<div class="card"><h2 style="font-size:.82rem">基本信息</h2><div class="param-grid">
-    <div class="fgi"><label>项目名称</label><input type="text" id="projName" placeholder="选填"></div>
-    <div class="fgi"><label>器件型号</label><input type="text" id="capModel" placeholder="选填"></div>
-    <div class="fgi"><label>散热条件</label><select id="cooling"><option value="1.0" selected>自然对流</option><option value="1.15">强制风冷 1-2m/s</option><option value="1.30">强制风冷 &gt;2m/s</option></select></div>
-    <div class="fgi"><label>每年工作天数</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"><span class="unit">天</span></div>
-    <div class="fgi"><label>质保期(年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
-    <div class="fgi"><label>场景</label><select id="scenario"><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select></div>
+<div class="card"><h2 style="font-size:.82rem" data-i18n="cap.basic">基本信息</h2><div class="param-grid">
+    <div class="fgi"><label data-i18n="cap.projName">项目名称</label><input type="text" id="projName" placeholder="选填" data-i18n-placeholder="cap.projName"></div>
+    <div class="fgi"><label data-i18n="cap.capModel">器件型号</label><input type="text" id="capModel" placeholder="选填"></div>
+    <div class="fgi"><label data-i18n="cap.cooling">散热条件</label><select id="cooling" data-i18n-opts='{"1.0":"cap.opt.natural","1.15":"cap.opt.fan1","1.30":"cap.opt.fan2"}'><option value="1.0" selected>自然对流</option><option value="1.15">强制风冷 1-2m/s</option><option value="1.30">强制风冷 &gt;2m/s</option></select></div>
+    <div class="fgi"><label data-i18n="cap.workdays">每年工作天数</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"><span class="unit" data-i18n="cap.workdays.unit">天</span></div>
+    <div class="fgi"><label data-i18n="cap.warranty">质保期(年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
+    <div class="fgi"><label data-i18n="cap.scenario">场景</label><select id="scenario" data-i18n-opts='{"consumer":"cap.opt.consumer","industrial":"cap.opt.industrial","automotive":"cap.opt.automotive","medical":"cap.opt.medical"}'><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select></div>
   </div></div>
 
-<div class="card"><h2 style="font-size:.82rem">器件参数</h2><div class="param-grid">
-    <div class="fgi"><label>额定寿命(h)</label><input type="number" id="l0" value="2000" min="100" step="100"><span class="unit">h</span></div>
-    <div class="fgi"><label>最高温度(C)</label><input type="number" id="tmax" value="105" min="60" max="150"><span class="unit">°C</span></div>
-    <div class="fgi" style="position:relative"><label>Arrhenius τ(℃) <span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="tau"><option value="8">8 (长寿命型)</option><option value="9">9 (高可靠型)</option><option value="10" selected>10 (标准品)</option></select><div class="info-popup" style="width:260px"><strong>Arrhenius 温度系数 τ</strong><br>寿命公式中每降低 τ°C，寿命翻倍的参数。反映电解液蒸发速率对温度的敏感度。<br><br><strong>如何选取：</strong><br>• <b>τ=10</b>：标准品（大多数常规铝电解电容）<br>• <b>τ=9</b>：高可靠型（如 Nichicon PW/PWJ 系列）<br>• <b>τ=8</b>：超长寿命型（12000h+ 系列，如 Rubycon ZLH/ZSH）<br>• 以制造商 datasheet 为准</div></div>
-    <div class="fgi"><label>额定电压(V)</label><input type="number" id="vrated" value="50" min="1" step="1"><span class="unit">V</span></div>
-    <div class="fgi"><label>额定纹波电流(mA)</label><input type="number" id="irated" value="500" min="1" step="10"><span class="unit">mA</span></div>
-    <div class="fgi" style="position:relative"><label>最大芯温升(C) <span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><input type="number" id="dt0" value="10" min="1" max="30" step="1"><span class="unit">°C</span><div class="info-popup" style="width:260px"><strong>最大芯温升 ΔT₀</strong><br>电容在额定纹波电流 Irated 下，芯部相对于外壳的最大允许温升。决定纹波发热计算基准。<br><br><strong>如何选取：</strong><br>• <b>标准型</b>：ΔT₀ = 10°C（大多数常规品）<br>• <b>长寿命型</b>：ΔT₀ = 5~6°C（低ESR设计，芯温更低，寿命更长）<br>• 具体数值以制造商数据手册为准</div></div>
-    <div class="fgi"><label>电容量(uF)</label><input type="number" id="cap" value="470" min="1" step="1"><span class="unit">μF</span></div>
+<div class="card"><h2 style="font-size:.82rem" data-i18n="cap.device">器件参数</h2><div class="param-grid">
+    <div class="fgi"><label data-i18n="cap.l0">额定寿命(h)</label><input type="number" id="l0" value="2000" min="100" step="100"><span class="unit">h</span></div>
+    <div class="fgi"><label data-i18n="cap.tmax">最高温度(C)</label><input type="number" id="tmax" value="105" min="60" max="150"><span class="unit">°C</span></div>
+    <div class="fgi" style="position:relative"><label data-i18n="cap.tau">Arrhenius τ(℃)</label> <span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span><select id="tau" data-i18n-opts='{"8":"cap.tau.8","9":"cap.tau.9","10":"cap.tau.10"}'><option value="8">8 (长寿命型)</option><option value="9">9 (高可靠型)</option><option value="10" selected>10 (标准品)</option></select><div class="info-popup" style="width:260px"><strong>Arrhenius 温度系数 τ</strong><br>寿命公式中每降低 τ°C，寿命翻倍的参数。反映电解液蒸发速率对温度的敏感度。<br><br><strong>如何选取：</strong><br>• <b>τ=10</b>：标准品（大多数常规铝电解电容）<br>• <b>τ=9</b>：高可靠型（如 Nichicon PW/PWJ 系列）<br>• <b>τ=8</b>：超长寿命型（12000h+ 系列，如 Rubycon ZLH/ZSH）<br>• 以制造商 datasheet 为准</div></div>
+    <div class="fgi"><label data-i18n="cap.vrated">额定电压(V)</label><input type="number" id="vrated" value="50" min="1" step="1"><span class="unit">V</span></div>
+    <div class="fgi"><label data-i18n="cap.irated">额定纹波电流(mA)</label><input type="number" id="irated" value="500" min="1" step="10"><span class="unit">mA</span></div>
+    <div class="fgi" style="position:relative"><label data-i18n="cap.dt0">最大芯温升(C)</label> <span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span><input type="number" id="dt0" value="10" min="1" max="30" step="1"><span class="unit">°C</span><div class="info-popup" style="width:260px"><strong>最大芯温升 ΔT₀</strong><br>电容在额定纹波电流 Irated 下，芯部相对于外壳的最大允许温升。决定纹波发热计算基准。<br><br><strong>如何选取：</strong><br>• <b>标准型</b>：ΔT₀ = 10°C（大多数常规品）<br>• <b>长寿命型</b>：ΔT₀ = 5~6°C（低ESR设计，芯温更低，寿命更长）<br>• 具体数值以制造商数据手册为准</div></div>
+    <div class="fgi"><label data-i18n="cap.capval">电容量(uF)</label><input type="number" id="cap" value="470" min="1" step="1"><span class="unit">μF</span></div>
   </div></div>
 
 <div class="layout">
 <!-- Left column: inputs -->
 <div>
-  <div class="card"><h2>运行剖面</h2>
-    <p style="font-size:.72rem;color:#64748b;margin-bottom:5px;line-height:1.3">多段工况 + 多频率纹波叠加，总温升按各频率 (I/K_freq)² 平方和计算</p>
+  <div class="card"><h2 data-i18n="cap.profile">运行剖面</h2>
+    <p style="font-size:.72rem;color:#64748b;margin-bottom:5px;line-height:1.3" data-i18n="cap.profile.hint">多段工况 + 多频率纹波叠加，总温升按各频率 (I/K_freq)² 平方和计算</p>
     <div id="sc"></div>
-    <button class="btn-sm" id="addSegBtn">+ 添加时段</button>
+    <button class="btn-sm" id="addSegBtn" data-i18n="cap.addSeg">+ 添加时段</button>
     <span id="stt" style="font-size:.72rem;color:#64748b;margin-left:10px"></span>
     <div id="stw" style="font-size:.72rem;color:#ef4444;margin-top:3px;display:none"></div>
   </div>
@@ -60,21 +61,21 @@
 
 <!-- Right column: results -->
 <div>
-  <div class="card"><h2>计算结果</h2><div class="result-grid">
-    <div class="ri"><div class="rl">预计总寿命</div><div class="rv"><span id="lh">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px">h</span></div></div>
-    <div class="ri"><div class="rl">预计服役年限</div><div class="rv"><span id="ly">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px">年</span></div></div>
-    <div class="ri"><div class="rl">质保期判定</div><div class="rv"><span id="wb">-</span></div></div>
-    <div class="ri"><div class="rl">年损伤率</div><div class="rv"><span id="ad">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px">%/年</span></div></div>
-    <div class="ri"><div class="rl">最恶劣时段芯温</div><div class="rv"><span id="wt">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px">C</span></div></div>
-    <div class="ri"><div class="rl">最恶劣时段 K_T</div><div class="rv"><span id="wk">-</span></div></div>
+  <div class="card"><h2 data-i18n="cap.results">计算结果</h2><div class="result-grid">
+    <div class="ri"><div class="rl" data-i18n="cap.r.life">预计总寿命</div><div class="rv"><span id="lh">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px">h</span></div></div>
+    <div class="ri"><div class="rl" data-i18n="cap.r.years">预计服役年限</div><div class="rv"><span id="ly">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px" data-i18n="cap.r.unit.yr">年</span></div></div>
+    <div class="ri"><div class="rl" data-i18n="cap.r.warranty">质保期判定</div><div class="rv"><span id="wb">-</span></div></div>
+    <div class="ri"><div class="rl" data-i18n="cap.r.damage">年损伤率</div><div class="rv"><span id="ad">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px" data-i18n="cap.r.unit.pct">%/年</span></div></div>
+    <div class="ri"><div class="rl" data-i18n="cap.r.worstT">最恶劣时段芯温</div><div class="rv"><span id="wt">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px">C</span></div></div>
+    <div class="ri"><div class="rl" data-i18n="cap.r.worstKt">最恶劣时段 K_T</div><div class="rv"><span id="wk">-</span></div></div>
   </div>
-  <div style="margin-top:10px"><h3 style="font-size:.85rem;font-weight:600;margin-bottom:5px">质保期裕量</h3>
+  <div style="margin-top:10px"><h3 style="font-size:.85rem;font-weight:600;margin-bottom:5px" data-i18n="cap.margin.title">质保期裕量</h3>
     <div style="display:flex;justify-content:space-between;font-size:.78rem;color:#64748b"><span id="wd">-</span></div>
     <div class="wb" style="margin-top:6px"><div class="wf" id="wf" style="width:0;background:#10b981"></div><div class="wm" id="wm" style="left:0"></div></div>
-    <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#64748b"><span>0 年</span><span id="wtl">目标: - 年</span><span id="wml">-</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#64748b"><span>0</span><span id="wtl">-</span><span id="wml">-</span></div>
   </div>
-  <div style="margin-top:10px"><h3 style="font-size:.85rem;font-weight:600;margin-bottom:4px">各时段寿命消耗</h3>
-    <table class="sg-tbl"><thead><tr><th>时段</th><th>时长(h)</th><th>芯温C</th><th>K_T</th><th>K_V</th><th>Li (h)</th><th>年损伤</th></tr></thead><tbody id="srb"></tbody></table>
+  <div style="margin-top:10px"><h3 style="font-size:.85rem;font-weight:600;margin-bottom:4px" data-i18n="cap.segment.title">各时段寿命消耗</h3>
+    <table class="sg-tbl"><thead><tr><th data-i18n="cap.segHdr.seg">时段</th><th data-i18n="cap.segHdr.dur">时长(h)</th><th data-i18n="cap.segHdr.temp">芯温C</th><th>K_T</th><th>K_V</th><th>Li (h)</th><th data-i18n="cap.segHdr.li">年损伤</th></tr></thead><tbody id="srb"></tbody></table>
   </div>
   </div>
 
@@ -86,13 +87,13 @@
 <!-- Report section -->
 <div style="margin-top:16px">
   <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-    <h2 style="font-size:1.1rem;font-weight:600">设计报告</h2>
+    <h2 style="font-size:1.1rem;font-weight:600" data-i18n="cap.report.title">设计报告</h2>
     <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn" onclick="genRep()" id="generateCapBtn">生成报告</button>
-      <div class="btn-export-group" id="exportCapGroup" style="display:none"><button class="btn" onclick="cExportReport('word')" id="exportCapBtn">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'cap')">▼</button><div class="export-dropdown" id="exportCapDropdown"><div onclick="cExportReport('word')">Word (.doc)</div><div onclick="cExportReport('pdf')">PDF</div></div></div>
+      <button class="btn" onclick="genRep()" id="generateCapBtn" data-i18n="cap.report.gen">生成报告</button>
+      <div class="btn-export-group" id="exportCapGroup" style="display:none"><button class="btn" onclick="cExportReport('word')" id="exportCapBtn" data-i18n="cap.report.export">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'cap')">▼</button><div class="export-dropdown" id="exportCapDropdown"><div onclick="cExportReport('word')">Word (.doc)</div><div onclick="cExportReport('pdf')">PDF</div></div></div>
     </div>
   </div>
-  <div id="rc"><h3>电解电容寿命评估报告</h3><p>点击"生成报告"按钮后显示。</p></div>
+  <div id="rc"><h3 data-i18n="cap.report.rptTitle">电解电容寿命评估报告</h3><p data-i18n="cap.report.empty">点击"生成报告"按钮后显示。</p></div>
 </div>
 
 </div><!-- /tab-capacitor -->
@@ -102,78 +103,37 @@
 <!-- Tab: Safety Distance                     -->
 <!-- ════════════════════════════════════════ -->
 <div id="tab-safety" class="tab-content">
-<h1 style="font-size:1.6rem;margin-bottom:4px">安规距离计算工具 <span style="font-size:.9rem;font-weight:400;color:#64748b">Creepage &amp; Clearance Calculator</span></h1>
-<p style="color:#64748b;margin-bottom:24px;font-size:.9rem">IEC 62109-1 / UL 1741 爬电距离 + 电气间隙 | 适用于并网逆变器</p>
+<h1 style="font-size:1.6rem;margin-bottom:4px"><span data-i18n="safe.title">安规距离计算工具</span> <span style="font-size:.9rem;font-weight:400;color:#64748b">Creepage &amp; Clearance Calculator</span></h1>
+<p style="color:#64748b;margin-bottom:24px;font-size:.9rem" data-i18n="safe.subtitle">IEC 62109-1 / UL 1741 爬电距离 + 电气间隙 | 适用于并网逆变器</p>
 
 <div class="layout">
 <!-- Left column -->
 <div>
-  <div class="card"><h2>标准体系</h2><div class="fgl"><label>标准体系</label><select id="sStd"><option value="iec" selected>IEC 62109-1</option><option value="ul">UL 1741</option></select></div></div>
+  <div class="card"><h2 data-i18n="safe.standard">标准体系</h2><div class="fgl"><label data-i18n="safe.standard">标准体系</label><select id="sStd"><option value="iec" selected>IEC 62109-1</option><option value="ul">UL 1741</option></select></div></div>
 
-  <div class="card"><h2>基础参数</h2><div class="fg">
-    <div class="fgl full" style="margin-bottom:12px"><label>项目名称</label><input type="text" id="sProjName" placeholder="选填"></div>
-    <div class="fgl" data-standard="iec"><label>污染等级<span id="sPd_iec_hint"></span></label><select id="sPd"><option value="1">PD 1 (无污染/密封)</option><option value="2" selected>PD 2 (一般污染)</option><option value="3">PD 3 (严重污染)</option></select></div>
-    <div class="fgl" data-standard="ul" style="display:none"><label>污染等级<span id="sPd_ul_hint" class="hint">UL §25.4a 固定 PD3</span></label><input type="text" value="PD 3 (UL 1741 §25.4a 强制)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
-    <div class="fgl" data-standard="iec"><label>材料组别 (CTI)</label><select id="sMg"><option value="i">I 组 (CTI >= 600)</option><option value="ii" selected>II 组 (400 <= CTI &lt; 600)</option><option value="iiia">IIIa 组 (175 <= CTI &lt; 400)</option><option value="iiib">IIIb 组 (100 <= CTI &lt; 175)</option></select></div>
-    <div class="fgl" data-standard="ul" style="display:none"><label>材料组别<span id="sMg_ul_hint" class="hint">UL §25.4d 固定 II 组</span></label><input type="text" value="II 组 (CTI >= 100, UL §25.4d)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
-    <div class="fgl"><label>海拔</label><select id="sAlt"><option value="2000" selected>&lt;= 2000 m</option><option value="3000">2000 - 3000 m</option><option value="4000">3000 - 4000 m</option><option value="5000">4000 - 5000 m</option></select></div>
+  <div class="card"><h2 data-i18n="safe.basic">基础参数</h2><div class="fg">
+    <div class="fgl full" style="margin-bottom:12px"><label data-i18n="safe.projName">项目名称</label><input type="text" id="sProjName" placeholder="选填"></div>
+    <div class="fgl" data-standard="iec"><label data-i18n="safe.pd">污染等级</label><span id="sPd_iec_hint"></span><select id="sPd"><option value="1">PD 1 (无污染/密封)</option><option value="2" selected>PD 2 (一般污染)</option><option value="3">PD 3 (严重污染)</option></select></div>
+    <div class="fgl" data-standard="ul" style="display:none"><label data-i18n="safe.pd">污染等级</label><span id="sPd_ul_hint" class="hint" data-i18n="safe.pd.hint.ul">UL §25.4a 固定 PD3</span><input type="text" value="PD 3 (UL 1741 §25.4a 强制)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
+    <div class="fgl" data-standard="iec"><label data-i18n="safe.mg">材料组别 (CTI)</label><select id="sMg"><option value="i">I 组 (CTI >= 600)</option><option value="ii" selected>II 组 (400 <= CTI &lt; 600)</option><option value="iiia">IIIa 组 (175 <= CTI &lt; 400)</option><option value="iiib">IIIb 组 (100 <= CTI &lt; 175)</option></select></div>
+    <div class="fgl" data-standard="ul" style="display:none"><label data-i18n="safe.mg">材料组别</label><span id="sMg_ul_hint" class="hint" data-i18n="safe.mg.hint.ul">UL §25.4d 固定 II 组</span><input type="text" value="II 组 (CTI >= 100, UL §25.4d)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
+    <div class="fgl"><label data-i18n="safe.alt">海拔</label><select id="sAlt"><option value="2000" selected>&lt;= 2000 m</option><option value="3000">2000 - 3000 m</option><option value="4000">3000 - 4000 m</option><option value="5000">4000 - 5000 m</option></select></div>
     <fieldset id="sIsolationFieldset" data-standard="iec" style="border:1px solid #e2e8f0;border-radius:6px;padding:10px 14px;margin-bottom:14px">
-      <legend class="iso-legend">隔离架构 (IEC 62109-1 §7.3.7)</legend>
-      <div class="fgl" style="margin-bottom:0"><label>电网 ↔ PV/DC 侧</label><select id="sIsolation"><option value="isolated" selected>有隔离 (变压器/光耦 — DC侧OVC自动降一档)</option><option value="non-isolated">无隔离 (DC侧取两者较高值)</option></select></div>
+      <legend class="iso-legend" data-i18n="safe.iso.title">隔离架构 (IEC 62109-1 §7.3.7)</legend>
+      <div class="fgl" style="margin-bottom:0"><label data-i18n="safe.iso.label">电网 ↔ PV/DC 侧</label><select id="sIsolation" data-i18n-opts='{"isolated":"safe.iso.isolated","non-isolated":"safe.iso.noniso"}'><option value="isolated" selected>有隔离 (变压器/光耦 — DC侧OVC自动降一档)</option><option value="non-isolated">无隔离 (DC侧取两者较高值)</option></select></div>
     </fieldset>
-    <div class="fgl" data-standard="iec"><label>AC侧过电压类别</label><select id="sOvc_AC"><option value="i">I — 经SPD保护电路</option><option value="ii" selected>II — 插接式设备</option><option value="iii">III — 固定安装/配电盘下游</option><option value="iv">IV — 建筑入口/电表上游</option></select></div>
-    <div class="fgl" data-standard="ul" style="display:none"><label>过电压类别<span id="sOvc_ul_hint" class="hint">UL §25.4b 固定 OVC IV</span></label><input type="text" value="IV (UL 1741 §25.4b 强制)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
-    <div class="fgl" data-standard="iec"><label>DC侧过电压类别<span id="sOvc_DC_derived" style="display:inline-block;font-size:.7rem;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:3px;padding:0 4px;margin-left:4px;vertical-align:middle">自动派生</span></label><select id="sOvc_DC"><option value="i">I — 经SPD保护电路</option><option value="ii" selected>II — PV默认/插接式设备</option><option value="iii">III — 固定安装</option><option value="iv">IV — 建筑入口</option></select><span class="hint">PV最低冲击电压2500V (§7.3.7.1.2b)</span></div>
-    <div class="fgl" data-standard="iec" style="position:relative"><label>AC系统电压 (V)<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.7rem;font-weight:700;cursor:pointer;margin-left:4px;transition:background .15s;user-select:none">?</span></label><input type="number" id="sSysV_AC" value="300" min="0" step="10" style="width:100px"><div id="acVoltageInfo" class="info-popup">For clearance distances and solid insulation the voltage used is as described in 7.3.7.2.2 to 7.3.7.2.4.<br>The impulse voltage and temporary overvoltage are taken from Table 12.<br>When using Table 12, the system voltage in column 1 is:<br>• in TN and TT systems: the r.m.s. value of the rated voltage between a phase and earth;<br>NOTE 1 A corner-earthed system is a TN system with one phase earthed, in which the system voltage is the r.m.s. value of the rated voltage between a non-earthed phase and earth (i.e. the phase-phase voltage).</div><span class="hint">AC主回路</span></div>
-    <div class="fgl" data-standard="ul" style="display:none"><label>AC系统电压 (V)<span id="sSysV_AC_ul_hint" class="hint">UL: 相地额定系统电压</span></label><input type="number" id="sSysV_AC_ul" value="300" min="0" step="10" style="width:100px"><span class="hint">Phase-to-Ground Rated System Voltage (kVRMS)</span></div>
-    <div class="fgl" data-standard="iec"><label>DC系统电压 (V)</label><input type="number" id="sSysV_DC" value="600" min="0" step="10" style="width:100px"><span class="hint">PV最大开路电压</span></div>
-    <div class="fgl" data-standard="ul" style="display:none"><label>DC系统电压 (V)<span id="sSysV_DC_ul_hint" class="hint">UL: 相地额定系统电压</span></label><input type="number" id="sSysV_DC_ul" value="600" min="0" step="10" style="width:100px"><span class="hint">Phase-to-Ground Rated System Voltage (kVRMS)</span></div>
+    <div class="fgl" data-standard="iec"><label data-i18n="safe.ovc.ac">AC侧过电压类别</label><select id="sOvc_AC"><option value="i">I — 经SPD保护电路</option><option value="ii" selected>II — 插接式设备</option><option value="iii">III — 固定安装/配电盘下游</option><option value="iv">IV — 建筑入口/电表上游</option></select></div>
+    <div class="fgl" data-standard="ul" style="display:none"><label data-i18n="safe.ovc.ac">过电压类别</label><span id="sOvc_ul_hint" class="hint" data-i18n="safe.ovc.ul.hint">UL §25.4b 固定 OVC IV</span><input type="text" value="IV (UL 1741 §25.4b 强制)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
+    <div class="fgl" data-standard="iec"><label><span data-i18n="safe.ovc.dc">DC侧过电压类别</span><span id="sOvc_DC_derived" style="display:inline-block;font-size:.7rem;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:3px;padding:0 4px;margin-left:4px;vertical-align:middle" data-i18n="safe.ovc.derived">自动派生</span></label><select id="sOvc_DC"><option value="i">I — 经SPD保护电路</option><option value="ii" selected>II — PV默认/插接式设备</option><option value="iii">III — 固定安装</option><option value="iv">IV — 建筑入口</option></select><span class="hint">PV最低冲击电压2500V (§7.3.7.1.2b)</span></div>
+    <div class="fgl" data-standard="iec" style="position:relative"><label><span data-i18n="safe.sysVac">AC系统电压 (V)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.7rem;font-weight:700;cursor:pointer;margin-left:4px;transition:background .15s;user-select:none">?</span></label><input type="number" id="sSysV_AC" value="300" min="0" step="10" style="width:100px"><div id="acVoltageInfo" class="info-popup">For clearance distances and solid insulation the voltage used is as described in 7.3.7.2.2 to 7.3.7.2.4.<br>The impulse voltage and temporary overvoltage are taken from Table 12.<br>When using Table 12, the system voltage in column 1 is:<br>• in TN and TT systems: the r.m.s. value of the rated voltage between a phase and earth;<br>NOTE 1 A corner-earthed system is a TN system with one phase earthed, in which the system voltage is the r.m.s. value of the rated voltage between a non-earthed phase and earth (i.e. the phase-phase voltage).</div><span class="hint" data-i18n="safe.hint.acMain">AC主回路</span></div>
+    <div class="fgl" data-standard="ul" style="display:none"><label><span data-i18n="safe.sysVac">AC系统电压 (V)</span><span id="sSysV_AC_ul_hint" class="hint">UL: 相地额定系统电压</span></label><input type="number" id="sSysV_AC_ul" value="300" min="0" step="10" style="width:100px"><span class="hint">Phase-to-Ground Rated System Voltage (kVRMS)</span></div>
+    <div class="fgl" data-standard="iec"><label data-i18n="safe.sysVdc">DC系统电压 (V)</label><input type="number" id="sSysV_DC" value="600" min="0" step="10" style="width:100px"><span class="hint" data-i18n="safe.hint.pvVoc">PV最大开路电压</span></div>
+    <div class="fgl" data-standard="ul" style="display:none"><label><span data-i18n="safe.sysVdc">DC系统电压 (V)</span><span id="sSysV_DC_ul_hint" class="hint">UL: 相地额定系统电压</span></label><input type="number" id="sSysV_DC_ul" value="600" min="0" step="10" style="width:100px"><span class="hint">Phase-to-Ground Rated System Voltage (kVRMS)</span></div>
   </div></div>
 
-  <div class="card" data-standard="iec"><h2>冲击电压 / 暂态过电压</h2>
+  <div class="card" data-standard="iec"><h2 data-i18n="safe.impulse">冲击电压 / 暂态过电压</h2>
     <div id="sImpulseInfo" class="rep-model-box"></div>
   </div>
 
-  <div class="card"><h2>测量节点定义</h2>
-    <p style="font-size:.78rem;color:#64748b;margin-bottom:8px">定义逆变器中各需要计算安规距离的节点及其电气参数</p>
-    <div style="overflow-x:auto"><table class="node-tbl" id="sNt"><thead><tr><th>#</th><th>节点名称</th><th>是否对地</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>PCB走线</th><th>三防漆</th><th>电路</th><th></th></tr></thead><tbody id="sN"></tbody></table></div>
-    <button class="btn-sm" id="addNodeBtn">+ 添加测量节点</button>
-  </div>
-</div>
-
-<!-- Right column -->
-<div>
-  <div class="card"><h2>计算结果</h2><div class="result-grid">
-  </div>
-  <h3 style="margin-top:14px;font-size:.88rem;font-weight:600;margin-bottom:6px">各节点所需安规距离</h3>
-  <table class="sg-tbl"><thead><tr><th>#</th><th>节点</th><th>工作电压Vrms(V)</th><th>绝缘类型</th><th>Clearance(mm)</th><th>Creepage(mm)</th></tr></thead><tbody id="sRtb"></tbody></table>
-  </div>
-<div id="safeWarn" class="input-warn" style="display:none"></div>
-  <div class="card"><h2>评估详情</h2><div id="sMa" style="font-size:.88rem"><p>-</p></div></div>
-</div>
-</div><!-- /layout -->
-
-<!-- Report section -->
-<div style="margin-top:24px">
-  <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <h2 style="font-size:1.1rem;font-weight:600">安距设计报告</h2>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn" onclick="sGenRep()" id="generateSafeBtn">生成报告</button>
-      <div class="btn-export-group" id="exportSafeGroup" style="display:none"><button class="btn" onclick="sExportReport('word')" id="exportSafeBtn">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'safe')">▼</button><div class="export-dropdown" id="exportSafeDropdown"><div onclick="sExportReport('word')">Word (.doc)</div><div onclick="sExportReport('pdf')">PDF</div></div></div>
-    </div>
-  </div>
-  <div id="sRc"><h3>安规距离评估报告</h3><p>点击"生成报告"按钮后显示。</p></div>
-</div>
-
-</div><!-- /tab-safety -->
-
-</div><!-- /container -->
-
-<!-- ── Scripts (order: models → ui modules → app) ──────── -->
-<script src="js/models/capacitor-model.js?v=10"></script>
-<script src="js/models/safety-model.js?v=10"></script>
-<script src="js/capacitor.js?v=12"></script>
-<script src="js/safety.js?v=13"></script>
-<script src="js/app.js?v=12"></script>
-</body>
-</html>
+  <div class="card"><h2 data-i18n="safe.nodes">测量节点定义</h2>
+    <p style="font-size:.78rem;color:#64748b;margin-bottom:8px" data-i18n="safe.nodes.hint"
