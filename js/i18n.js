@@ -452,7 +452,20 @@
     document.querySelectorAll("[data-i18n]").forEach(function(el) {
       var key = el.getAttribute("data-i18n");
       var entry = D[key];
-      if (entry) el.textContent = entry[currentLang] || entry.zh;
+      if (!entry) return;
+      var val = entry[currentLang] || entry.zh;
+      // Preserve child elements (e.g. info-icon spans) — only replace text nodes
+      if (el.children.length > 0) {
+        el.childNodes.forEach(function(node) {
+          if (node.nodeType === Node.TEXT_NODE) node.textContent = val;
+        });
+        // If no text node exists, prepend one
+        if (!Array.from(el.childNodes).some(function(n){return n.nodeType===Node.TEXT_NODE})) {
+          el.insertBefore(document.createTextNode(val), el.firstChild);
+        }
+      } else {
+        el.textContent = val;
+      }
     });
     document.querySelectorAll("[data-i18n-html]").forEach(function(el) {
       var key = el.getAttribute("data-i18n-html");

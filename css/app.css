@@ -348,8 +348,12 @@ h1.page-title, .tab-content > h1 {
 
 /* Inline (compact) field group — label + input on same row */
 .fgi          { display: flex; align-items: center; gap: 6px; }
-.fgi label    { font-size: var(--fs-xs); font-weight: 500; color: var(--color-text-soft); white-space: nowrap; min-width: 0; }
-.fgi label::after { content: "："; }
+.fgi label    { font-size: var(--fs-xs); font-weight: 500; color: var(--color-text-soft); white-space: nowrap; min-width: 0; flex-shrink: 1; }
+.fgi .info-icon { flex-shrink: 0; margin-left: 3px; }
+/* Colon after label text — labels without info-icon get it directly */
+.fgi label:not(:has(> .info-icon))::after { content: "："; }
+/* Labels with info-icon: colon goes on the inner span, not the label */
+.fgi label > span[data-i18n]::after { content: "："; }
 
 /* Unit label after inputs — compact gray text */
 .unit { font-size: .7rem; color: #94a3b8; white-space: nowrap; margin-left: 2px; }
