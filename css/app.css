@@ -153,8 +153,10 @@
 [data-theme="dark"] .btn-sm:hover,
 [data-theme="dark"] .btn:hover { background: #334155; border-color: #475569; color: #e2e8f0; }
 
-/* Dark mode toggle button */
-.dark-toggle {
+/* Nav dropdown buttons (language + theme) */
+.nav-dropdown { position: relative; display: inline-block; }
+
+.nav-dropdown-btn {
   padding: 6px 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -163,23 +165,66 @@
   font-size: var(--fs-xs);
   color: var(--color-text-mid);
   transition: all .15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.dark-toggle:hover { background: #f8fafc; border-color: #cbd5e1; }
 
-/* Language toggle button */
-.lang-toggle {
-  padding: 6px 10px;
+.nav-dropdown-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+/* Language icon — "文/A" text */
+.lang-icon::after {
+  content: "文/A";
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: -.03em;
+}
+
+[data-lang="en"] .lang-icon::after,
+body:has([data-lang="en"]) .lang-icon::after { content: "文/A"; }
+
+/* Theme icon — half-black/half-white circle */
+.theme-icon::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #1e293b 50%, #f8fafc 50%);
+  border: 1.5px solid var(--color-border);
+}
+
+[data-theme="dark"] .theme-icon::before {
+  background: linear-gradient(90deg, #f8fafc 50%, #1e293b 50%);
+  border-color: #475569;
+}
+
+/* Hover dropdown menu */
+.nav-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 200;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  padding: 4px 0;
+  min-width: 130px;
+  box-shadow: var(--shadow-lg);
+}
+
+.nav-dropdown:hover .nav-dropdown-menu { display: block; }
+
+.nav-dropdown-menu div {
+  padding: 8px 16px;
   font-size: var(--fs-sm);
-  font-weight: 600;
   cursor: pointer;
   color: var(--color-text-mid);
-  transition: all .15s ease;
-  min-width: 32px;
+  transition: background .15s;
 }
-.lang-toggle:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+.nav-dropdown-menu div:hover { background: #f8fafc; }
 
 /* ============================================================
    Reset & Base
@@ -671,7 +716,7 @@ table.data-tbl tbody tr:hover {
   #rc thead th, #sRc thead th { background: #f0f0f0 !important; color: #333 !important; }
 
   /* Hide interactive elements */
-  button, .btn-sm, .btn, .btn-p, .dark-toggle, .lang-toggle, .info-icon, .export-dropdown { display: none !important; }
+  button, .btn-sm, .btn, .btn-p, .nav-dropdown, .info-icon, .export-dropdown { display: none !important; }
 
   /* Ensure links show URLs */
   a[href]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #666; }

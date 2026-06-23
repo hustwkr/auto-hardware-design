@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>电解电容寿命计算工具</title>
 <link rel="icon" type="image/png" href="/hwlogo.png">
-<link rel="stylesheet" href="css/app.css?v=9">
+<link rel="stylesheet" href="css/app.css?v=10">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>
 </head>
@@ -17,8 +17,20 @@
   <button class="tab-btn active" data-tab="capacitor" data-i18n="nav.capacitor">电解电容寿命计算</button>
   <button class="tab-btn" data-tab="safety" data-i18n="nav.safety">安规距离计算</button>
   <button class="tab-btn" style="margin-left:auto" onclick="window.location.href='/admin/login'" data-i18n="nav.admin">⚙ 后台</button>
-  <button class="lang-toggle" id="langToggle" onclick="toggleLang()" title="Switch Language">EN</button>
-  <button class="dark-toggle" id="darkToggle" title="切换暗色模式">🌙</button>
+  <div class="nav-dropdown" id="langDropdownWrap">
+    <button class="nav-dropdown-btn lang-icon" id="langBtn" title="Language / 语言"></button>
+    <div class="nav-dropdown-menu" id="langMenu">
+      <div data-action="setLang" data-value="zh">中文</div>
+      <div data-action="setLang" data-value="en">English</div>
+    </div>
+  </div>
+  <div class="nav-dropdown" id="themeDropdownWrap">
+    <button class="nav-dropdown-btn theme-icon" id="themeBtn" title="Theme / 颜色模式"></button>
+    <div class="nav-dropdown-menu" id="themeMenu">
+      <div data-action="setTheme" data-value="light">☀️ Light</div>
+      <div data-action="setTheme" data-value="dark">🌙 Dark</div>
+    </div>
+  </div>
 </nav>
 
 <!-- ════════════════════════════════════════ -->
@@ -176,6 +188,6 @@
 <script src="js/models/safety-model.js?v=10"></script>
 <script src="js/capacitor.js?v=14"></script>
 <script src="js/safety.js?v=14"></script>
-<script src="js/app.js?v=13"></script>
+<script src="js/app.js?v=14"></script>
 </body>
 </html>

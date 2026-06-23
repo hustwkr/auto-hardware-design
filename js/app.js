@@ -152,39 +152,37 @@
     return true;
   }
 
-  /* ── Dark mode toggle ──────────────────── */
+  /* ── Theme switcher (dropdown) ─────────── */
+  function setTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    try{localStorage.setItem('hw-design-theme', theme)}catch(e){}
+  }
+  window.setTheme = setTheme;
+
   (function(){
     var theme = localStorage.getItem('hw-design-theme');
     if(!theme){
       theme = window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
     }
     document.documentElement.setAttribute('data-theme', theme);
-
-    function updateIcon(isDark){
-      var btn = document.getElementById('darkToggle');
-      if(btn) btn.textContent = isDark ? '☀️' : '🌙';
-    }
-    updateIcon(theme === 'dark');
-
-    document.addEventListener('click', function(e){
-      var btn = document.getElementById('darkToggle');
-      if(!btn || !btn.contains(e.target)) return;
-      var current = document.documentElement.getAttribute('data-theme');
-      var next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('hw-design-theme', next);
-      updateIcon(next === 'dark');
-    });
   })();
 
-  /* ── Language toggle ───────────────────── */
-  function toggleLang(){
-    var next = (typeof _getLang === 'function' && _getLang() === 'zh') ? 'en' : 'zh';
-    if(typeof _applyLang === 'function') _applyLang(next);
-    var btn = document.getElementById('langToggle');
-    if(btn) btn.textContent = next === 'zh' ? 'EN' : '中';
+  /* ── Language switcher (dropdown) ──────── */
+  function setLang(lang){
+    if(typeof _applyLang === 'function') _applyLang(lang);
+    try{localStorage.setItem('hw-design-lang', lang)}catch(e){}
   }
-  window.toggleLang = toggleLang;
+  window.setLang = setLang;
+
+  /* ── Dropdown click delegation ─────────── */
+  document.addEventListener('click', function(e){
+    var action = e.target.getAttribute('data-action');
+    if(action === 'setTheme'){
+      setTheme(e.target.getAttribute('data-value'));
+    } else if(action === 'setLang'){
+      setLang(e.target.getAttribute('data-value'));
+    }
+  });
 
   /* ── Unregister stale Service Workers ───── */
   if ('serviceWorker' in navigator) {
@@ -202,8 +200,6 @@
     var savedLang = 'zh';
     try { savedLang = localStorage.getItem('hw-design-lang') || 'zh'; } catch(e) {}
     if(typeof _applyLang === 'function') _applyLang(savedLang);
-    var langBtn = document.getElementById('langToggle');
-    if(langBtn) langBtn.textContent = savedLang === 'zh' ? 'EN' : '中';
 
     // Initialize capacitor tab (default active)
     if(typeof initCapacitor==='function')initCapacitor();
