@@ -61,9 +61,6 @@
     }
     var label = {1:'i',2:'ii',3:'iii',4:'iv'}[ovcNum] || 'ii';
     document.getElementById('sOvc_DC').value = label;
-    // Show "auto-derived" badge
-    var badge = document.getElementById('sOvc_DC_derived');
-    if(badge) badge.style.display = 'inline-block';
   }
 
   /* ── Apply standard-specific UI mode (IEC vs UL) ─── */
@@ -576,11 +573,9 @@
       sCalc();
       return;
     }
-    // Manual override of DC OVC → stop auto-derivation, hide badge
+    // Manual override of DC OVC → stop auto-derivation
     if(t.id === 'sOvc_DC'){
       dcManualOverride = true;
-      var badge = document.getElementById('sOvc_DC_derived');
-      if(badge) badge.style.display = 'none';
       sCalc();
       return;
     }
