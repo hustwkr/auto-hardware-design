@@ -153,18 +153,45 @@
   }
 
   /* ── Theme switcher (dropdown) ─────────── */
-  function setTheme(theme){
+  var _systemThemeListener = null;
+
+  function applyThemeResolved(theme){
+    if(theme === 'system') return; // already resolved below
     document.documentElement.setAttribute('data-theme', theme);
+  }
+
+  function setTheme(theme){
     try{localStorage.setItem('hw-design-theme', theme)}catch(e){}
+    if(theme === 'system'){
+      _followSystemTheme();
+    } else {
+      // Remove system listener when user picks explicit theme
+      if(_systemThemeListener){
+        window.matchMedia('(prefers-color-scheme:dark)').removeEventListener('change', _systemThemeListener);
+        _systemThemeListener = null;
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+    }
   }
   window.setTheme = setTheme;
+
+  function _followSystemTheme(){
+    var isDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  }
 
   (function(){
     var theme = localStorage.getItem('hw-design-theme');
     if(!theme){
-      theme = window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+      theme = 'system';
     }
-    document.documentElement.setAttribute('data-theme', theme);
+    if(theme === 'system'){
+      _followSystemTheme();
+      _systemThemeListener = function(){ _followSystemTheme(); };
+      window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change', _systemThemeListener);
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
   })();
 
   /* ── Language switcher (dropdown) ──────── */
