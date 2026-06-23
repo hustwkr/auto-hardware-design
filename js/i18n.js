@@ -10,6 +10,9 @@
     "nav.capacitor":     { zh: "电解电容寿命计算", en: "Capacitor Lifetime" },
     "nav.safety":        { zh: "安规距离计算", en: "Safety Distance" },
     "nav.admin":         { zh: "⚙ 后台", en: "⚙ Admin" },
+    /* Theme */
+    "theme.light":       { zh: "u6d45u8272", en: "Light" },
+    "theme.dark":        { zh: "u6df1u8272", en: "Dark" },
 
     /* Capacitor page */
     "cap.title":         { zh: "电解电容寿命计算工具", en: "Electrolytic Capacitor Lifetime Calculator" },
