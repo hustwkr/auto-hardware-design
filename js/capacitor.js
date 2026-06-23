@@ -21,10 +21,10 @@
     var rr="";
     rips.forEach(function(v){
       // FIX Bug #1: support {freq,current} objects for per-row frequency (K_freq)
-      var freq = typeof v === 'object' && v !== null ? (v.freq || 120) : 120;
-      var cur  = typeof v === 'object' && v !== null ? (v.current || 0)   : v;
-      rr+="<tr><td class=ripgroup><input class=fv type=number value="+freq+" style=width:55px oninput=calc()>" +mU()+ "</td>"
-        +" <td><input class=fc type=number value=" +cur+" min=0 step=10 style=width:65px oninput=calc()><span style=\"font-size:.7rem;color:#94a3b8;margin-left:2px\">mA</span></td>"
+      var freq = typeof v === 'object' ? (v.freq || 120) : 120;
+      var cur  = typeof v === 'object' ? (v.current || 0)   : v;
+      rr+="<tr><td class=ripgroup><input class=fv type=number value="+freq+"  oninput=calc()>" +mU()+ "</td>"
+        +" <td><input class=fc type=number value=" +cur+" min=0 step=10  oninput=calc()><span style=\"font-size:.7rem;color:#94a3b8;margin-left:2px\">mA</span></td>"
         +" <td><button class=btn-sm onclick=removeRippleRow(this)>&times;</button></td></tr>";
     });
     return "<div class=seg data-id="+id+">"
@@ -72,8 +72,8 @@
 
   function addRR(b){
     b.closest(".seg").querySelector(".rtb").insertAdjacentHTML("beforeend",
-      "<tr><td class=ripgroup><input class=fv type=number value=120 style=width:55px oninput=calc()>" +mU()+ "</td>"
-        +"<td><input class=fc type=number value=50 min=0 step=10 style=width:65px oninput=calc()><span style=\"font-size:.7rem;color:#94a3b8;margin-left:2px\">mA</span></td>"
+      "<tr><td class=ripgroup><input class=fv type=number value=120  oninput=calc()>" +mU()+ "</td>"
+        +"<td><input class=fc type=number value=50 min=0 step=10  oninput=calc()><span style=\"font-size:.7rem;color:#94a3b8;margin-left:2px\">mA</span></td>"
         +"<td><button class=btn-sm onclick=removeRippleRow(this)>&times;</button></td></tr>");
     calc();
   }
@@ -282,7 +282,8 @@
     // Show export button after report generation
     var eg=document.getElementById('exportCapGroup');if(eg)eg.style.display='';
 
-    var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
+    var n=new Date(),lang=_getLang()||'zh',locale=lang==='en'?'en-US':'zh-CN';
+    var ds=n.toLocaleDateString(locale,{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString(locale,{hour:"2-digit",minute:"2-digit"});
     var sr="";
 
     d.sr.forEach(function(r){
@@ -365,8 +366,8 @@
     var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><title>'+_t("cap.calc.reportTitle")+ts+'</title>';
     h+=css;h+='</head><body>';
     h+='<h2 class="title">'+_t("cap.calc.reportTitle")+ts+'</h2>';
-    var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"});
-    h+='<p class="meta">'+_t("cap.calc.rptNum")+': EL-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
+    var n=new Date(),locale=_getLang()==='en'?'en-US':'zh-CN',ds=n.toLocaleDateString(locale,{year:"numeric",month:"2-digit",day:"2-digit"});
+    h+='<p class="meta">'+_t("cap.calc.rptNum")+': EL-'+(new Date().toLocaleDateString(locale).replace(/[\/-]/g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
     h+='<p class="meta">'+_t("cap.calc.genDate")+': '+ds+'</p>';
 
     h+='<h3>1. '+_t("cap.report.projInfo")+'</h3>';
@@ -411,6 +412,39 @@
     var b=new Blob([h],{type:'application/msword'});var dn=_t("cap.calc.reportTitle")+(te.length?'('+te.join('-')+')':'')+'.doc';saveBlobWithDialog(b,dn);
   }
 
+  /* ── Refresh dynamic segment labels on lang change ─── */
+  function refreshSegLabels(){
+    document.querySelectorAll("#sc .seg").forEach(function(s,i){
+      var head=s.querySelector(".seg-head");
+      if(!head)return;
+      var spans=head.querySelectorAll("span");
+      spans[0].textContent=_t("cap.seg")+(i+1);
+      if(spans[1]){
+        var dur=spans[1].querySelector(".sh");
+        var d=dur?dur.textContent:"";
+        spans[1].innerHTML=_t("cap.segDur")+" <span class=sh>"+d+"</span> "+_t("cap.segDur.h");
+      }
+      // Delete button text
+      var delBtn=head.querySelector(".btn-sm");
+      if(delBtn)delBtn.innerHTML="&times;"+_t("cap.delSeg");
+    });
+    // Ripple add buttons
+    document.querySelectorAll("#sc .seg").forEach(function(s){
+      var btns=s.querySelectorAll(":scope > button.btn-sm");
+      btns.forEach(function(b){b.textContent="+ "+_t("cap.addRipple")});
+    });
+    // Segment body labels
+    document.querySelectorAll("#sc .seg-body label").forEach(function(lbl,i){
+      var keys=["cap.durLabel","cap.taLabel","cap.vopLabel"];
+      if(keys[i])lbl.textContent=_t(keys[i]);
+    });
+    // Ripple table headers
+    document.querySelectorAll("#sc .rt thead th").forEach(function(th,i){
+      var keys=["cap.rippleHdr.freq","cap.rippleHdr.cur"];
+      if(keys[i])th.textContent=_t(keys[i]);
+    });
+  }
+
   /* ── Init ──────────────────────── */
   function initCapacitor(){
     document.getElementById("sc").insertAdjacentHTML("beforeend", mSeg(sid++,0,8,60,30,[250,150]));
@@ -439,6 +473,7 @@
   global.renderLatex = renderLatex; global.calc = calc; global.calcFormulas = calcFormulas;
   global.genRep = genRep; global.exportWord = exportWord; global.cExportReport = cExportReport;
   global.loadSegmentsFromDefaults = loadSegmentsFromDefaults;
+  global.refreshSegLabels = refreshSegLabels;
 
   /* ── Wire static inputs via event delegation ─── */
   document.addEventListener('input', function(e){

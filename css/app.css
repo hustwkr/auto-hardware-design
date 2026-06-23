@@ -29,12 +29,12 @@
 
   /* Typography */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
-  --fs-xs:   .72rem;
-  --fs-sm:   .8rem;
-  --fs-base: .88rem;
-  --fs-md:   .95rem;
-  --fs-lg:   1.05rem;
-  --fs-xl:   1.35rem;
+  --fs-xs:   .78rem;
+  --fs-sm:   .85rem;
+  --fs-base: .93rem;
+  --fs-md:   1rem;
+  --fs-lg:   1.1rem;
+  --fs-xl:   1.45rem;
 
   /* Spacing */
   --space-xs: 6px;
@@ -126,6 +126,13 @@
   border-color: #334155;
   color: #e2e8f0;
 }
+/* Ripple table inputs dark mode */
+[data-theme="dark"] .rt .fv,
+[data-theme="dark"] .rt .fc {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
 /* Measurement node inputs (safety section) */
 [data-theme="dark"] .node-tbl input,
 [data-theme="dark"] .node-tbl select {
@@ -190,7 +197,9 @@
 .nav-dropdown-menu {
   display: none;
   position: absolute;
-  top: calc(100% + 2px);
+  top: 100%;
+  margin-top: -4px;
+  padding-top: 4px;
   right: 0;
   z-index: 200;
   background: var(--color-surface);
@@ -226,6 +235,14 @@
    Reset & Base
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] { -moz-appearance: textfield; }
 
 body {
   font-family: var(--font-sans);
@@ -305,17 +322,16 @@ h1.page-title, .tab-content > h1 {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 8px 12px;
-  margin-bottom: 6px;
-  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  margin-bottom: 12px;
 }
 
 .card h2 {
   font-size: var(--fs-base);
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 4px;
-  padding-bottom: 3px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -347,7 +363,8 @@ h1.page-title, .tab-content > h1 {
 .fgl select,
 .fgi input,
 .fgi select {
-  padding: 5px 8px;
+  padding: 6px 10px;
+  min-height: 32px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-size: var(--fs-base);
@@ -358,9 +375,14 @@ h1.page-title, .tab-content > h1 {
 
 .fgi input,
 .fgi select {
-  width: 120px;
+  width: 130px;
   min-width: 0;
-  padding: 4px 6px;
+  padding: 6px 8px;
+  font-size: var(--fs-sm);
+}
+
+.fgl input,
+.fgl select {
   font-size: var(--fs-sm);
 }
 
@@ -390,7 +412,9 @@ h1.page-title, .tab-content > h1 {
   background: #fafbfd;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: 6px 8px;
+  padding: 10px 12px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Ripple table keeps natural height; "+ 纹波分量" button pushed down, narrow & left */
@@ -409,22 +433,51 @@ h1.page-title, .tab-content > h1 {
 .seg-head .sh { color: #64748b; font-weight: 400; }
 
 /* Segment body — inline fields row */
-.seg-body { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.seg-body { display: flex; align-items: center; gap: 6px; min-width: 0; }
 
 .seg-body input[type=number] {
-  width: 52px; padding: 3px 4px; font-size: var(--fs-xs);
-  border: 1px solid var(--color-border); border-radius: 4px; text-align: right;
+  width: 55px; padding: 6px 4px; font-size: var(--fs-sm); min-height: 32px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: #fff; color: var(--color-text); text-align: right;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.seg-body input[type=number]:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
 }
 
 .seg-body label { font-size: .68rem; color: #94a3b8; }
 
 /* Ripple table (inside segments) — compact */
-.rt { width: 100%; border-collapse: collapse; font-size: var(--fs-xs); margin-top: 3px; }
-.rt th, .rt td { text-align: left; padding: 2px 4px; border: 1px solid var(--color-border); }
+.rt { width: max-content; max-width: 100%; border-collapse: collapse; font-size: var(--fs-xs); margin-top: 3px; }
+.rt th, .rt td { text-align: left; padding: 2px 4px; border: 1px solid var(--color-border); min-width: 0; white-space: nowrap; }
 .rt thead th { background: #f8fafc; font-weight: 500; font-size: .68rem; color: var(--color-text-soft); }
 
 /* Ripple inline field group — display:flex only when NOT a <td> (table cells must stay table-cell) */
 .ripgroup:not(td) { display: flex; align-items: center; gap: 2px; }
+
+/* Ripple table inputs match standard form style */
+.rt .fv,
+.rt .fc {
+  width: 80px;
+  padding: 6px 8px;
+  min-height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  background: #fff;
+  color: var(--color-text);
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.rt .fv:focus,
+.rt .fc:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
 
 /* ============================================================
    Tables — report, results, ripple, nodes
@@ -457,11 +510,6 @@ table.data-tbl tbody tr:hover {
   background: #fafbfd;
 }
 
-/* Ripple table (inside segments) */
-.rt { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-top: 4px; }
-.rt th, .rt td { text-align: left; padding: 4px 6px; border: 1px solid var(--color-border); }
-.rt thead th { background: #f8fafc; font-weight: 500; font-size: var(--fs-xs); color: var(--color-text-soft); }
-
 /* Results grid table */
 .sg-tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-top: 4px; }
 .sg-tbl th, .sg-tbl td { text-align: left; padding: 4px 8px; border: 1px solid var(--color-border); }
@@ -477,7 +525,7 @@ table.data-tbl tbody tr:hover {
    Buttons
    ============================================================ */
 .btn-sm {
-  padding: 4px 12px;
+  padding: 6px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -490,7 +538,7 @@ table.data-tbl tbody tr:hover {
 .btn-sm:hover { background: #f8fafc; border-color: #cbd5e1; }
 
 .btn {
-  padding: 6px 14px;
+  padding: 8px 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -518,10 +566,10 @@ table.data-tbl tbody tr:hover {
 /* ============================================================
    Result Cards (KPI grid)
    ============================================================ */
-.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 .ri {
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: #fafbfd;
   border: 1px solid var(--color-border-lt);
   border-radius: var(--radius-sm);
@@ -553,10 +601,9 @@ table.data-tbl tbody tr:hover {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 16px 20px;
+  padding: 20px;
   font-size: var(--fs-base);
   line-height: 1.55;
-  box-shadow: var(--shadow-sm);
 }
 
 #rc h3, #sRc h3 {

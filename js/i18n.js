@@ -483,6 +483,9 @@
     });
     document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
     document.title = currentLang === "zh" ? "电解电容寿命计算工具" : "Capacitor Lifetime Calculator";
+    // Refresh dynamically created content that uses _t() at creation time
+    if (typeof refreshSegLabels === "function") { try { refreshSegLabels(); } catch(e) {} }
+    if (typeof refreshNodeLabels === "function") { try { refreshNodeLabels(); } catch(e) {} }
     if (typeof calc === "function") { try { calc(); } catch(e) {} }
     if (typeof sCalc === "function") { try { sCalc(); } catch(e) {} }
   }

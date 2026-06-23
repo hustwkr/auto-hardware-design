@@ -349,7 +349,7 @@
 
     // Show export button after report generation
     var eg=document.getElementById('exportSafeGroup');if(eg)eg.style.display='';
-    var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
+    var n=new Date(),locale=_getLang()==='en'?'en-US':'zh-CN',ds=n.toLocaleDateString(locale,{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString(locale,{hour:"2-digit",minute:"2-digit"});
     var sr="";d.results.forEach(function(r){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLine");var f=r.forcedReinforced?' '+_t("safe.chain.forcedReinf"):'';var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';sr+="<tr><td>"+(d.results.indexOf(r)+1)+"</td><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
 
     var isoLabel = (d.isolation==='isolated')?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
@@ -424,7 +424,7 @@
     d.results.forEach(function(r,i){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLineShort");var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';sr+='<tr><td>'+(i+1)+'</td><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+pw+'</td></tr>'});
 
     var isoLabel = (d.isolation==='isolated')?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
-    var n=new Date(),ds=n.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"});
+    var n=new Date(),locale=_getLang()==='en'?'en-US':'zh-CN',ds=n.toLocaleDateString(locale,{year:"numeric",month:"2-digit",day:"2-digit"});
 
     /* ── Read system voltage from correct input based on standard ─── */
     var sysVAC_el = d.std === 'ul' ? document.getElementById('sSysV_AC_ul') : document.getElementById('sSysV_AC');
@@ -467,7 +467,7 @@
     h+='</head><body>';
 
     h+='<h2 class="title">'+_t("safe.word.title")+ts+'</h2>';
-    h+='<p class="meta">'+_t("safe.word.rptNum")+': SA-'+(new Date().toLocaleDateString('zh-CN').replace(/\//g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
+    h+='<p class="meta">'+_t("safe.word.rptNum")+': SA-'+(new Date().toLocaleDateString(locale).replace(/[\/-]/g,''))+'-'+(Math.floor(Math.random()*9000+1000))+'</p>';
     h+='<p class="meta">'+_t("safe.word.genDate")+': '+ds+'</p>';
 
     h+='<h3>1. '+_t("safe.word.projInfo")+'</h3>';
@@ -498,6 +498,25 @@
     // FIX Bug #4: after loading nodes from defaults, ensure DC OVC is derived
     if(typeof autoDeriveDC==='function')autoDeriveDC();
     sCalc();
+  }
+
+  /* ── Refresh dynamic node labels on lang change ─── */
+  function refreshNodeLabels(){
+    document.querySelectorAll("#sN .snode").forEach(function(row){
+      // Rebuild select options for insulation, PCB, coating, toGnd
+      var ins=row.querySelector(".sins");if(ins)refreshSelect(ins,"safe.ins.func","safe.ins.basic","safe.ins.supp","safe.ins.reinf");
+      var pcb=row.querySelector(".spcb");if(pcb)refreshSelect(pcb,"safe.pcb.no","safe.pcb.yes");
+      var coat=row.querySelector(".scoat");if(coat)refreshSelect(coat,"safe.coat.no","safe.coat.t1","safe.coat.t2");
+      var gnd=row.querySelector(".stoGnd");if(gnd)refreshSelect(gnd,"safe.gnd.no","safe.gnd.yes");
+    });
+  }
+
+  function refreshSelect(sel){
+    // args: safe.ins.func, safe.ins.basic, ...
+    Array.from(sel.options).forEach(function(opt,idx){
+      var key=arguments[idx+1];
+      if(key)opt.textContent=_t(key);
+    });
   }
 
   /* ── Init ──────────────────────── */
@@ -531,6 +550,7 @@
   global.sRmNode = sRmNode; global.sReNum = sReNum; global.sCalc = sCalc;
   global.buildCalcChains = buildCalcChains; global.sGenRep = sGenRep;
   global.sExportReport = sExportReport; global.loadNodesFromDefaults = loadNodesFromDefaults;
+  global.refreshNodeLabels = refreshNodeLabels;
 
   /* ── Wire static inputs via event delegation ─── */
   document.addEventListener('input', function(e){
