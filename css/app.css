@@ -421,7 +421,7 @@ h1.page-title, .tab-content > h1 {
 .seg > button:last-child { margin-top: auto; width: fit-content; }
 
 /* Ripple table delete buttons — red × */
-.rt .btn-sm { color: #ef4444; }
+.rtb .btn-sm { }
 
 /* Segment header row — compact single line */
 .seg-head {

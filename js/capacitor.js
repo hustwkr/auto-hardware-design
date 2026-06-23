@@ -29,7 +29,7 @@
     });
     return "<div class=seg data-id="+id+">"
       +"<div class=seg-head><span>"+_t("cap.seg")+(idx+1)+"</span><span style='font-size:.72rem;color:#94a3b8;font-weight:400'>"+_t("cap.segDur")+" <span class=sh>"+dur+"</span> "+_t("cap.segDur.h")+"</span>"
-        +"<button class=btn-sm style=\"margin-left:auto;color:#ef4444;padding:1px 6px;font-size:.65rem\" onclick=rmSeg(this)>&times;"+_t("cap.delSeg")+"</button></div>"
+        +"<button class=btn-sm onclick=rmSeg(this)>&times;</button></div>"
       +"<div class=seg-body>"
         +"<label>"+_t("cap.durLabel")+"</label><input class=sd type=number value="+dur+" min=0 max=24 step=0.5 oninput=sdChange(this);calc()>"
         +"<label>"+_t("cap.taLabel")+"</label><input class=stp type=number value="+ta+" min=-40 max=150 oninput=calc()>"
@@ -37,7 +37,7 @@
       +"</div>"
       +"<table class=rt><thead><tr><th>"+_t("cap.rippleHdr.freq")+"</th><th>"+_t("cap.rippleHdr.cur")+"</th><th></th></tr></thead>"
         +"<tbody class=rtb>"+rr+"</tbody></table>"
-      +"<button class=btn-sm onclick=addRR(this)>+ "+_t("cap.addRipple")+"</button>"
+      +"<button class=btn-sm onclick=addRR(this)>"+_t("cap.addRipple")+"</button>"
     +"</div>";
   }
 
@@ -424,14 +424,14 @@
         var d=dur?dur.textContent:"";
         spans[1].innerHTML=_t("cap.segDur")+" <span class=sh>"+d+"</span> "+_t("cap.segDur.h");
       }
-      // Delete button text
+      // Delete button — just × like ripple delete
       var delBtn=head.querySelector(".btn-sm");
-      if(delBtn)delBtn.innerHTML="&times;"+_t("cap.delSeg");
+      if(delBtn)delBtn.innerHTML="&times;";
     });
     // Ripple add buttons
     document.querySelectorAll("#sc .seg").forEach(function(s){
       var btns=s.querySelectorAll(":scope > button.btn-sm");
-      btns.forEach(function(b){b.textContent="+ "+_t("cap.addRipple")});
+      btns.forEach(function(b){b.textContent=_t("cap.addRipple")});
     });
     // Segment body labels
     document.querySelectorAll("#sc .seg-body label").forEach(function(lbl,i){
