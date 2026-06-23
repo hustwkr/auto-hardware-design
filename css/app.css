@@ -126,6 +126,13 @@
   border-color: #334155;
   color: #e2e8f0;
 }
+/* Ripple table inputs dark mode */
+[data-theme="dark"] .rt .fv,
+[data-theme="dark"] .rt .fc {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
 /* Measurement node inputs (safety section) */
 [data-theme="dark"] .node-tbl input,
 [data-theme="dark"] .node-tbl select {
@@ -229,6 +236,14 @@
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] { -moz-appearance: textfield; }
+
 body {
   font-family: var(--font-sans);
   background: var(--color-bg);
@@ -238,7 +253,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.container { max-width: 960px; margin: 0 auto; }
+.container { max-width: 740px; margin: 0 auto; }
 
 /* ============================================================
    Page Header (H1 + subtitle)
@@ -366,6 +381,11 @@ h1.page-title, .tab-content > h1 {
   font-size: var(--fs-sm);
 }
 
+.fgl input,
+.fgl select {
+  font-size: var(--fs-sm);
+}
+
 .fgl input:focus,
 .fgl select:focus,
 .fgi input:focus,
@@ -393,6 +413,8 @@ h1.page-title, .tab-content > h1 {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Ripple table keeps natural height; "+ 纹波分量" button pushed down, narrow & left */
@@ -411,22 +433,51 @@ h1.page-title, .tab-content > h1 {
 .seg-head .sh { color: #64748b; font-weight: 400; }
 
 /* Segment body — inline fields row */
-.seg-body { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.seg-body { display: flex; align-items: center; gap: 6px; min-width: 0; }
 
 .seg-body input[type=number] {
-  width: 56px; padding: 4px 6px; font-size: var(--fs-xs); min-height: 28px;
-  border: 1px solid var(--color-border); border-radius: 4px; text-align: right;
+  width: 55px; padding: 6px 4px; font-size: var(--fs-sm); min-height: 32px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: #fff; color: var(--color-text); text-align: right;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.seg-body input[type=number]:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
 }
 
 .seg-body label { font-size: .68rem; color: #94a3b8; }
 
 /* Ripple table (inside segments) — compact */
-.rt { width: 100%; border-collapse: collapse; font-size: var(--fs-xs); margin-top: 3px; }
-.rt th, .rt td { text-align: left; padding: 2px 4px; border: 1px solid var(--color-border); }
+.rt { width: max-content; max-width: 100%; border-collapse: collapse; font-size: var(--fs-xs); margin-top: 3px; }
+.rt th, .rt td { text-align: left; padding: 2px 4px; border: 1px solid var(--color-border); min-width: 0; white-space: nowrap; }
 .rt thead th { background: #f8fafc; font-weight: 500; font-size: .68rem; color: var(--color-text-soft); }
 
 /* Ripple inline field group — display:flex only when NOT a <td> (table cells must stay table-cell) */
 .ripgroup:not(td) { display: flex; align-items: center; gap: 2px; }
+
+/* Ripple table inputs match standard form style */
+.rt .fv,
+.rt .fc {
+  width: 80px;
+  padding: 6px 8px;
+  min-height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  background: #fff;
+  color: var(--color-text);
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.rt .fv:focus,
+.rt .fc:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
 
 /* ============================================================
    Tables — report, results, ripple, nodes
@@ -458,11 +509,6 @@ table.data-tbl thead th {
 table.data-tbl tbody tr:hover {
   background: #fafbfd;
 }
-
-/* Ripple table (inside segments) */
-.rt { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-top: 4px; }
-.rt th, .rt td { text-align: left; padding: 4px 6px; border: 1px solid var(--color-border); }
-.rt thead th { background: #f8fafc; font-weight: 500; font-size: var(--fs-xs); color: var(--color-text-soft); }
 
 /* Results grid table */
 .sg-tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-top: 4px; }
