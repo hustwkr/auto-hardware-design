@@ -182,7 +182,7 @@
           '<span class="imp-sub">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
           '<div><span class="imp-label">'+_t("safe.imp.dcLbl")+'</span> ' +
           '<span class="imp-val">'+impDC+' kV</span> ' +
-          '<span class="imp-sub">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span> '+isoNote+'</div>' +
+          '<span class="imp-sub">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span> <span class="imp-note">PV最低冲击电压2500V (§7.3.7.1.2b)</span> '+isoNote+'</div>' +
           '<div><span class="imp-label">'+_t("safe.imp.tovLbl")+'</span> ' +
           '<span class="imp-tov">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span></div>' +
           '<div class="imp-footer">' +
