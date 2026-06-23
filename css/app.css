@@ -248,12 +248,15 @@ body {
   font-family: var(--font-sans);
   background: var(--color-bg);
   color: var(--color-text);
-  padding: var(--space-md) var(--space-sm);
+  padding-top: 0;
+  padding-bottom: var(--space-md);
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
-.container { max-width: 820px; margin: 0 auto; }
+.container { max-width: 820px; margin: 0 auto; padding-top: var(--space-md); }
 
 /* ============================================================
    Page Header (H1 + subtitle)
@@ -273,18 +276,25 @@ h1.page-title, .tab-content > h1 {
 }
 
 /* ============================================================
-   Tab Navigation
+   Tab Navigation — full-width sticky top bar (GitHub-style)
    ============================================================ */
 .tab-nav {
-  display: flex;
-  gap: 0;
-  background: var(--color-surface);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  padding: 6px 6px 0;
   position: sticky;
   top: 0;
-  z-index: 50;
-  box-shadow: var(--shadow-sm);
+  z-index: 100;
+  width: 100%;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.nav-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  display: flex;
+  gap: 0;
+  padding: 6px var(--space-sm) 0;
+  align-items: stretch;
 }
 
 .tab-btn {
