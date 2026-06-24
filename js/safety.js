@@ -23,12 +23,12 @@
     return '<tr class="snode" data-id='+id+'>'
       +'<td style="text-align:center;color:#94a3b8;font-size:.72rem">'+(idx+1)+'</td>'
       +'<td><input class=sname type=text value="'+name+'" style="width:80px;border:1px solid #e2e8f0;border-radius:3px;padding:2px 4px;font-size:.78rem"></td>'
-      +'<td><select class=stoGnd style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+go+'</select></td>'
       +'<td><input class=svrms type=number value='+vrms+' min=0 step=10 style="width:60px;border:1px solid #e2e8f0;border-radius:3px;padding:2px 4px;font-size:.78rem"></td>'
       +'<td><select class=sins style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+io+'</select></td>'
       +'<td><select class=spcb style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+po+'</select></td>'
       +'<td><select class=scoat style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+co+'</select></td>'
-      +'<td><select class=scirc style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto"><option value=ac '+(circ=='ac'?'selected':'')+'>AC</option><option value=dc '+(circ=='dc'?'selected':'')+'>DC(PV)</option></select></td>'
+      +'<td><select class=scirc style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto"><option value=ac '+(circ=='ac'?'selected':'')+'>'+_t("opt.value.ac")+'</option><option value=dc '+(circ=='dc'?'selected':'')+'>'+_t("opt.value.dc")+'</option></select></td>'
+      +'<td><select class=stoGnd style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+go+'</select></td>'
       +'<td style="text-align:center;white-space:nowrap"><button class="btn-sm" style="color:#ef4444;padding:1px 6px" onclick=sRmNode(this)>✕</button></td>'
       +'</tr>';
   }
@@ -127,10 +127,16 @@
       [1000, 2.5,   4.0,   6.0,   8.0]
     ];
 
-    function impulseFor(ovcNum, sysV){
+    function impulseFor(ovcNum, sysV, interp){
       var ov = Math.min(ovcNum || 2, 4);
       for(var i=0; i<IMPULSE_TBL.length; i++){
-        if(sysV <= IMPULSE_TBL[i][0]) return IMPULSE_TBL[i][ov];
+        if(sysV == IMPULSE_TBL[i][0]) return IMPULSE_TBL[i][ov];
+        if(sysV < IMPULSE_TBL[i][0]){
+          if(!interp || i==0) return IMPULSE_TBL[i][ov];
+          var x0=IMPULSE_TBL[i-1][0], x1=IMPULSE_TBL[i][0];
+          var y0=IMPULSE_TBL[i-1][ov], y1=IMPULSE_TBL[i][ov];
+          return Math.round((y0+(sysV-x0)/(x1-x0)*(y1-y0))*100)/100;
+        }
       }
       return IMPULSE_TBL[IMPULSE_TBL.length-1][ov];
     }
@@ -150,8 +156,8 @@
     }
 
     // Compute impulse withstand voltage (kV) for AC and DC sides
-    var impAC = impulseFor(ovc_AC, sysVAC);
-    var impDC = impulseFor(ovc_DC, sysVDC);
+    var impAC = impulseFor(ovc_AC, sysVAC, false);
+    var impDC = impulseFor(ovc_DC, sysVDC, true);
 
     /* PV circuit rule: minimum 2.5 kV per IEC 62109-1 §7.3.7.1.2b */
     if(impDC < 2.5) impDC = 2.5;
@@ -501,6 +507,7 @@
     });
     // FIX Bug #4: after loading nodes from defaults, ensure DC OVC is derived
     if(typeof autoDeriveDC==='function')autoDeriveDC();
+    var btn=document.getElementById("addNodeBtn");if(btn)btn.onclick=sAddNode;
     sCalc();
   }
 
@@ -512,14 +519,14 @@
       var pcb=row.querySelector(".spcb");if(pcb)refreshSelect(pcb,"safe.pcb.no","safe.pcb.yes");
       var coat=row.querySelector(".scoat");if(coat)refreshSelect(coat,"safe.coat.no","safe.coat.t1","safe.coat.t2");
       var gnd=row.querySelector(".stoGnd");if(gnd)refreshSelect(gnd,"safe.gnd.no","safe.gnd.yes");
+      var circ=row.querySelector(".scirc");if(circ)refreshSelect(circ,"opt.value.ac","opt.value.dc");
     });
   }
 
-  function refreshSelect(sel){
-    // args: safe.ins.func, safe.ins.basic, ...
+  function refreshSelect(sel/*, key1, key2, ... */){
+    var keys=Array.prototype.slice.call(arguments,1);
     Array.from(sel.options).forEach(function(opt,idx){
-      var key=arguments[idx+1];
-      if(key)opt.textContent=_t(key);
+      if(keys[idx])opt.textContent=_t(keys[idx]);
     });
   }
 
@@ -528,6 +535,7 @@
 // FIX Bug #4: handle race where initSafety was already called with fallback,
 // but defaults have now arrived via applyDefaults -> loadNodesFromDefaults
     var hasNodes = document.querySelector("#sN [data-id]");
+    if(hasNodes) return;
 
       // No nodes yet — load from defaults or use fallback
       if(defaultNodes && defaultNodes.length){

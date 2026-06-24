@@ -14,7 +14,7 @@
   document.addEventListener('click',function(){document.querySelectorAll('.export-dropdown,.info-popup').forEach(function(d){d.classList.remove('show')})});
 
   /* ── Info popup toggle (generic) ───────── */
-  function toggleInfo(e){e.stopPropagation();var icon=e.currentTarget;var fgi=icon.closest('.fgi');if(!fgi)return;var popup=fgi.querySelector(':scope > .info-popup');if(popup){document.querySelectorAll('.info-popup.show').forEach(function(d){if(d!==popup)d.classList.remove('show')});popup.classList.toggle('show')}}
+  function toggleInfo(e){e.stopPropagation();var icon=e.currentTarget;var container=icon.closest('.fgi')||icon.parentElement;var popup=container.querySelector(':scope > .info-popup');if(popup){document.querySelectorAll('.info-popup.show').forEach(function(d){if(d!==popup)d.classList.remove('show')});if(!popup.classList.contains('show')){var r=icon.getBoundingClientRect();var pw=parseInt(popup.style.width)||320;var left=r.left;if(left+pw>window.innerWidth)left=window.innerWidth-pw-8;if(left<0)left=8;popup.style.top=(r.bottom+4)+'px';popup.style.left=left+'px';popup.classList.add('show')}else{popup.classList.remove('show')}}}
   window.toggleInfo = toggleInfo;
   window.toggleExportDropdown = toggleExportDropdown;
 
@@ -199,14 +199,29 @@
   }
   window.setLang = setLang;
 
-  /* ── Dropdown click delegation ─────────── */
-  document.addEventListener('click', function(e){
-    var action = e.target.getAttribute('data-action');
-    if(action === 'setTheme'){
-      setTheme(e.target.getAttribute('data-value'));
-    } else if(action === 'setLang'){
-      setLang(e.target.getAttribute('data-value'));
-    }
+  /* ── Dropdown click-to-toggle ─────────── */
+  document.querySelectorAll('.nav-dropdown').forEach(function wrap(wrap){
+    var btn=wrap.querySelector('.nav-icon-btn');
+    var menu=wrap.querySelector('.nav-dropdown-menu');
+    if(!btn||!menu)return;
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var wasOpen=menu.classList.contains('open');
+      // Close all other dropdowns first
+      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function(m){m.classList.remove('open')});
+      if(!wasOpen)menu.classList.add('open');
+    });
+  });
+
+  /* ── Dropdown action delegation ─────────── */
+  document.addEventListener('click',function(e){
+    // Close any open dropdown menus
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(function(m){m.classList.remove('open')});
+    var target=e.target.closest('[data-action]');
+    if(!target)return;
+    var action=target.getAttribute('data-action');
+    if(action==='setTheme'){setTheme(target.getAttribute('data-value'))}
+    else if(action==='setLang'){setLang(target.getAttribute('data-value'))}
   });
 
   /* ── Unregister stale Service Workers ───── */

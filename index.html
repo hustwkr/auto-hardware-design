@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>电解电容寿命计算工具</title>
 <link rel="icon" type="image/png" href="/hwlogo.png">
-<link rel="stylesheet" href="css/app.css?v=23">
+<link rel="stylesheet" href="css/app.css?v=27">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>
 </head>
@@ -149,7 +149,7 @@
     <div class="fgi" data-standard="iec"><label data-i18n="safe.mg">材料组别 (CTI)</label><select id="sMg"><option value="i">I 组 (CTI >= 600)</option><option value="ii" selected>II 组 (400 <= CTI &lt; 600)</option><option value="iiia">IIIa 组 (175 <= CTI &lt; 400)</option><option value="iiib">IIIb 组 (100 <= CTI &lt; 175)</option></select></div>
     <div class="fgi" data-standard="ul" style="display:none"><label data-i18n="safe.mg">材料组别</label><span id="sMg_ul_hint" class="hint" data-i18n="safe.mg.hint.ul" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">UL §25.4d 固定 II 组</span><input type="text" value="II 组 (CTI >= 100, UL §25.4d)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
     <div class="fgi"><label data-i18n="safe.alt">海拔</label><select id="sAlt"><option value="2000" selected>&lt;= 2000 m</option><option value="3000">2000 - 3000 m</option><option value="4000">3000 - 4000 m</option><option value="5000">4000 - 5000 m</option></select></div>
-    <div class="fgi" data-standard="iec" style="position:relative"><label><span data-i18n="safe.iso.label">电网 ↔ PV/DC 侧</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="sIsolation" data-i18n-opts='{"isolated":"safe.iso.isolated","non-isolated":"safe.iso.noniso"}'><option value="isolated" selected>有隔离</option><option value="non-isolated">无隔离</option></select><div class="info-popup">IEC 62109-1 §7.3.7：<br>• <b>有隔离</b>：DC侧OVC = AC侧 − 1档（最低I）<br>• <b>无隔离</b>：DC侧OVC = max(AC侧, PV固有II)<br><br>影响后续冲击电压、电气间隙和爬电距离计算。</div></div>
+    <div class="fgi" data-standard="iec" style="position:relative"><label><span data-i18n="safe.iso.label">电网 ↔ PV/DC 侧</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="sIsolation" data-i18n-opts='{"isolated":"safe.iso.isolated","non-isolated":"safe.iso.noniso"}'><option value="isolated" selected>有隔离</option><option value="non-isolated">无隔离</option></select><div class="info-popup">IEC 62109-1 §7.3.7：<br>• <b>有隔离</b>：AC与DC之间有隔离变压器等器件，DC侧过电压类别比AC侧降低一档（但最低为I档）<br>• <b>无隔离</b>：AC与DC直接相连，DC侧过电压类别取AC侧和PV固有类别中较高的那个<br><br>该设置影响DC侧冲击电压、电气间隙和爬电距离的计算。</div></div>
     <div class="fgi" data-standard="iec"><label data-i18n="safe.ovc.ac">AC侧过电压类别</label><select id="sOvc_AC"><option value="i">I — 经SPD保护电路</option><option value="ii" selected>II — 插接式设备</option><option value="iii">III — 固定安装/配电盘下游</option><option value="iv">IV — 建筑入口/电表上游</option></select></div>
     <div class="fgi" data-standard="ul" style="display:none"><label data-i18n="safe.ovc.ac">过电压类别</label><span id="sOvc_ul_hint" class="hint" data-i18n="safe.ovc.ul.hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">UL §25.4b 固定 OVC IV</span><input type="text" value="IV (UL 1741 §25.4b 强制)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
     <div class="fgi" data-standard="iec"><label data-i18n="safe.ovc.dc">DC侧过电压类别</label><select id="sOvc_DC"><option value="i">I — 经SPD保护电路</option><option value="ii" selected>II — PV默认/插接式设备</option><option value="iii">III — 固定安装</option><option value="iv">IV — 建筑入口</option></select></div>
@@ -165,7 +165,7 @@
 
   <div class="card"><h2 data-i18n="safe.nodes">测量节点定义</h2>
     <p style="font-size:.78rem;color:#64748b;margin-bottom:8px" data-i18n="safe.nodes.hint">定义逆变器中各需要计算安规距离的节点及其电气参数</p>
-    <div style="overflow-x:auto"><table class="node-tbl" id="sNt"><thead><tr><th>#</th><th data-i18n="safe.nodeHdr.name">节点名称</th><th data-i18n="safe.nodeHdr.gnd">是否对地</th><th data-i18n="safe.nodeHdr.vrms">工作电压Vrms(V)</th><th data-i18n="safe.nodeHdr.ins">绝缘类型</th><th data-i18n="safe.nodeHdr.pcb">PCB走线</th><th data-i18n="safe.nodeHdr.coat">三防漆</th><th data-i18n="safe.nodeHdr.circ">电路</th><th></th></tr></thead><tbody id="sN"></tbody></table></div>
+    <div style="overflow-x:auto"><table class="node-tbl" id="sNt"><thead><tr><th>#</th><th data-i18n="safe.nodeHdr.name">节点名称</th><th data-i18n="safe.nodeHdr.vrms">工作电压Vrms(V)</th><th data-i18n="safe.nodeHdr.ins">绝缘类型</th><th data-i18n="safe.nodeHdr.pcb">PCB走线</th><th data-i18n="safe.nodeHdr.coat">三防漆</th><th data-i18n="safe.nodeHdr.circ">电路</th><th data-i18n="safe.nodeHdr.gnd">是否对外壳<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px"><b>对外壳(PE)节点的影响：</b><br>① <b>强制加强绝缘</b> — 外壳为可触及导电部件，活体与外壳之间必须使用加强绝缘 (§7.3.7)<br>② <b>冲击电压不降档</b> — 线间节点内部功能绝缘可降一档，对地不降 (§7.3.7.1.2f)<br>③ <b>TOV适用</b> — 暂态过电压仅用于对地绝缘 (§7.3.7.1.2f)<br>④ PCB走线到PE电位不受①限制 — 属于不可触及，适用§7.3.7.7 PWB豁免</div></th><th></th></tr></thead><tbody id="sN"></tbody></table></div>
     <button class="btn-sm" id="addNodeBtn" data-i18n="safe.addNode">+ 添加测量节点</button>
   </div>
 </div>
@@ -198,11 +198,11 @@
 </div><!-- /container -->
 
 <!-- ── Scripts (order: i18n → models → ui modules → app) ── -->
-<script src="js/i18n.js?v=7"></script>
+<script src="js/i18n.js?v=10"></script>
 <script src="js/models/capacitor-model.js?v=11"></script>
-<script src="js/models/safety-model.js?v=11"></script>
+<script src="js/models/safety-model.js?v=13"></script>
 <script src="js/capacitor.js?v=19"></script>
-<script src="js/safety.js?v=21"></script>
-<script src="js/app.js?v=17"></script>
+<script src="js/safety.js?v=26"></script>
+<script src="js/app.js?v=21"></script>
 </body>
 </html>

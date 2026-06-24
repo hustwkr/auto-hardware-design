@@ -79,7 +79,7 @@
 .imp-sub { color: #64748b; }
 .imp-tov { color: #7c3aed; font-size: .85rem; }
 .imp-note { color: #64748b; font-size: .75rem; }
-.imp-footer { margin-top: 4px; padding-top: 4px; border-top: 1px solid #e0e7ff; font-size: .78rem; color: #64748b; }
+.imp-footer { margin-top: 4px; font-size: .78rem; color: #64748b; }
 .iso-legend { font-size: var(--fs-xs); font-weight: 600; color: var(--color-text-soft); padding: 0 6px; }
 .rep-footer { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; font-size: .8rem; color: var(--color-text-soft); }
 
@@ -210,7 +210,8 @@
   box-shadow: var(--shadow-lg);
 }
 
-.nav-dropdown:hover .nav-dropdown-menu { display: block; }
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown-menu.open { display: block; }
 
 .nav-dropdown-menu div {
   padding: 9px 16px;
@@ -686,10 +687,8 @@ table.data-tbl tbody tr:hover {
 
 .info-popup {
   display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 100;
+  position: fixed;
+  z-index: 1000;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -699,7 +698,9 @@ table.data-tbl tbody tr:hover {
   line-height: 1.6;
   box-shadow: var(--shadow-lg);
   max-width: 380px;
-  margin-top: 4px;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 .info-popup.show { display: block; }

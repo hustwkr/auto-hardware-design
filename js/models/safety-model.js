@@ -559,13 +559,14 @@
     /* ── IEC 62109-1 §7.3.7: Insulation type enforcement ─── */
     // Between live parts and accessible conductive parts (PE/enclosure):
     // reinforced insulation is MANDATORY — basic/functional alone is NOT compliant.
+    // PCB traces to PE are NOT "accessible" — §7.3.7.7 PWB exemption applies.
     var forcedReinforced = false;
-    if (toGnd && ins !== 'reinf') {
+    if (toGnd && !pcb && ins !== 'reinf') {
       forcedReinforced = true;
     }
 
     // Effective insulation type for clearance calculation
-    var effIns = (ins === 'reinf' || toGnd) ? 'reinf' : ins;
+    var effIns = (ins === 'reinf' || (toGnd && !pcb)) ? 'reinf' : ins;
 
     /* ── Clearance distances ─────────────── */
     var reqClr;
@@ -751,7 +752,7 @@
     var nodes    = params.nodes || [];
 
     // Impulse withstand voltage (kV) — accept from caller or compute via lookupImpulse as fallback
-    var impAC = typeof params.impAC === 'number' ? params.impAC : lookupImpulse(sysVAC, params.ovcClass||2, true);
+    var impAC = typeof params.impAC === 'number' ? params.impAC : lookupImpulse(sysVAC, params.ovcClass||2, false);
 
     /* DC impulse: per IEC 62109-1 §7.3.7.1.2b — PV circuits have
        minimum 2.5kV regardless of system voltage. Use Table 12 lookup
