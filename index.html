@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>电解电容寿命计算工具</title>
 <link rel="icon" type="image/png" href="/hwlogo.png">
-<link rel="stylesheet" href="css/app.css?v=28">
+<link rel="stylesheet" href="css/app.css?v=31">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>
 </head>
@@ -63,9 +63,9 @@
 <div class="card"><h2 data-i18n="cap.basic">基本信息</h2><div class="param-grid">
     <div class="fgi"><label data-i18n="cap.projName">项目名称</label><input type="text" id="projName" placeholder="选填" data-i18n-placeholder="cap.projName"></div>
     <div class="fgi"><label data-i18n="cap.capModel">器件型号</label><input type="text" id="capModel" placeholder="选填"></div>
+    <div class="fgi"><label data-i18n="cap.warranty">产品质保期(年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
     <div class="fgi"><label data-i18n="cap.workdays">每年工作天数</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"></div>
-    <div class="fgi"><label data-i18n="cap.warranty">质保期(年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
-    <div class="fgi"><label data-i18n="cap.scenario">场景</label><select id="scenario" data-i18n-opts='{"consumer":"cap.opt.consumer","industrial":"cap.opt.industrial","automotive":"cap.opt.automotive","medical":"cap.opt.medical"}'><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select></div>
+    <div class="fgi"><label><span data-i18n="cap.scenario">场景</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="scenario" data-i18n-opts='{"consumer":"cap.opt.consumer","industrial":"cap.opt.industrial","automotive":"cap.opt.automotive","medical":"cap.opt.medical"}'><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select><div class="info-popup" style="width:320px">质保判定所需的最低寿命裕量系数，按应用场景可靠性要求预设：<br>• <b>消费 1.3x</b>：消费电子，裕量要求最低<br>• <b>工业 1.5x</b>：工业设备，中等裕量<br>• <b>汽车 2.0x</b>：车规级，高可靠性裕量<br>• <b>医疗 2.5x</b>：医疗设备，最高可靠性裕量<br><br>判定公式：实际寿命 ÷ 质保年限 ≥ 余量系数 → 合格。<br><br><i>注：以上系数为工程经验值预设，非强制标准要求，可根据项目实际需求调整。</i></div></div>
   </div></div>
 
 <div class="card"><h2 data-i18n="cap.device">器件参数</h2><div class="param-grid">
@@ -97,8 +97,8 @@
     <div class="ri"><div class="rl" data-i18n="cap.r.years">预计服役年限</div><div class="rv"><span id="ly">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px" data-i18n="cap.r.unit.yr">年</span></div></div>
     <div class="ri"><div class="rl" data-i18n="cap.r.warranty">质保期判定</div><div class="rv"><span id="wb">-</span></div></div>
     <div class="ri"><div class="rl" data-i18n="cap.r.damage">年损伤率</div><div class="rv"><span id="ad">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px" data-i18n="cap.r.unit.pct">%/年</span></div></div>
-    <div class="ri"><div class="rl" data-i18n="cap.r.worstT">最恶劣时段芯温</div><div class="rv"><span id="wt">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px">C</span></div></div>
-    <div class="ri"><div class="rl" data-i18n="cap.r.worstKt">最恶劣时段 K_T</div><div class="rv"><span id="wk">-</span></div></div>
+    <div class="ri"><div class="rl" data-i18n="cap.r.worstT">最恶劣时段芯温</div><div class="rv"><span id="wt">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px">℃</span></div></div>
+    <div class="ri"><div class="rl">最恶劣时段 K<sub>T</sub></div><div class="rv"><span id="wk">-</span></div></div>
   </div>
   <div style="margin-top:10px"><h3 class="section-h3" data-i18n="cap.margin.title">质保期裕量</h3>
     <div style="display:flex;justify-content:space-between;font-size:.78rem;color:#64748b"><span id="wd">-</span></div>
@@ -106,7 +106,7 @@
     <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#64748b"><span>0</span><span id="wtl">-</span><span id="wml">-</span></div>
   </div>
   <div style="margin-top:10px"><h3 class="section-h3" data-i18n="cap.segment.title">各时段寿命消耗</h3>
-    <table class="sg-tbl"><thead><tr><th data-i18n="cap.segHdr.seg">时段</th><th data-i18n="cap.segHdr.dur">时长(h)</th><th data-i18n="cap.segHdr.temp">芯温C</th><th>K_T</th><th>K_V</th><th>Li (h)</th><th data-i18n="cap.segHdr.li">年损伤</th></tr></thead><tbody id="srb"></tbody></table>
+    <table class="sg-tbl"><thead><tr><th data-i18n="cap.segHdr.seg">时段</th><th data-i18n="cap.segHdr.dur">时长(h)</th><th data-i18n="cap.segHdr.temp">芯温℃</th><th>K<sub>T</sub></th><th>K<sub>V</sub></th><th data-i18n="cap.segHdr.li">等效寿命Li(h)</th><th data-i18n="cap.segHdr.dmg">年损伤</th></tr></thead><tbody id="srb"></tbody></table>
   </div>
   </div>
 
@@ -198,11 +198,11 @@
 </div><!-- /container -->
 
 <!-- ── Scripts (order: i18n → models → ui modules → app) ── -->
-<script src="js/i18n.js?v=14"></script>
+<script src="js/i18n.js?v=16"></script>
 <script src="js/models/capacitor-model.js?v=11"></script>
 <script src="js/models/safety-model.js?v=13"></script>
 <script src="js/capacitor.js?v=19"></script>
-<script src="js/safety.js?v=32"></script>
+<script src="js/safety.js?v=33"></script>
 <script src="js/app.js?v=21"></script>
 </body>
 </html>

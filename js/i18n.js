@@ -29,7 +29,7 @@
     "cap.opt.fan2":      { zh: "强制风冷 >2m/s", en: "Forced Air >2m/s" },
     "cap.workdays":      { zh: "每年工作天数", en: "Workdays/Year" },
     "cap.workdays.unit": { zh: "天", en: "days" },
-    "cap.warranty":      { zh: "质保期(年)", en: "Warranty Target (yr)" },
+    "cap.warranty":      { zh: "产品质保期(年)", en: "Warranty Target (yr)" },
     "cap.scenario":      { zh: "场景", en: "Scenario" },
     "cap.opt.consumer":  { zh: "消费(1.3x)", en: "Consumer (1.3x)" },
     "cap.opt.industrial":{ zh: "工业(1.5x)", en: "Industrial (1.5x)" },
@@ -79,8 +79,9 @@
     "cap.segment.title": { zh: "各时段寿命消耗", en: "Per-Segment Life Consumption" },
     "cap.segHdr.seg":    { zh: "时段", en: "Seg" },
     "cap.segHdr.dur":    { zh: "时长(h)", en: "Dur(h)" },
-    "cap.segHdr.temp":   { zh: "芯温C", en: "T_core°C" },
-    "cap.segHdr.li":     { zh: "年损伤", en: "Dmg/yr" },
+    "cap.segHdr.temp":   { zh: "芯温℃", en: "T_core°C" },
+    "cap.segHdr.li":     { zh: "等效寿命Li(h)", en: "Life Li(h)" },
+    "cap.segHdr.dmg":    { zh: "年损伤", en: "Dmg/yr" },
 
     /* Capacitor — model description */
     "cap.model.title":   { zh: "计算模型说明", en: "Calculation Model" },

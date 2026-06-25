@@ -75,7 +75,7 @@
 .rep-model-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 4px; padding: 8px 12px; margin-bottom: 10px; font-size: .8rem; color: #0c4a6e; line-height: 1.7; }
 #sImpulseInfo.rep-model-box { display: flex; gap: 16px; flex-wrap: wrap; }
 .imp-label { font-weight: 600; color: #1e293b; }
-.imp-val { font-weight: 700; color: var(--color-text); }
+.imp-val { font-size: .85rem; color: var(--color-text); }
 .imp-sub { color: #64748b; }
 .imp-tov { font-size: .85rem; color: var(--color-text); }
 .imp-note { color: #64748b; font-size: .75rem; }
@@ -461,7 +461,7 @@ h1.page-title, .tab-content > h1 {
 .seg-body input[type=number] {
   width: 55px; padding: 6px 4px; font-size: var(--fs-sm); min-height: 32px;
   border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-  background: #fff; color: var(--color-text); text-align: right;
+  background: #fff; color: var(--color-text); text-align: left;
   transition: border-color .15s, box-shadow .15s;
 }
 

@@ -29,7 +29,7 @@
       +'<td><select class=scoat style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+co+'</select></td>'
       +'<td><select class=scirc style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto"><option value=ac '+(circ=='ac'?'selected':'')+'>'+_t("opt.value.ac")+'</option><option value=dc '+(circ=='dc'?'selected':'')+'>'+_t("opt.value.dc")+'</option></select></td>'
       +'<td><select class=stoGnd style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+go+'</select></td>'
-      +'<td style="text-align:center;white-space:nowrap"><button class="btn-sm" style="color:#ef4444;padding:1px 6px" onclick=sRmNode(this)>✕</button></td>'
+      +'<td style="text-align:center;white-space:nowrap"><button class="btn-sm" onclick=sRmNode(this)>&times;</button></td>'
       +'</tr>';
   }
 
