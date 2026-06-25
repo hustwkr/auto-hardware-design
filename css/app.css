@@ -75,9 +75,9 @@
 .rep-model-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 4px; padding: 8px 12px; margin-bottom: 10px; font-size: .8rem; color: #0c4a6e; line-height: 1.7; }
 #sImpulseInfo.rep-model-box { display: flex; gap: 16px; flex-wrap: wrap; }
 .imp-label { font-weight: 600; color: #1e293b; }
-.imp-val { color: #2563eb; font-weight: 700; font-size: .95rem; }
+.imp-val { font-weight: 700; color: var(--color-text); }
 .imp-sub { color: #64748b; }
-.imp-tov { color: #7c3aed; font-size: .85rem; }
+.imp-tov { font-size: .85rem; color: var(--color-text); }
 .imp-note { color: #64748b; font-size: .75rem; }
 .imp-footer { margin-top: 4px; font-size: .78rem; color: #64748b; }
 .iso-legend { font-size: var(--fs-xs); font-weight: 600; color: var(--color-text-soft); padding: 0 6px; }
@@ -89,9 +89,7 @@
 [data-theme="dark"] .rep-result { color: #cbd5e1; }
 [data-theme="dark"] .rep-model-box { background: #0c2d4a; border-color: #1e3a5f; color: #7dd3fc; }
 [data-theme="dark"] .imp-label { color: #e2e8f0; }
-[data-theme="dark"] .imp-val { color: #60a5fa; }
 [data-theme="dark"] .imp-sub, [data-theme="dark"] .imp-note { color: #94a3b8; }
-[data-theme="dark"] .imp-tov { color: #c4b5fd; }
 [data-theme="dark"] .imp-footer { border-top-color: #1e3a5f; color: #94a3b8; }
 [data-theme="dark"] .rep-footer { border-top-color: var(--color-border); color: var(--color-text-soft); }
 

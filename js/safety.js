@@ -38,7 +38,7 @@
   function sAddNode(){
     document.getElementById("sN").insertAdjacentHTML("beforeend", mNode(snid++,0,"L-N",230,"basic",0,0,false,"ac"));
     var btn=document.getElementById("addNodeBtn");if(btn)btn.onclick=sAddNode;
-    sCalc();
+    sReNum();sCalc();
   }
 
   function sRmNode(b){b.closest("tr[data-id]").remove();sReNum();sCalc()};
@@ -178,19 +178,19 @@
         if(!el) return;
         var ovcLabel = function(n){return {1:'I',2:'II',3:'III',4:'IV'}[n]||'II';};
         var tovAC_info = tovFor(sysVAC);
-        var isoNote = iso==='isolated'?'<span class="imp-note">'+_t("safe.imp.isoDown")+'</span>':'<span class="imp-note">'+_t("safe.imp.noIso")+'</span>';
+        var isoNote = '';
         el.innerHTML =
           '<div><span class="imp-label">'+_t("safe.imp.acLbl")+'</span> ' +
           '<span class="imp-val">'+impAC+' kV</span> ' +
-          '<span class="imp-sub">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
+          '<span class="imp-sub">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span> ' +
+          '<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;vertical-align:middle;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px">'+_t("safe.imp.tipAc")+'</div></div>' +
           '<div><span class="imp-label">'+_t("safe.imp.dcLbl")+'</span> ' +
           '<span class="imp-val">'+impDC+' kV</span> ' +
-          '<span class="imp-sub">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span> <span class="imp-note">PV最低冲击电压2500V (§7.3.7.1.2b)</span> '+isoNote+'</div>' +
+          '<span class="imp-sub">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span> ' +
+          '<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;vertical-align:middle;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px">'+_t("safe.imp.tipDc")+'</div></div>' +
           '<div><span class="imp-label">'+_t("safe.imp.tovLbl")+'</span> ' +
-          '<span class="imp-tov">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span></div>' +
-          '<div class="imp-footer">' +
-          _t("safe.imp.lineNote")+': AC '+prevImpLevel(impAC)+' kV, DC '+Math.max(prevImpLevel(impDC), 2.5)+' kV' +
-          '<br><span style="font-style:italic">'+_t("safe.imp.iecRef")+'</span></div>';
+          '<span class="imp-tov">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span> ' +
+          '<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;vertical-align:middle;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px">'+_t("safe.imp.tipTov")+'</div></div>';
       })();
     } else {
       /* ── UL mode: show system voltage info instead of impulse/TOV ─── */
@@ -262,7 +262,7 @@
     var ovc_AC_val = document.getElementById('sOvc_AC').value;
     var ovc_DC_val = document.getElementById('sOvc_DC').value;
     var altk = SM.altFactor(alt);
-    window._sd={results:result.results,pd:pd,mg:mg,alt:alt,altk:altk,std:std,impAC:impAC,impDC:impDC,ovc_AC:ovc_AC_val,ovc_DC:ovc_DC_val,isolation:iso};
+    window._sd={results:result.results,pd:pd,mg:mg,alt:alt,altk:altk,std:std,impAC:impAC,impDC:impDC,ovc_AC:ovc_AC_val,ovc_DC:ovc_DC_val,isolation:iso,sysVAC:sysVAC,sysVDC:sysVDC};
   }
 
   /* ── Report generation (DOM-only) ───────── */
@@ -270,6 +270,24 @@
   function buildCalcChains(d){
     if(!d||!d.results||!d.results.length)return "";
     var html="";
+
+    /* ── Voltage calculation summary (before per-node details) ─── */
+    if(d.std === 'iec'){
+      var ovcLabel = function(n){return {1:'I',2:'II',3:'III',4:'IV'}[n]||'II';};
+      var tovInfo = typeof SM.lookupTov === 'function' ? SM.lookupTov(d.sysVAC) : null;
+      html += "<div style=margin:6px 0;padding:10px 14px;border-left:3px solid #7c3aed;background:#f5f3ff;font-size:.85rem;line-height:1.7>";
+      html += "<strong>冲击电压与暂态过电压确定 (Table 12)</strong><br>";
+      html += "&nbsp;&nbsp;AC侧: 系统电压 " + d.sysVAC + " V, OVC " + ovcLabel(d.ovc_AC) + " → 冲击电压 = <strong>" + d.impAC + " kV</strong> (电网电路，不允许插值，向上取整)<br>";
+      html += "&nbsp;&nbsp;DC侧: 系统电压 " + d.sysVDC + " V, OVC " + ovcLabel(d.ovc_DC);
+      if(d.isolation === 'isolated') html += " (隔离降档)";
+      html += " → 冲击电压 = <strong>" + d.impDC + " kV</strong>";
+      if(d.impDC <= 2.5) html += " (PV最低2.5kV)";
+      html += " (PV电路，允许插值)<br>";
+      if(tovInfo){
+        html += "&nbsp;&nbsp;暂态过电压: Table 12 第6列 → " + (tovInfo.peak/1000).toFixed(2) + " kV pk / " + (tovInfo.rms/1000).toFixed(2) + " kV rms (仅电网电路)<br>";
+      }
+      html += "</div>";
+    }
     d.results.forEach(function(r,i){
       var mult = SM.INS_K[r.effIns] || SM.INS_K[r.ins] || 1;
       var txt="<div style=margin:6px 0;padding:10px 14px;border-left:3px solid #2563eb;background:#f8fafc;font-size:.85rem;line-height:1.7>";
