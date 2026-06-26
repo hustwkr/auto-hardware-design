@@ -244,7 +244,6 @@ html[data-theme-choice="system"] .nav-dropdown-menu div[data-value="system"],
 html[data-theme-choice="light"] .nav-dropdown-menu div[data-value="light"],
 html[data-theme-choice="dark"] .nav-dropdown-menu div[data-value="dark"] {
   background: rgba(59,130,246,.1);
-  color: #2563eb;
   font-weight: 600;
 }
 
@@ -252,7 +251,6 @@ html[data-theme-choice="dark"] .nav-dropdown-menu div[data-value="dark"] {
 html[data-lang="zh"] #langMenu div[data-value="zh"],
 html[data-lang="en"] #langMenu div[data-value="en"] {
   background: rgba(59,130,246,.1);
-  color: #2563eb;
   font-weight: 600;
 }
 
