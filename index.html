@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>电解电容寿命计算工具</title>
 <link rel="icon" type="image/png" href="/hwlogo.png">
-<link rel="stylesheet" href="css/app.css?v=31">
+<link rel="stylesheet" href="css/app.css?v=32">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>
 </head>
@@ -153,7 +153,7 @@
     <div class="fgi" data-standard="iec"><label data-i18n="safe.ovc.ac">AC侧过电压类别</label><select id="sOvc_AC"><option value="i">I — 经SPD保护电路</option><option value="ii" selected>II — 插接式设备</option><option value="iii">III — 固定安装/配电盘下游</option><option value="iv">IV — 建筑入口/电表上游</option></select></div>
     <div class="fgi" data-standard="ul" style="display:none"><label data-i18n="safe.ovc.ac">过电压类别</label><span id="sOvc_ul_hint" class="hint" data-i18n="safe.ovc.ul.hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">UL §25.4b 固定 OVC IV</span><input type="text" value="IV (UL 1741 §25.4b 强制)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
     <div class="fgi" data-standard="iec"><label data-i18n="safe.ovc.dc">DC侧过电压类别</label><select id="sOvc_DC"><option value="i">I — 经SPD保护电路</option><option value="ii" selected>II — PV默认/插接式设备</option><option value="iii">III — 固定安装</option><option value="iv">IV — 建筑入口</option></select></div>
-    <div class="fgi" data-standard="iec" style="position:relative"><label><span data-i18n="safe.sysVac">AC系统电压 (V)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><input type="number" id="sSysV_AC" value="300" min="0" step="10"><div id="acVoltageInfo" class="info-popup">For clearance distances and solid insulation the voltage used is as described in 7.3.7.2.2 to 7.3.7.2.4.<br>The impulse voltage and temporary overvoltage are taken from Table 12.<br>When using Table 12, the system voltage in column 1 is:<br>• in TN and TT systems: the r.m.s. value of the rated voltage between a phase and earth;<br>NOTE 1 A corner-earthed system is a TN system with one phase earthed, in which the system voltage is the r.m.s. value of the rated voltage between a non-earthed phase and earth (i.e. the phase-phase voltage).</div></div>
+    <div class="fgi" data-standard="iec"><label><span data-i18n="safe.sysVac">AC系统电压 (Vrms)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><input type="number" id="sSysV_AC" value="300" min="0" step="10"><div id="acVoltageInfo" class="info-popup">For clearance distances and solid insulation the voltage used is as described in 7.3.7.2.2 to 7.3.7.2.4.<br>The impulse voltage and temporary overvoltage are taken from Table 12.<br>When using Table 12, the system voltage in column 1 is:<br>• in TN and TT systems: the r.m.s. value of the rated voltage between a phase and earth;<br>NOTE 1 A corner-earthed system is a TN system with one phase earthed, in which the system voltage is the r.m.s. value of the rated voltage between a non-earthed phase and earth (i.e. the phase-phase voltage).</div></div>
     <div class="fgi" data-standard="ul" style="display:none"><label><span data-i18n="safe.sysVac">AC系统电压 (V)</span><span id="sSysV_AC_ul_hint" class="hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">UL: 相地额定系统电压</span></label><input type="number" id="sSysV_AC_ul" value="300" min="0" step="10"><span class="hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">Phase-to-Ground Rated System Voltage (kVRMS)</span></div>
     <div class="fgi" data-standard="iec"><label data-i18n="safe.sysVdc">DC系统电压 (V)</label><input type="number" id="sSysV_DC" value="600" min="0" step="10"></div>
     <div class="fgi" data-standard="ul" style="display:none"><label><span data-i18n="safe.sysVdc">DC系统电压 (V)</span><span id="sSysV_DC_ul_hint" class="hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">UL: 相地额定系统电压</span></label><input type="number" id="sSysV_DC_ul" value="600" min="0" step="10"><span class="hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">Phase-to-Ground Rated System Voltage (kVRMS)</span></div>
@@ -165,7 +165,7 @@
 
   <div class="card"><h2 data-i18n="safe.nodes">测量节点定义</h2>
     <p style="font-size:.78rem;color:#64748b;margin-bottom:8px" data-i18n="safe.nodes.hint">定义逆变器中各需要计算安规距离的节点及其电气参数</p>
-    <div style="overflow-x:auto"><table class="node-tbl" id="sNt"><thead><tr><th>#</th><th data-i18n="safe.nodeHdr.name">节点名称</th><th data-i18n="safe.nodeHdr.vrms">工作电压Vrms(V)</th><th data-i18n="safe.nodeHdr.ins">绝缘类型</th><th data-i18n="safe.nodeHdr.pcb">PCB走线</th><th data-i18n="safe.nodeHdr.coat">三防漆</th><th data-i18n="safe.nodeHdr.circ">电路</th><th data-i18n="safe.nodeHdr.gnd">是否对外壳<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px"><b>对外壳(PE)节点的影响：</b><br>① <b>强制加强绝缘</b> — 外壳为可触及导电部件，活体与外壳之间必须使用加强绝缘 (§7.3.7)<br>② <b>冲击电压不降档</b> — 线间节点内部功能绝缘可降一档，对地不降 (§7.3.7.1.2f)<br>③ <b>TOV适用</b> — 暂态过电压仅用于对地绝缘 (§7.3.7.1.2f)<br>④ PCB走线到PE电位不受①限制 — 属于不可触及，适用§7.3.7.7 PWB豁免</div></th><th></th></tr></thead><tbody id="sN"></tbody></table></div>
+    <div style="overflow-x:auto"><table class="node-tbl" id="sNt"><thead><tr><th>#</th><th data-i18n="safe.nodeHdr.name">节点名称</th><th data-i18n="safe.nodeHdr.circ">电路位置</th><th data-i18n="safe.nodeHdr.gnd">是否对地<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px"><b>对地节点的影响：</b><br>① <b>强制加强绝缘</b> — 对地节点必须使用加强绝缘 (§7.3.7)<br>② <b>冲击电压不降档</b> — 线间节点内部功能绝缘可降一档，对地不降 (§7.3.7.1.2f)<br>③ <b>TOV适用</b> — 暂态过电压仅用于对地绝缘 (§7.3.7.1.2f)<br>④ PCB走线到PE电位不受①限制 — 属于不可触及，适用§7.3.7.7 PWB豁免</div></th><th data-i18n="safe.nodeHdr.vrms">工作电压Vrms(V)</th><th data-i18n="safe.nodeHdr.ins">绝缘类型</th><th data-i18n="safe.nodeHdr.pcb">是否PCB走线<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:340px"><b>PCB走线对安规距离的影响：</b><br>① <b>爬电距离更短</b> — PD1/PD2环境下PCB走线使用Table 14的PWBs列，距离远小于常规值<br>② <b>不强制加强绝缘</b> — PCB走线属于不可触及部分，对地时不强制要求加强绝缘 (§7.3.7.7 PWB豁免)<br>③ <b>绝缘类型保持原值</b> — 不会像非PCB对地节点那样被自动提升为加强绝缘</div></th><th data-i18n="safe.nodeHdr.coat">三防漆</th><th></th></tr></thead><tbody id="sN"></tbody></table></div>
     <button class="btn-sm" id="addNodeBtn" data-i18n="safe.addNode">+ 添加测量节点</button>
   </div>
 </div>
@@ -175,7 +175,7 @@
   <div class="card"><h2 data-i18n="safe.res.title">计算结果</h2><div class="result-grid">
   </div>
   <h3 class="section-h3" data-i18n="safe.res.req">各节点所需安规距离</h3>
-  <table class="sg-tbl"><thead><tr><th>#</th><th data-i18n="safe.res.node">节点</th><th data-i18n="safe.nodeHdr.vrms">工作电压Vrms(V)</th><th data-i18n="safe.res.ins">绝缘类型</th><th>Clearance(mm)</th><th>Creepage(mm)</th></tr></thead><tbody id="sRtb"></tbody></table>
+  <table class="sg-tbl"><thead><tr><th>#</th><th data-i18n="safe.res.node">节点</th><th data-i18n="safe.nodeHdr.vrms">工作电压Vrms(V)</th><th data-i18n="safe.res.ins">绝缘类型</th><th data-i18n="safe.nodeHdr.pcb">是否PCB走线</th><th data-i18n="safe.res.clr">电气间隙(mm)</th><th data-i18n="safe.res.crp">爬电距离(mm)</th></tr></thead><tbody id="sRtb"></tbody></table>
   </div>
 <div id="safeWarn" class="input-warn" style="display:none"></div>
 </div>
@@ -198,11 +198,11 @@
 </div><!-- /container -->
 
 <!-- ── Scripts (order: i18n → models → ui modules → app) ── -->
-<script src="js/i18n.js?v=16"></script>
+<script src="js/i18n.js?v=17"></script>
 <script src="js/models/capacitor-model.js?v=11"></script>
-<script src="js/models/safety-model.js?v=13"></script>
+<script src="js/models/safety-model.js?v=17"></script>
 <script src="js/capacitor.js?v=19"></script>
-<script src="js/safety.js?v=33"></script>
-<script src="js/app.js?v=21"></script>
+<script src="js/safety.js?v=40"></script>
+<script src="js/app.js?v=22"></script>
 </body>
 </html>

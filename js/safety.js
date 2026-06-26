@@ -23,12 +23,12 @@
     return '<tr class="snode" data-id='+id+'>'
       +'<td style="text-align:center;color:#94a3b8;font-size:.72rem">'+(idx+1)+'</td>'
       +'<td><input class=sname type=text value="'+name+'" style="width:80px;border:1px solid #e2e8f0;border-radius:3px;padding:2px 4px;font-size:.78rem"></td>'
+      +'<td><select class=scirc style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto"><option value=ac '+(circ=='ac'?'selected':'')+'>'+_t("opt.value.ac")+'</option><option value=dc '+(circ=='dc'?'selected':'')+'>'+_t("opt.value.dc")+'</option></select></td>'
+      +'<td><select class=stoGnd style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+go+'</select></td>'
       +'<td><input class=svrms type=number value='+vrms+' min=0 step=10 style="width:60px;border:1px solid #e2e8f0;border-radius:3px;padding:2px 4px;font-size:.78rem"></td>'
       +'<td><select class=sins style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+io+'</select></td>'
       +'<td><select class=spcb style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+po+'</select></td>'
       +'<td><select class=scoat style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+co+'</select></td>'
-      +'<td><select class=scirc style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto"><option value=ac '+(circ=='ac'?'selected':'')+'>'+_t("opt.value.ac")+'</option><option value=dc '+(circ=='dc'?'selected':'')+'>'+_t("opt.value.dc")+'</option></select></td>'
-      +'<td><select class=stoGnd style="font-size:.75rem;padding:1px 2px;border:1px solid #e2e8f0;border-radius:3px;min-width:0;width:auto">'+go+'</select></td>'
       +'<td style="text-align:center;white-space:nowrap"><button class="btn-sm" onclick=sRmNode(this)>&times;</button></td>'
       +'</tr>';
   }
@@ -118,27 +118,36 @@
     sysVDC = cl(sysVDC,0,15000,_t("param.dcv"));
 
     /* ── Impulse withstand voltage per IEC 62109-1 Table 12 ──── */
-    var IMPULSE_TBL = [
+    var IMPULSE_TBL_AC = [
       [50,   0.33,  0.5,   0.8,   1.5],
       [100,  0.5,   0.8,   1.5,   2.5],
       [150,  0.8,   1.5,   2.5,   4.0],
       [300,  1.5,   2.5,   4.0,   6.0],
-      [600,  1.5,   2.5,   4.0,   6.0],
-      [1000, 2.5,   4.0,   6.0,   8.0]
+      [600,  2.5,   4.0,   6.0,   8.0],
+      [1000, 4.0,   6.0,   8.0,   12.0]
+    ];
+    var IMPULSE_TBL_DC = [
+      [71,   0.33,  0.5,   0.8,   1.5],
+      [141,  0.5,   0.8,   1.5,   2.5],
+      [213,  0.8,   1.5,   2.5,   4.0],
+      [424,  1.5,   2.5,   4.0,   6.0],
+      [849,  1.5,   4.0,   6.0,   8.0],
+      [1500, 2.5,   6.0,   8.0,   12.0]
     ];
 
-    function impulseFor(ovcNum, sysV, interp){
+    function impulseFor(ovcNum, sysV, interp, circType){
       var ov = Math.min(ovcNum || 2, 4);
-      for(var i=0; i<IMPULSE_TBL.length; i++){
-        if(sysV == IMPULSE_TBL[i][0]) return IMPULSE_TBL[i][ov];
-        if(sysV < IMPULSE_TBL[i][0]){
-          if(!interp || i==0) return IMPULSE_TBL[i][ov];
-          var x0=IMPULSE_TBL[i-1][0], x1=IMPULSE_TBL[i][0];
-          var y0=IMPULSE_TBL[i-1][ov], y1=IMPULSE_TBL[i][ov];
+      var tbl = (circType === 'dc') ? IMPULSE_TBL_DC : IMPULSE_TBL_AC;
+      for(var i=0; i<tbl.length; i++){
+        if(sysV == tbl[i][0]) return tbl[i][ov];
+        if(sysV < tbl[i][0]){
+          if(!interp || i==0) return tbl[i][ov];
+          var x0=tbl[i-1][0], x1=tbl[i][0];
+          var y0=tbl[i-1][ov], y1=tbl[i][ov];
           return Math.round((y0+(sysV-x0)/(x1-x0)*(y1-y0))*100)/100;
         }
       }
-      return IMPULSE_TBL[IMPULSE_TBL.length-1][ov];
+      return tbl[tbl.length-1][ov];
     }
 
     /* ── Temporary overvoltage per Table 12 col 6 — mains only ─── */
@@ -157,7 +166,7 @@
 
     // Compute impulse withstand voltage (kV) for AC and DC sides
     var impAC = impulseFor(ovc_AC, sysVAC, false);
-    var impDC = impulseFor(ovc_DC, sysVDC, true);
+    var impDC = impulseFor(ovc_DC, sysVDC, true, 'dc');
 
     /* PV circuit rule: minimum 2.5 kV per IEC 62109-1 §7.3.7.1.2b */
     if(impDC < 2.5) impDC = 2.5;
@@ -254,7 +263,9 @@
       var warnNote = r.forcedReinforced ? ' <span style="color:#f59e0b;font-size:.7rem" title="'+_t("safe.tip.forced")+'">'+_t("safe.chain.forcedReinf")+'</span>' : '';
       var peakWarn = (r.recurringPeakOk === false) ? ' <span style="color:#ef4444;font-size:.7rem" title="'+_t("safe.tip.peakOver")+'">🔴 '+_t("safe.chain.warnPeak")+'</span>' : '';
       var t241Warn = r.tbl241Note ? ' <span style="color:#f59e0b;font-size:.7rem" title="'+_t("safe.tip.t241")+'">⚠T24.1</span>' : '';
-      tb+="<tr><td>"+(i+1)+"</td><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+r.insL+warnNote+withinNote+"</td><td>"+r.reqClr+t241Warn+"</td><td>"+r.reqCrp+peakWarn+"</td></tr>";
+      var crFloorNote = r.crFloorApplied ? ' <span style="color:#64748b;font-size:.65rem" title="爬电距离不低于电气间隙 (Cr≥Cl)">Cr≥Cl</span>' : '';
+      var pcbLabel = r.pcb ? _t("safe.pcb.yes") : _t("safe.pcb.no");
+      tb+="<tr><td>"+(i+1)+"</td><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+r.insL+warnNote+withinNote+"</td><td>"+pcbLabel+"</td><td>"+r.reqClr+t241Warn+"</td><td>"+r.reqCrp+crFloorNote+peakWarn+"</td></tr>";
     });
     document.getElementById("sRtb").innerHTML=tb;
 
@@ -347,17 +358,19 @@
       }
 
       // ── Creepage chain ──
+      var crpBaseVal = r.baseCrp !== undefined ? r.baseCrp : (r.reqCrp / mult);
+      var crpBase = crpBaseVal.toFixed(2);
       if(d.std === 'ul'){
         txt += "<br><strong>爬电距离:</strong> "+_t("safe.chain.workV") + " " + r.vrms + " V, PD" + d.pd + ", MG-II, " + _t("safe.chain.ulTableBase");
-        var crpBase = (r.reqCrp / mult).toFixed(2);
         txt += " ~" + crpBase + " mm";
         if(mult > 1) txt += " × " + _t("safe.chain.insMult") + "×" + mult;
+        if(r.crFloorApplied) txt += " → Cr≥Cl: " + r.reqClr + " mm";
         txt += " → reqCreepage = <strong>" + r.reqCrp + " mm</strong>";
       } else {
         txt += "<br><strong>爬电距离 (IEC):</strong> "+_t("safe.chain.workV") + " " + r.vrms + " V, PD" + d.pd + ", MG-" + (d.mg||'II').toUpperCase() + ", " + _t("safe.chain.iecTable");
-        var crpBase = (r.reqCrp / mult).toFixed(2);
         txt += " ~" + crpBase + " mm";
         if(mult > 1) txt += " × " + _t("safe.chain.insMult") + "×" + mult;
+        if(r.crFloorApplied) txt += " → Cr≥Cl: " + r.reqClr + " mm";
         txt += " → reqCreepage = <strong>" + r.reqCrp + " mm</strong>";
       }
 
@@ -378,7 +391,7 @@
     // Show export button after report generation
     var eg=document.getElementById('exportSafeGroup');if(eg)eg.style.display='';
     var n=new Date(),locale=_getLang()==='en'?'en-US':'zh-CN',ds=n.toLocaleDateString(locale,{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString(locale,{hour:"2-digit",minute:"2-digit"});
-    var sr="";d.results.forEach(function(r){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLine");var f=r.forcedReinforced?' '+_t("safe.chain.forcedReinf"):'';var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';sr+="<tr><td>"+(d.results.indexOf(r)+1)+"</td><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
+    var sr="";d.results.forEach(function(r){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLine");var f=r.forcedReinforced?' '+_t("safe.chain.forcedReinf"):'';var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';var pcb=r.pcb?_t("safe.pcb.yes"):_t("safe.pcb.no");sr+="<tr><td>"+(d.results.indexOf(r)+1)+"</td><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+pcb+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
 
     var isoLabel = (d.isolation==='isolated')?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
 
@@ -419,7 +432,7 @@
         +"<tr><td>"+_t("safe.report.std")+"</td><td>"+ds+" "+ts+"</td></tr>"
         +"<tr><td>"+_t("safe.projName")+"</td><td>"+(document.getElementById('sProjName').value||'-')+"</td></tr></table>"
       +"<h3>2. "+_t("safe.report.basic")+"</h3><table><tr><th>"+_t("safe.report.params")+"</th><th>"+_t("safe.report.val")+"</th></tr>"+baseTable+"</table>"
-      +"<h3>3. "+_t("safe.report.nodes")+"</h3><table><tr><th>#</th><th>"+_t("safe.res.node")+"</th><th>"+_t("safe.nodeHdr.vrms")+"</th><th>"+_t("safe.res.ins")+"</th><th>Clearance(mm)</th><th>Creepage(mm)</th></tr>"+sr+"</table>"
+      +"<h3>3. "+_t("safe.report.nodes")+"</h3><table><tr><th>#</th><th>"+_t("safe.res.node")+"</th><th>"+_t("safe.nodeHdr.vrms")+"</th><th>"+_t("safe.res.ins")+"</th><th>"+_t("safe.nodeHdr.pcb")+"</th><th>"+_t("safe.res.clr")+"</th><th>"+_t("safe.res.crp")+"</th></tr>"+sr+"</table>"
       +"<h3>4. "+_t("safe.report.calcProc")+"</h3>" + buildCalcChains(d)
       +"<p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>"+_t("safe.report.conclusion")+":</strong> "+_t("safe.report.conclusionText")+"</p>"
       +"<div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b><span>"+_t("safe.report.footer")+" v1.0</span><span>"+ds+" "+ts+"</span></div>";
@@ -449,7 +462,7 @@
     css+='</style>';
 
     /* ── Results rows ─── */
-    d.results.forEach(function(r,i){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLineShort");var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';sr+='<tr><td>'+(i+1)+'</td><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+pw+'</td></tr>'});
+    d.results.forEach(function(r,i){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLineShort");var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';var pcb=r.pcb?_t("safe.pcb.yes"):_t("safe.pcb.no");sr+='<tr><td>'+(i+1)+'</td><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+pcb+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+pw+'</td></tr>'});
 
     var isoLabel = (d.isolation==='isolated')?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
     var n=new Date(),locale=_getLang()==='en'?'en-US':'zh-CN',ds=n.toLocaleDateString(locale,{year:"numeric",month:"2-digit",day:"2-digit"});
@@ -506,7 +519,7 @@
 
     h+='<h3>3. '+_t("safe.word.results")+'</h3>';
     h+='<table class="data-tbl"><thead><tr>'
-      +'<th>#</th><th>'+_t("safe.word.node")+'</th><th>Vrms (V)</th><th>'+_t("safe.word.insLvl")+'</th><th>Clearance mm</th><th>Creepage mm</th>'
+      +'<th>#</th><th>'+_t("safe.word.node")+'</th><th>Vrms (V)</th><th>'+_t("safe.word.insLvl")+'</th><th>'+_t("safe.nodeHdr.pcb")+'</th><th>'+_t("safe.res.clr")+'</th><th>'+_t("safe.res.crp")+'</th>'
       +'</tr></thead><tbody>'+sr+'</tbody></table>';
 
     /* Footer */
@@ -566,8 +579,13 @@
     var btn=document.getElementById("addNodeBtn");if(btn)btn.onclick=sAddNode;
 
     /* Auto-derive DC OVC based on isolation + AC OVC — called during init */
-    dcManualOverride = false; // Reset before init derivation
-    autoDeriveDC();
+    /* Skip if DC OVC was already loaded from defaults (not the HTML default "ii") */
+    var dcOvcEl = document.getElementById('sOvc_DC');
+    if(dcOvcEl && dcOvcEl.value !== 'ii'){
+      dcManualOverride = true;
+    } else if(!dcManualOverride){
+      autoDeriveDC();
+    }
 
     /* Apply standard-specific UI mode (IEC by default) */
     applyStandardMode(document.getElementById("sStd").value || "iec");
@@ -621,5 +639,6 @@
   });
 
   global.initSafety = initSafety;
+  global.setDcManualOverride = function(v){ dcManualOverride = v; };
 
 })(window);

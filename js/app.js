@@ -81,7 +81,7 @@
       var scenarioEl=document.getElementById('scenario'); if(scenarioEl) state.capacitor.scenario=scenarioEl.value;
 
       /* Safety fields */
-      ['sStd','sPd','sMg','sAlt','sIsolation','sOvc_AC'].forEach(function(id){
+      ['sStd','sPd','sMg','sAlt','sIsolation','sOvc_AC','sOvc_DC'].forEach(function(id){
         var el=document.getElementById(id); if(el) state.safety[id]=el.value;
       });
       ['sSysV_AC','sSysV_DC'].forEach(function(id){
@@ -116,7 +116,11 @@
     var s=d.safety;if(s&&typeof s==='object'){
       setValSelect('sStd',s.sStd);setValSelect('sPd',s.sPd+'');setValSelect('sMg',s.sMg);
       setValSelect('sAlt',s.sAlt+'');setValSelect('sIsolation',s.sIsolation||'isolated');
-      setValSelect('sOvc_AC',s.sOvc_AC||'ii');/* sOvc_DC auto-derived in safety.js */
+      setValSelect('sOvc_AC',s.sOvc_AC||'ii');
+      if(s.sOvc_DC){if(typeof setDcManualOverride==='function')setDcManualOverride(true);setValSelect('sOvc_DC',s.sOvc_DC);
+        /* Re-apply after initSafety may have overridden it */
+        setTimeout(function(){if(typeof setDcManualOverride==='function')setDcManualOverride(true);setValSelect('sOvc_DC',s.sOvc_DC);},500);
+      }
       setVal('sSysV_AC',s.sSysV_AC+'');setVal('sSysV_DC',s.sSysV_DC+'');
 
       /* Load safety nodes from defaults — replaces initSafety fallback */

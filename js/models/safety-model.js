@@ -46,36 +46,38 @@
   /* Combined lookup table for UL clearance (standard + extended) */
   CLR_TBL_UL = CLR_TBL_UL.concat(CLR_TBL_UL_EXT);
 
-  /* ── IEC Creepage Table [Vrms, PD1-B, PD1-F, PD2-B, PD2-F, PCB, PD3-B, PD3-F, ...] ── */
+  /* ── IEC Creepage Table per IEC 62109-1 Table 14 ── */
+  /* [Vrms, PWBs-PD1, PWBs-PD2, Other-PD1, Other-PD2-I, Other-PD2-II, Other-PD2-IIIa, Other-PD2-IIIb,
+     Other-PD3-I, Other-PD3-II, Other-PD3-IIIa, Other-PD3-IIIb] — 12 data columns */
   var CRP_IEC = [
-    [0,0.35,0.35,0.35,0.87,0.025,0.87,0.87,0.87,0.87],
-    [2,0.35,0.35,0.35,0.87,0.025,0.87,0.87,0.87,0.87],
-    [10,0.40,0.40,0.40,1.0,0.025,1.0,1.0,1.0,1.0],
-    [25,0.50,0.50,0.50,1.25,0.025,1.25,1.25,1.25,1.25],
-    [32,0.53,0.53,0.53,1.3,0.025,1.3,1.3,1.3,1.3],
-    [40,0.56,0.80,1.1,1.4,0.025,1.4,1.6,1.8,1.8],
-    [50,0.60,0.85,1.20,1.5,0.025,1.5,1.7,1.9,1.9],
-    [63,0.63,0.90,1.25,1.6,0.04,1.6,1.8,2.0,2.0],
-    [80,0.67,0.95,1.3,1.7,0.063,1.7,1.9,2.1,2.1],
-    [100,0.71,1.0,1.4,1.8,0.10,1.8,2.0,2.2,2.2],
-    [125,0.75,1.05,1.5,1.9,0.16,1.9,2.1,2.4,2.4],
-    [160,0.80,1.1,1.6,2.0,0.25,2.0,2.2,2.5,2.5],
-    [200,1.0,1.4,2.0,2.5,0.40,2.5,2.8,3.2,3.2],
-    [250,1.25,1.8,2.5,3.2,0.56,3.2,3.6,4.0,4.0],
-    [320,1.6,2.2,3.2,4.0,0.75,4.0,4.5,5.0,5.0],
-    [400,2.0,2.8,4.0,5.0,1.0,5.0,5.6,6.3,6.3],
-    [500,2.5,3.6,5.0,6.3,1.3,6.3,7.1,8.0,8.0],
-    [630,3.2,4.5,6.3,8.0,1.8,8.0,9.0,10.0,10.0],
-    [800,4.0,5.6,8.0,10.0,2.4,10.0,11,12.5,12.5],
-    [1000,5.0,7.1,10.0,12.5,3.2,12.5,14,16,16],
-    [1250,6.3,9,12.5,16,4.2,16,18,20,20],
-    [1600,8.0,11,16,20,5.6,20,22,25,25],
-    [2000,10.0,14,20,25,7.5,25,28,32,32],
-    [2500,12.5,18,25,32,10.0,32,36,40,40],
-    [3200,16,22,32,40,12.5,40,45,50,50],
-    [4000,20,28,40,50,16,50,56,63,63],
-    [5000,25,36,50,63,20,63,71,80,80],
-    [6300,32,45,63,80,25,80,90,100,100]
+    [0,    0.025, 0.04,  0.056, 0.35, 0.35, 0.35, 0.35, 0.87, 0.87, 0.87, 0.87],
+    [2,    0.025, 0.04,  0.056, 0.35, 0.35, 0.35, 0.35, 0.87, 0.87, 0.87, 0.87],
+    [10,   0.025, 0.04,  0.08,  0.40, 0.40, 0.40, 0.40, 1.0,  1.0,  1.0,  1.0],
+    [25,   0.025, 0.04,  0.125, 0.50, 0.50, 0.50, 0.50, 1.25, 1.25, 1.25, 1.25],
+    [32,   0.025, 0.04,  0.14,  0.53, 0.53, 0.53, 0.53, 1.3,  1.3,  1.3,  1.3],
+    [40,   0.025, 0.04,  0.16,  0.56, 0.80, 1.1,  1.4,  1.6,  1.8,  1.8,  1.8],
+    [50,   0.025, 0.04,  0.18,  0.60, 0.85, 1.20, 1.5,  1.7,  1.9,  1.9,  1.9],
+    [63,   0.04,  0.063, 0.20,  0.63, 0.90, 1.25, 1.6,  1.8,  2.0,  2.0,  2.0],
+    [80,   0.063, 0.10,  0.22,  0.67, 0.95, 1.3,  1.7,  1.9,  2.1,  2.1,  2.1],
+    [100,  0.10,  0.16,  0.25,  0.71, 1.0,  1.4,  1.8,  2.0,  2.2,  2.2,  2.2],
+    [125,  0.16,  0.25,  0.28,  0.75, 1.05, 1.5,  1.9,  2.1,  2.4,  2.4,  2.4],
+    [160,  0.25,  0.40,  0.32,  0.80, 1.1,  1.6,  2.0,  2.2,  2.5,  2.5,  2.5],
+    [200,  0.40,  0.63,  0.42,  1.0,  1.4,  2.0,  2.5,  2.8,  3.2,  3.2,  3.2],
+    [250,  0.56,  1.0,   0.56,  1.25, 1.8,  2.5,  3.2,  3.6,  4.0,  4.0,  4.0],
+    [320,  0.75,  1.6,   0.75,  1.6,  2.2,  3.2,  4.0,  4.5,  5.0,  5.0,  5.0],
+    [400,  1.0,   2.0,   1.0,   2.0,  2.8,  4.0,  5.0,  5.6,  6.3,  6.3,  6.3],
+    [500,  1.3,   2.5,   1.3,   2.5,  3.6,  5.0,  6.3,  7.1,  8.0,  8.0,  8.0],
+    [630,  1.8,   3.2,   1.8,   3.2,  4.5,  6.3,  8.0,  9.0,  10.0, 10.0, 10.0],
+    [800,  2.4,   4.0,   2.4,   4.0,  5.6,  8.0,  10.0, 11,   12.5, 12.5, 12.5],
+    [1000, 3.2,   5.0,   3.2,   5.0,  7.1,  10.0, 12.5, 14,   16,   16,   16],
+    [1250, 4.2,   6.3,   4.2,   6.3,  9.0,  12.5, 16,   18,   20,   20,   20],
+    [1600, null,  null,  5.6,   8.0,  11,   16,   20,   22,   25,   25,   25],
+    [2000, null,  null,  7.5,   10.0, 14,   20,   25,   28,   32,   32,   32],
+    [2500, null,  null,  10.0,  12.5, 18,   25,   32,   36,   40,   40,   40],
+    [3200, null,  null,  12.5,  16,   22,   32,   40,   45,   50,   50,   50],
+    [4000, null,  null,  16,    20,   28,   40,   50,   56,   63,   63,   63],
+    [5000, null,  null,  20,    25,   36,   50,   63,   71,   80,   80,   80],
+    [6300, null,  null,  25,    32,   45,   63,   80,   90,   100,  100,  100]
   ];
 
   /* ── UL Creepage Table (UL 840 Table 9.1 — full data per Notebook) ─── */
@@ -134,11 +136,20 @@
   ];
 
   /* ── Impulse withstand voltage per IEC 62109-1 Table 12 [sysV, OVC-I..IV] (kV) ─ */
-  var IMPULSE_TBL = [
+  /* AC: system voltage in V rms */
+  var IMPULSE_TBL_AC = [
     [50,0.33,0.5,0.8,1.5],[100,0.5,0.8,1.5,2.5],
     [150,0.8,1.5,2.5,4.0],[300,1.5,2.5,4.0,6.0],
-    [600,1.5,2.5,4.0,6.0],[1000,2.5,4.0,6.0,8.0]
+    [600,2.5,4.0,6.0,8.0],[1000,4.0,6.0,8.0,12.0]
   ];
+  /* DC: system voltage in V dc — impulse values differ from AC (higher for same OVC) */
+  var IMPULSE_TBL_DC = [
+    [71,0.33,0.5,0.8,1.5],[141,0.5,0.8,1.5,2.5],
+    [213,0.8,1.5,2.5,4.0],[424,1.5,2.5,4.0,6.0],
+    [849,1.5,4.0,6.0,8.0],[1500,2.5,6.0,8.0,12.0]
+  ];
+  /* Backward compat alias */
+  var IMPULSE_TBL = IMPULSE_TBL_AC;
 
   /* ── Temporary overvoltage per Table 12 col 6 [sysV, Vpeak, Vrms] — mains only ─ */
   var TOV_TBL = [
@@ -253,21 +264,23 @@
   /* Pure lookup functions (no DOM)               */
   /* ════════════════════════════════════════════ */
 
-  function lookupImpulse(sysV, ovcClass, interp) {
-    // sysV: AC system voltage in V (e.g. 300)
+  function lookupImpulse(sysV, ovcClass, interp, circType) {
+    // sysV: system voltage in V (AC rms or DC)
     // ovcClass: 1-4 for OVC I-IV
     // interp: true for linear interpolation between rows
+    // circType: 'ac' (default) or 'dc' — selects voltage breakpoints per Table 12
     var ov = ovcClass || 2;
-    for (var i = 0; i < IMPULSE_TBL.length; i++) {
-      if (sysV == IMPULSE_TBL[i][0]) return IMPULSE_TBL[i][ov];
-      if (sysV < IMPULSE_TBL[i][0]) {
-        if (!interp || i == 0) return IMPULSE_TBL[i][ov];
-        var x0 = IMPULSE_TBL[i-1][0], x1 = IMPULSE_TBL[i][0];
-        var y0 = IMPULSE_TBL[i-1][ov], y1 = IMPULSE_TBL[i][ov];
+    var tbl = (circType === 'dc') ? IMPULSE_TBL_DC : IMPULSE_TBL_AC;
+    for (var i = 0; i < tbl.length; i++) {
+      if (sysV == tbl[i][0]) return tbl[i][ov];
+      if (sysV < tbl[i][0]) {
+        if (!interp || i == 0) return tbl[i][ov];
+        var x0 = tbl[i-1][0], x1 = tbl[i][0];
+        var y0 = tbl[i-1][ov], y1 = tbl[i][ov];
         return Math.round((y0 + (sysV - x0) / (x1 - x0) * (y1 - y0)) * 100) / 100;
       }
     }
-    return IMPULSE_TBL[IMPULSE_TBL.length - 1][ov];
+    return tbl[tbl.length - 1][ov];
   }
 
   function lookupTov(sysV) {
@@ -347,22 +360,25 @@
       return lookupCrp_UL_Table9_1(v, pd, mgGroup);
     }
 
-    /* ── IEC path (unchanged) ─────────────── */
+    /* ── IEC path ─────────────── */
+    // Column layout: [Vrms, PWBs-PD1(1), PWBs-PD2(2), Other-PD1(3),
+    //   Other-PD2-I(4), Other-PD2-II(5), Other-PD2-IIIa(6), Other-PD2-IIIb(7),
+    //   Other-PD3-I(8), Other-PD3-II(9), Other-PD3-IIIa(10), Other-PD3-IIIb(11)]
     var tbl = CRP_IEC;
     var mi = MG_I[mgGroup] || 0;
     for (var i = 0; i < tbl.length; i++) {
       if (v <= tbl[i][0]) {
-        if (pcb && pd <= 2) return tbl[i][5];
-        if (pd === 1) return tbl[i][5];
-        if (pd === 2) return tbl[i][1 + mi];
-        return tbl[i][6 + mi];
+        if (pcb && pd <= 2) return tbl[i][2]; // PWBs-PD2
+        if (pd === 1) return tbl[i][3];       // Other-PD1
+        if (pd === 2) return tbl[i][4 + mi];  // Other-PD2-I/II/IIIa/IIIb
+        return tbl[i][8 + mi];                // Other-PD3-I/II/IIIa/IIIb
       }
     }
     var last = tbl[tbl.length - 1];
-    if (pcb && pd <= 2) return last[5];
-    if (pd === 1) return last[5];
-    if (pd === 2) return last[1 + mi];
-    return last[6 + mi];
+    if (pcb && pd <= 2) return last[2];
+    if (pd === 1) return last[3];
+    if (pd === 2) return last[4 + mi];
+    return last[8 + mi];
   }
 
   /* ── UL Table 9.1 lookup helper (internal) ─── */
@@ -652,29 +668,32 @@
     }
 
     var reqCrp;
+    var baseCrp;
     if (grIIIbNa) {
       // N/A — use most conservative PD3 value (Gr IIIa) as fallback with a warning flag
-      reqCrp = lookupCrp(vrms, localPd, 'iiia', standard, pcb ? 1 : 0);
-      reqCrp = Math.round(reqCrp * crpMult * 10) / 10;
+      baseCrp = lookupCrp(vrms, localPd, 'iiia', standard, pcb ? 1 : 0);
+      reqCrp = Math.round(baseCrp * crpMult * 10) / 10;
     } else if (coat === 2) {
-      // IEC 60664-3 Table 1: Type 2 potting provides solid insulation equivalent,
-      // Tables 13/14 do not apply. Use minimum spacing directly without crpMult.
       reqCrp = Math.round(0.15 * 10) / 10;
+      baseCrp = reqCrp;
     } else {
       var rawCrp = lookupCrp(vrms, localPd, mgGroup, standard, pcb ? 1 : 0);
       if (rawCrp === null) {
-        // SafetyModel returned null (e.g. IIIb@PD3>630V edge case not caught above)
-        reqCrp = Math.round(reqClr * 10) / 10; // fallback to clearance value
+        reqCrp = Math.round(reqClr * 10) / 10;
+        baseCrp = reqCrp;
       } else {
         reqCrp = Math.round(rawCrp * crpMult * 10) / 10;
+        baseCrp = reqCrp;
       }
     }
 
     /* ── P1: Cr ≥ Cl floor constraint (UL 840 §3.2.2 + Notebook rule) ─── */
     // NOTE: This constraint does NOT apply when coating reduces creepage requirements,
     // because coated assemblies use different measurement rules per IEC 60664-3 / UL 1741.
+    var crFloorApplied = false;
     if (reqCrp < reqClr && coat !== 2) {
       reqCrp = reqClr;
+      crFloorApplied = true;
     }
 
     /* ── P2#4: UL 1741 §25.3 — Field wiring terminals floor (Table 24.1) ─── */
@@ -736,7 +755,9 @@
       tbl241Note: tbl241Note,            // UL §25.3 Table 24.1 floor: null/clr/crp/both
       tbl1Note: tbl1Note,                // UL 1741 Table 1 enclosure floor: null/clr/crp/both
       interpUsed: interpUsed,              // true when linear interpolation was applied
-      grIIIbNa: grIIIbNa                  // Group IIIb @ PD3 >630V → N/A warning (fallback to IIIa)
+      grIIIbNa: grIIIbNa,                 // Group IIIb @ PD3 >630V → N/A warning (fallback to IIIa)
+      crFloorApplied: crFloorApplied,      // true when Cr ≥ Cl floor constraint raised creepage
+      baseCrp: baseCrp                     // Table 14 base creepage before Cr≥Cl floor
     };
   }
 
@@ -762,7 +783,7 @@
       impDC = params.impDC;
     } else {
       // Table 12 lookup for DC system voltage at OVC II + minimum clamp
-      impDC = Math.max(lookupImpulse(sysVDC, 2, true), 2.5);
+      impDC = lookupImpulse(sysVDC, 2, true, 'dc');
     }
 
     if (!nodes.length) return null;
