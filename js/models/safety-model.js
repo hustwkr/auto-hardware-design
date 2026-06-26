@@ -330,12 +330,13 @@
     return CLR_TBL_IEC[CLR_TBL_IEC.length - 1][2 + pd];
   }
 
-  function lookupCrp(rmsV, pd, mgGroup, standard, pcb) {
+  function lookupCrp(rmsV, pd, mgGroup, standard, pcb, interp) {
     // rmsV: RMS voltage in V
     // pd: pollution degree 1-4 (UL), 1-3 (IEC)
     // mgGroup: 'i' | 'ii' | 'iiia' | 'iiib'
     // standard: 'iec' | 'ul'
     // pcb: boolean — PCB trace (uses Table 9.2 for UL PD1/PD2)
+    // interp: boolean — allow linear interpolation (per Table 14 NOTE)
     var v = Math.min(rmsV, 6300);
 
     if (standard === 'ul') {
@@ -366,19 +367,41 @@
     //   Other-PD3-I(8), Other-PD3-II(9), Other-PD3-IIIa(10), Other-PD3-IIIb(11)]
     var tbl = CRP_IEC;
     var mi = MG_I[mgGroup] || 0;
+    var col = pcb && pd <= 2 ? 2 : (pd === 1 ? 3 : (pd === 2 ? 4 + mi : 8 + mi));
+    // PCB columns (PWBs) only cover ≤1250V; above that, fall back to Other columns
+    var pcbFallback = pcb && pd <= 2 ? (pd === 1 ? 3 : 4 + mi) : -1;
     for (var i = 0; i < tbl.length; i++) {
-      if (v <= tbl[i][0]) {
-        if (pcb && pd <= 2) return tbl[i][2]; // PWBs-PD2
-        if (pd === 1) return tbl[i][3];       // Other-PD1
-        if (pd === 2) return tbl[i][4 + mi];  // Other-PD2-I/II/IIIa/IIIb
-        return tbl[i][8 + mi];                // Other-PD3-I/II/IIIa/IIIb
+      if (v == tbl[i][0]) {
+        var val = tbl[i][col];
+        if (val !== null) return val;
+        if (pcbFallback >= 0) return tbl[i][pcbFallback];
+        return val;
+      }
+      if (v < tbl[i][0]) {
+        if (i == 0) return tbl[i][col];
+        var x0 = tbl[i-1][0], x1 = tbl[i][0];
+        var y0 = tbl[i-1][col], y1 = tbl[i][col];
+        // Primary column has data → interpolate normally
+        if (y0 !== null && y1 !== null) {
+          if (!interp) return tbl[i][col];
+          return Math.round((y0 + (v - x0) / (x1 - x0) * (y1 - y0)) * 100) / 100;
+        }
+        // PCB column exhausted (>1250V) → fall back to Other column
+        if (pcbFallback >= 0) {
+          var fb0 = tbl[i-1][pcbFallback], fb1 = tbl[i][pcbFallback];
+          if (fb0 !== null && fb1 !== null) {
+            if (!interp) return tbl[i][pcbFallback];
+            return Math.round((fb0 + (v - x0) / (x1 - x0) * (fb1 - fb0)) * 100) / 100;
+          }
+          return tbl[i][pcbFallback];
+        }
+        return tbl[i][col];
       }
     }
     var last = tbl[tbl.length - 1];
-    if (pcb && pd <= 2) return last[2];
-    if (pd === 1) return last[3];
-    if (pd === 2) return last[4 + mi];
-    return last[8 + mi];
+    if (last[col] !== null) return last[col];
+    if (pcbFallback >= 0) return last[pcbFallback];
+    return last[col];
   }
 
   /* ── UL Table 9.1 lookup helper (internal) ─── */
@@ -671,13 +694,13 @@
     var baseCrp;
     if (grIIIbNa) {
       // N/A — use most conservative PD3 value (Gr IIIa) as fallback with a warning flag
-      baseCrp = lookupCrp(vrms, localPd, 'iiia', standard, pcb ? 1 : 0);
+      baseCrp = lookupCrp(vrms, localPd, 'iiia', standard, pcb ? 1 : 0, true);
       reqCrp = Math.round(baseCrp * crpMult * 10) / 10;
     } else if (coat === 2) {
       reqCrp = Math.round(0.15 * 10) / 10;
       baseCrp = reqCrp;
     } else {
-      var rawCrp = lookupCrp(vrms, localPd, mgGroup, standard, pcb ? 1 : 0);
+      var rawCrp = lookupCrp(vrms, localPd, mgGroup, standard, pcb ? 1 : 0, true);
       if (rawCrp === null) {
         reqCrp = Math.round(reqClr * 10) / 10;
         baseCrp = reqCrp;
