@@ -159,7 +159,7 @@
     <div class="fgi" data-standard="ul" style="display:none"><label><span data-i18n="safe.sysVdc">DC系统电压 (V)</span><span id="sSysV_DC_ul_hint" class="hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">UL: 相地额定系统电压</span></label><input type="number" id="sSysV_DC_ul" value="600" min="0" step="10"><span class="hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">Phase-to-Ground Rated System Voltage (kVRMS)</span></div>
   </div></div>
 
-  <div class="card" data-standard="iec"><h2 data-i18n="safe.impulse">冲击电压 / 暂态过电压</h2>
+  <div class="card" data-standard="iec"><h2 data-i18n="safe.impulse" style="display:inline-flex;align-items:center;gap:6px">冲击电压 / 暂态过电压<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;flex-shrink:0;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:420px" data-i18n-html="safe.imp.tipAll"></div></h2>
     <div id="sImpulseInfo" class="rep-model-box"></div>
   </div>
 

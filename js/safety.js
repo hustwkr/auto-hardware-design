@@ -191,15 +191,12 @@
         el.innerHTML =
           '<div><span class="imp-label">'+_t("safe.imp.acLbl")+'</span> ' +
           '<span class="imp-val">'+impAC+' kV</span> ' +
-          '<span class="imp-sub">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span> ' +
-          '<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;vertical-align:middle;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px">'+_t("safe.imp.tipAc")+'</div></div>' +
+          '<span class="imp-sub">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
           '<div><span class="imp-label">'+_t("safe.imp.dcLbl")+'</span> ' +
           '<span class="imp-val">'+impDC+' kV</span> ' +
-          '<span class="imp-sub">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span> ' +
-          '<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;vertical-align:middle;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px">'+_t("safe.imp.tipDc")+'</div></div>' +
+          '<span class="imp-sub">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span></div>' +
           '<div><span class="imp-label">'+_t("safe.imp.tovLbl")+'</span> ' +
-          '<span class="imp-tov">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span> ' +
-          '<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;vertical-align:middle;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px">'+_t("safe.imp.tipTov")+'</div></div>';
+          '<span class="imp-tov">'+(tovAC_info.peak/1000).toFixed(2)+' kV pk / '+(tovAC_info.rms/1000).toFixed(2)+' kV rms</span></div>';
       })();
     } else {
       /* ── UL mode: show system voltage info instead of impulse/TOV ─── */
