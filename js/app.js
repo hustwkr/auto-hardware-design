@@ -164,6 +164,7 @@
 
   function setTheme(theme){
     try{localStorage.setItem('hw-design-theme', theme)}catch(e){}
+    document.documentElement.setAttribute('data-theme-choice', theme);
     if(theme === 'system'){
       _followSystemTheme();
     } else {
@@ -187,6 +188,7 @@
     if(!theme){
       theme = 'system';
     }
+    document.documentElement.setAttribute('data-theme-choice', theme);
     if(theme === 'system'){
       _followSystemTheme();
       _systemThemeListener = function(){ _followSystemTheme(); };
