@@ -50,7 +50,7 @@
     "cap.capval":        { zh: "电容量(μF)", en: "Capacitance (μF)" },
 
     /* Capacitor — mission profile */
-    "cap.profile":       { zh: "运行剖面", en: "Mission Profile" },
+    "cap.profile":       { zh: "运行工况", en: "Operating Conditions" },
     "cap.profile.hint":  { zh: "多段工况 + 多频率纹波叠加，总温升按各频率 (I/K_freq)² 平方和计算", en: "Multi-segment + multi-frequency ripple; total ΔT by sum-of-squares of (I/K_freq)² per frequency" },
     "cap.addSeg":        { zh: "+ 添加时段", en: "+ Add Segment" },
     "cap.seg":           { zh: "时段", en: "Segment" },

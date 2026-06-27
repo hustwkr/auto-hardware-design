@@ -57,7 +57,7 @@
 <!-- Tab: Capacitor Lifetime                  -->
 <!-- ════════════════════════════════════════ -->
 <div id="tab-capacitor" class="tab-content active">
-<h1 style="font-size:1.4rem;margin-bottom:2px"><span data-i18n="cap.title">电解电容寿命计算工具</span> <span style="font-size:.82rem;font-weight:400;color:#64748b">Electrolytic Capacitor Lifetime Calculator</span></h1>
+<h1 style="font-size:1.4rem;margin-bottom:2px"><span data-i18n="cap.title">电解电容寿命计算工具</span></h1>
 <p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35" data-i18n="cap.subtitle">Arrhenius + Miner 累积损伤 + 多段运行剖面 + 多频率纹波叠加 + 质保期判定</p>
 
 <div class="card"><h2 data-i18n="cap.basic">基本信息</h2><div class="param-grid">
@@ -81,8 +81,7 @@
 <div class="layout">
 <!-- Left column: inputs -->
 <div>
-  <div class="card"><h2 data-i18n="cap.profile">运行剖面</h2>
-    <p style="font-size:.72rem;color:#64748b;margin-bottom:5px;line-height:1.3" data-i18n="cap.profile.hint">多段工况 + 多频率纹波叠加，总温升按各频率 (I/K_freq)² 平方和计算</p>
+  <div class="card"><h2 data-i18n="cap.profile" style="display:inline-flex;align-items:center;gap:6px">运行工况<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;flex-shrink:0;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:380px" data-i18n-html="cap.profile.hint"></div></h2>
     <div id="sc"></div>
     <button class="btn-sm" id="addSegBtn" data-i18n="cap.addSeg">+ 添加时段</button>
     <span id="stt" style="font-size:.72rem;color:#64748b;margin-left:10px"></span>
@@ -134,7 +133,7 @@
 <!-- Tab: Safety Distance                     -->
 <!-- ════════════════════════════════════════ -->
 <div id="tab-safety" class="tab-content">
-<h1 style="font-size:1.4rem;margin-bottom:2px"><span data-i18n="safe.title">安规距离计算工具</span> <span style="font-size:.82rem;font-weight:400;color:#64748b">Creepage &amp; Clearance Calculator</span></h1>
+<h1 style="font-size:1.4rem;margin-bottom:2px"><span data-i18n="safe.title">安规距离计算工具</span></h1>
 <p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35" data-i18n="safe.subtitle">IEC 62109-1 / UL 1741 爬电距离 + 电气间隙 | 适用于并网逆变器</p>
 
 <div class="layout">
