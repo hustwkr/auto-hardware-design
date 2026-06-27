@@ -301,6 +301,7 @@
         +"<th>"+_t("cap.report.projName")+"</th><th>"+_t("cap.report.model")+"</th><th>"+_t("cap.report.scene")+"</th><th>"+_t("cap.report.days")+"</th><th>"+_t("cap.report.warr")+"</th></tr></thead><tbody><tr>"
         +"<td>"+pn+"</td><td>"+cm+"</td><td>"+_t("cap.opt."+d.scenario)+"</td>"
         +"<td>"+d.wd+"</td><td>"+d.wt+_t("cap.r.unit.yr")+"</td></tr></tbody></table>"
+        +"<h3>2. "+_t("cap.report.rated")+"</h3><table class=\"data-tbl\"><thead><tr>"
         +"<th>L<sub>0</sub></th><th>T<sub>max</sub></th><th>V<sub>rated</sub></th><th>I<sub>rated</sub></th><th>ΔT<sub>0</sub></th></tr></thead><tbody><tr>"
         +"<td>"+d.l0+" h</td><td>"+d.tmax+" °C</td><td>"+(d.vr||d.vrated)+" V</td>"
         +"<td>"+(d.ir||d.irated)+" mA</td><td>"+d.dt0+" °C</td></tr></tbody></table>"

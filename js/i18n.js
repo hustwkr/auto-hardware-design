@@ -105,7 +105,7 @@
     "cap.report.hint":   { zh: "请先定义运行剖面", en: "Please define a mission profile first" },
     "cap.report.projInfo":{ zh: "项目信息", en: "Project Information" },
     "cap.report.rated":  { zh: "额定参数", en: "Rated Parameters" },
-    "cap.report.profile":{ zh: "运行剖面", en: "Mission Profile" },
+    "cap.report.profile":{ zh: "运行工况", en: "Operating Conditions" },
     "cap.report.calc":   { zh: "计算过程", en: "Calculation Process" },
     "cap.report.conclusion":{ zh: "结论", en: "Conclusion" },
     "cap.report.projName":{ zh: "项目名称", en: "Project" },
@@ -142,10 +142,10 @@
     "cap.verdict.fail":  { zh: "不合格", en: "Fail" },
 
     /* Capacitor — warranty description templates */
-    "cap.warranty.sufficient":{ zh: "质保期{wt}年,预计{ly}年,裕量充足", en: "Warranty {wt}yr, Est. {ly}yr, sufficient margin" },
-    "cap.warranty.meets": { zh: "质保期{wt}年,预计{ly}年,满足要求", en: "Warranty {wt}yr, Est. {ly}yr, meets requirement" },
-    "cap.warranty.edge":  { zh: "质保期{wt}年,预计{ly}年,建议增加裕量", en: "Warranty {wt}yr, Est. {ly}yr, consider more margin" },
-    "cap.warranty.fail":  { zh: "质保期{wt}年,预计{ly}年,无法满足", en: "Warranty {wt}yr, Est. {ly}yr, cannot meet" },
+    "cap.warranty.sufficient":{ zh: "质保期{wt}年，预计寿命{ly}年", en: "Warranty {wt}yr, Est. {ly}yr" },
+    "cap.warranty.meets": { zh: "质保期{wt}年，预计寿命{ly}年", en: "Warranty {wt}yr, Est. {ly}yr" },
+    "cap.warranty.edge":  { zh: "质保期{wt}年，预计寿命{ly}年", en: "Warranty {wt}yr, Est. {ly}yr" },
+    "cap.warranty.fail":  { zh: "质保期{wt}年，预计寿命{ly}年", en: "Warranty {wt}yr, Est. {ly}yr" },
     "cap.warranty.req":   { zh: "需{req}x", en: "need {req}x" },
 
     /* Capacitor — clamping warnings */
@@ -326,10 +326,10 @@
     "cap.remaining":     { zh: "剩余 {v} h 未定义(停机)", en: "{v} h undefined (idle)" },
 
     /* Capacitor — warranty description templates */
-    "cap.warranty.sufficient":{ zh: "质保期{wt}年,预计{ly}年,裕量充足", en: "Warranty {wt}yr, Est. {ly}yr, sufficient margin" },
-    "cap.warranty.meets": { zh: "质保期{wt}年,预计{ly}年,满足要求", en: "Warranty {wt}yr, Est. {ly}yr, meets requirement" },
-    "cap.warranty.edge":  { zh: "质保期{wt}年,预计{ly}年,建议增加裕量", en: "Warranty {wt}yr, Est. {ly}yr, consider more margin" },
-    "cap.warranty.fail":  { zh: "质保期{wt}年,预计{ly}年,无法满足", en: "Warranty {wt}yr, Est. {ly}yr, cannot meet" },
+    "cap.warranty.sufficient":{ zh: "质保期{wt}年，预计寿命{ly}年", en: "Warranty {wt}yr, Est. {ly}yr" },
+    "cap.warranty.meets": { zh: "质保期{wt}年，预计寿命{ly}年", en: "Warranty {wt}yr, Est. {ly}yr" },
+    "cap.warranty.edge":  { zh: "质保期{wt}年，预计寿命{ly}年", en: "Warranty {wt}yr, Est. {ly}yr" },
+    "cap.warranty.fail":  { zh: "质保期{wt}年，预计寿命{ly}年", en: "Warranty {wt}yr, Est. {ly}yr" },
     "cap.warranty.req":   { zh: "需{req}x", en: "need {req}x" },
 
     /* Capacitor — clamping warnings */
