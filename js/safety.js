@@ -262,7 +262,7 @@
       var t241Warn = r.tbl241Note ? ' <span style="color:#f59e0b;font-size:.7rem" title="'+_t("safe.tip.t241")+'">⚠T24.1</span>' : '';
       var crFloorNote = r.crFloorApplied ? ' <span style="color:#64748b;font-size:.65rem" title="爬电距离不低于电气间隙 (Cr≥Cl)">Cr≥Cl</span>' : '';
       var pcbLabel = r.pcb ? _t("safe.pcb.yes") : _t("safe.pcb.no");
-      tb+="<tr><td>"+(i+1)+"</td><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+r.insL+warnNote+withinNote+"</td><td>"+pcbLabel+"</td><td>"+r.reqClr+t241Warn+"</td><td>"+r.reqCrp+crFloorNote+peakWarn+"</td></tr>";
+      tb+="<tr><td>"+(i+1)+"</td><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+_t(r.insL)+warnNote+withinNote+"</td><td>"+pcbLabel+"</td><td>"+r.reqClr+t241Warn+"</td><td>"+r.reqCrp+crFloorNote+peakWarn+"</td></tr>";
     });
     document.getElementById("sRtb").innerHTML=tb;
 
@@ -302,7 +302,7 @@
       // Node header + input params
       var gndMark = r.toGnd ? ' ⊕' : ' ↓';
       txt += "<strong>" + (i+1) + ". " + r.name + gndMark + "</strong><br>";
-      txt += _t("safe.chain.workV") + ": " + r.vrms + " Vrms | " + r.insL + " ("+_t("safe.chain.mul")+": ×" + mult + ")<br>";
+      txt += _t("safe.chain.workV") + ": " + r.vrms + " Vrms | " + _t(r.insL) + " ("+_t("safe.chain.mul")+": ×" + mult + ")<br>";
 
       // ── Clearance chain ──
       if(d.std === 'ul'){
@@ -388,7 +388,7 @@
     // Show export button after report generation
     var eg=document.getElementById('exportSafeGroup');if(eg)eg.style.display='';
     var n=new Date(),locale=_getLang()==='en'?'en-US':'zh-CN',ds=n.toLocaleDateString(locale,{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString(locale,{hour:"2-digit",minute:"2-digit"});
-    var sr="";d.results.forEach(function(r){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLine");var f=r.forcedReinforced?' '+_t("safe.chain.forcedReinf"):'';var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';var pcb=r.pcb?_t("safe.pcb.yes"):_t("safe.pcb.no");sr+="<tr><td>"+(d.results.indexOf(r)+1)+"</td><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+r.insL+f+"</td><td>"+pcb+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
+    var sr="";d.results.forEach(function(r){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLine");var f=r.forcedReinforced?' '+_t("safe.chain.forcedReinf"):'';var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';var pcb=r.pcb?_t("safe.pcb.yes"):_t("safe.pcb.no");sr+="<tr><td>"+(d.results.indexOf(r)+1)+"</td><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+_t(r.insL)+f+"</td><td>"+pcb+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
 
     var isoLabel = (d.isolation==='isolated')?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
 
@@ -459,7 +459,7 @@
     css+='</style>';
 
     /* ── Results rows ─── */
-    d.results.forEach(function(r,i){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLineShort");var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';var pcb=r.pcb?_t("safe.pcb.yes"):_t("safe.pcb.no");sr+='<tr><td>'+(i+1)+'</td><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+r.insL+'</td><td>'+pcb+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+pw+'</td></tr>'});
+    d.results.forEach(function(r,i){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLineShort");var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';var pcb=r.pcb?_t("safe.pcb.yes"):_t("safe.pcb.no");sr+='<tr><td>'+(i+1)+'</td><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+_t(r.insL)+'</td><td>'+pcb+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+pw+'</td></tr>'});
 
     var isoLabel = (d.isolation==='isolated')?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
     var n=new Date(),locale=_getLang()==='en'?'en-US':'zh-CN',ds=n.toLocaleDateString(locale,{year:"numeric",month:"2-digit",day:"2-digit"});

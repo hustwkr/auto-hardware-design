@@ -258,7 +258,7 @@
   var MG_I = {i:0,ii:1,iiia:2,iiib:3};
 
   /* ── Insulation type labels ─────────────────── */
-  var INS_LABELS = {func:"功能",basic:"基本",supp:"附加",reinf:"加强"};
+  var INS_LABELS = {func:"safe.ins.func",basic:"safe.ins.basic",supp:"safe.ins.supp",reinf:"safe.ins.reinf"};
 
   /* ════════════════════════════════════════════ */
   /* Pure lookup functions (no DOM)               */

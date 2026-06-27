@@ -432,12 +432,14 @@
     // Segment body labels
     document.querySelectorAll("#sc .seg-body label").forEach(function(lbl,i){
       var keys=["cap.durLabel","cap.taLabel","cap.vopLabel"];
-      if(keys[i])lbl.textContent=_t(keys[i]);
+      var key=keys[i%keys.length];
+      if(key)lbl.textContent=_t(key);
     });
     // Ripple table headers
     document.querySelectorAll("#sc .rt thead th").forEach(function(th,i){
       var keys=["cap.rippleHdr.freq","cap.rippleHdr.cur"];
-      if(keys[i])th.textContent=_t(keys[i]);
+      var key=keys[i%keys.length];
+      if(key)th.textContent=_t(key);
     });
   }
 
