@@ -366,7 +366,7 @@ h1.page-title, .tab-content > h1 {
 }
 
 .card h2 {
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: 8px;
