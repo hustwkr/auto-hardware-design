@@ -649,6 +649,7 @@ table.data-tbl tbody tr:hover {
 .wb { margin: 8px 0; height: 14px; background: var(--color-border-lt); border-radius: 999px; overflow: hidden; position: relative; }
 .wf { height: 100%; border-radius: 999px; transition: width .3s ease; }
 .wm { position: absolute; top: 0; height: 100%; border-right: 2px dashed var(--color-danger); z-index: 2; }
+.wml { position: absolute; top: 16px; font-size: .65rem; color: #64748b; white-space: nowrap; transform: translateX(-50%); z-index: 3; }
 
 /* ============================================================
    Report Container (#rc, #sRc) — the "gold standard" styling

@@ -199,6 +199,7 @@
     var mb=Math.max(wt*3,result.ly);
     document.getElementById("wf").style.width=Math.min(100,(result.ly/mb)*100)+"%";
     document.getElementById("wm").style.left=Math.min(100,(wt/mb)*100)+"%";
+    document.getElementById("wtl").style.left=Math.min(100,(wt/mb)*100)+"%";
     document.getElementById("wf").style.background=result.margin>=result.req?"#10b981":result.margin>=result.req*0.7?"#f59e0b":"#ef4444";
     document.getElementById("wtl").textContent=_t("cap.margin.target")+" "+wt+_t("cap.r.unit.yr");
     document.getElementById("wml").textContent=fv(mb,0)+_t("cap.r.unit.yr");
