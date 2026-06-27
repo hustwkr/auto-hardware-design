@@ -432,7 +432,7 @@
       +"<h3>3. "+_t("safe.report.nodes")+"</h3><table><tr><th>#</th><th>"+_t("safe.res.node")+"</th><th>"+_t("safe.nodeHdr.vrms")+"</th><th>"+_t("safe.res.ins")+"</th><th>"+_t("safe.nodeHdr.pcb")+"</th><th>"+_t("safe.res.clr")+"</th><th>"+_t("safe.res.crp")+"</th></tr>"+sr+"</table>"
       +"<h3>4. "+_t("safe.report.calcProc")+"</h3>" + buildCalcChains(d)
       +"<p style=margin:8px 0;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px><strong>"+_t("safe.report.conclusion")+":</strong> "+_t("safe.report.conclusionText")+"</p>"
-      +"<div style=margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#64748b><span>"+_t("safe.report.footer")+" v1.0</span><span>"+ds+" "+ts+"</span></div>";
+      +"<div class=rep-footer><span>"+_t("safe.report.footer")+" v1.0</span><span>"+_t("cap.report.date")+": "+ds+" "+ts+"</span></div>";
   }
 
   /* ── Word export (DOM-only) ─────────────── */

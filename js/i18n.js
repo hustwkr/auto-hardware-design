@@ -126,6 +126,7 @@
     "cap.report.lifeCalc":{ zh: "寿命计算", en: "Life Calculation" },
     "cap.report.miner":  { zh: "累计损伤 (Miner准则)", en: "Cumulative Damage (Miner)" },
     "cap.report.footer": { zh: "电解电容寿命计算器", en: "Capacitor Lifetime Calculator" },
+    "cap.report.date":  { zh: "报告日期", en: "Report Date" },
 
     /* Capacitor — model description for report */
     "cap.modelDesc.temp":{ zh: "温度加速：Arrhenius 模型 K_T = 2^((T_max - T_hs) / τ)", en: "Temp Acceleration: Arrhenius K_T = 2^((T_max - T_hs) / τ)" },

@@ -314,7 +314,7 @@
         +"<th>"+_t("cap.report.dmgD")+"</th><th>"+_t("cap.report.estLife")+"</th><th>"+_t("cap.report.warr")+"</th><th>"+_t("cap.report.margin")+"</th><th>"+_t("cap.report.verdict")+"</th></tr></thead><tbody><tr>"
         +"<td>"+fv(d.dmg*100,3)+"%</td><td>"+fv(d.ly,1)+" "+_t("cap.r.unit.yr")+"</td><td>"+d.wt+" "+_t("cap.r.unit.yr")+"</td>"
         +"<td>"+fv(d.margin,2)+"x</td><td><strong>"+_t(wsKey)+"</strong></td></tr></tbody></table>"
-      +"<div class=\"rep-footer\"><span>"+_t("cap.report.footer")+" v2.0</span><span>"+_t("cap.report.warr")+": "+ds+" "+ts+"</span></div>";
+      +"<div class=\"rep-footer\"><span>"+_t("cap.report.footer")+" v2.0</span><span>"+_t("cap.report.date")+": "+ds+" "+ts+"</span></div>";
 
     setTimeout(renderLatex,200);
   }
