@@ -112,6 +112,7 @@
 
   /* ── Read params from DOM → call model → render results ─── */
   function calc(){
+    updT();
     var segs=document.querySelectorAll("#sc .seg");
     if(!segs.length){
       document.getElementById("lh").textContent="-";document.getElementById("ly").textContent="-";
