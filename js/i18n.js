@@ -9,6 +9,7 @@
     /* Nav */
     "nav.capacitor":     { zh: "电解电容寿命计算", en: "Capacitor Lifetime" },
     "nav.safety":        { zh: "安规距离计算", en: "Safety Distance" },
+    "nav.pcb":           { zh: "PCB载流能力", en: "PCB Trace Current" },
     "nav.admin":         { zh: "⚙ 后台", en: "⚙ Admin" },
     /* Theme */
     "theme.light":       { zh: "浅色", en: "Light" },
@@ -310,6 +311,34 @@
     "safe.ul.reinfNote": { zh: "加强绝缘(UL): 取基本绝缘距离×2 或表中上一行，以较大值为准 (§6.3)", en: "Reinforced (UL): max of basic×2 or next row (§6.3)" },
     "safe.ul.crpNote":   { zh: "爬电距离(UL): 由工作电压Vrms查表确定，加强绝缘翻倍", en: "Creepage (UL): from Vrms lookup, reinforced doubles" },
 
+    /* PCB Trace Current Capacity */
+    "pcb.title":        { zh: "PCB 载流能力计算工具", en: "PCB Trace Current Capacity Calculator" },
+    "pcb.subtitle":     { zh: "IPC-2221 标准公式 · 正向/反向计算 · 压降分析 · 多宽度对比", en: "IPC-2221 standard formula · Forward/Reverse calculation · Voltage drop · Multi-width comparison" },
+    "pcb.basic":        { zh: "基础参数", en: "Basic Parameters" },
+    "pcb.width":        { zh: "走线宽度 (mil)", en: "Trace Width (mil)" },
+    "pcb.copper":       { zh: "铜厚 (oz)", en: "Copper Weight (oz)" },
+    "pcb.position":     { zh: "走线位置", en: "Trace Position" },
+    "pcb.posExternal":  { zh: "外层", en: "External" },
+    "pcb.posInternal":  { zh: "内层", en: "Internal" },
+    "pcb.tempRise":     { zh: "允许温升 (°C)", en: "Allowed Temp Rise (°C)" },
+    "pcb.ambTemp":      { zh: "环境温度 (°C)", en: "Ambient Temp (°C)" },
+    "pcb.length":       { zh: "走线长度 (mm)", en: "Trace Length (mm)" },
+    "pcb.targetI":      { zh: "目标电流 (A) — 反向计算", en: "Target Current (A) — reverse calc" },
+    "pcb.result":       { zh: "计算结果", en: "Calculation Results" },
+    "pcb.maxI":         { zh: "最大允许电流", en: "Max Current" },
+    "pcb.minWidth":     { zh: "最小线宽", en: "Min Width" },
+    "pcb.vdrop":        { zh: "压降", en: "Voltage Drop" },
+    "pcb.powerLoss":    { zh: "功率损耗", en: "Power Loss" },
+    "pcb.compare":      { zh: "多宽度对比", en: "Multi-Width Comparison" },
+    "pcb.repTitle":     { zh: "PCB 载流能力评估报告", en: "PCB Trace Current Capacity Report" },
+    "pcb.repInput":     { zh: "输入参数", en: "Input Parameters" },
+    "pcb.repCalc":      { zh: "计算过程", en: "Calculation Process" },
+    "pcb.repFormula":   { zh: "IPC-2221 公式", en: "IPC-2221 Formula" },
+    "pcb.repReverse":   { zh: "反向计算（由目标电流求最小线宽）", en: "Reverse calculation (target current → min width)" },
+    "pcb.repVdrop":     { zh: "压降计算", en: "Voltage Drop" },
+    "pcb.repCompare":   { zh: "多宽度对比", en: "Multi-Width Comparison" },
+    "pcb.repFooter":    { zh: "PCB载流能力计算器", en: "PCB Trace Current Calculator" },
+
     /* Common warnings */
     "common.warn.calcErr":{ zh: "⚠ 计算错误:", en: "⚠ Calculation error:" },
     "common.noRipple":   { zh: "无纹波输入, ΔT = 0°C", en: "No ripple input, ΔT = 0°C" },
@@ -536,6 +565,7 @@
     if (typeof refreshNodeLabels === "function") { try { refreshNodeLabels(); } catch(e) {} }
     if (typeof calc === "function") { try { calc(); } catch(e) {} }
     if (typeof sCalc === "function") { try { sCalc(); } catch(e) {} }
+    if (typeof pcbCalc === "function") { try { pcbCalc(); pcbCompare(); } catch(e) {} }
   }
 
   /* ── Expose ─── */

@@ -38,6 +38,9 @@
         var defaultNodes = _defaults && _defaults.safety && Array.isArray(_defaults.safety.nodes) ? _defaults.safety.nodes : null;
         if(typeof initSafety==='function')initSafety(defaultNodes);
       }
+      if(this.dataset.tab==="pcb"&&!document.querySelector("#pcbResult .pcb-result")){
+        if(typeof initPcb==='function')initPcb();
+      }
     });
   });
 

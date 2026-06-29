@@ -80,6 +80,23 @@ Supports online preview and Word document export.
 
 ---
 
+### 3. PCB 载流能力计算
+### PCB Trace Current Capacity Calculator
+
+基于 IPC-2221 标准公式，计算 PCB 走线最大允许电流，支持正向（线宽→电流）和反向（电流→线宽）计算。
+
+An IPC-2221 based PCB trace current capacity calculator supporting forward (width→current) and reverse (current→width) calculations.
+
+#### 功能特性 Features
+
+- **正向计算** Forward calculation — 输入线宽和铜厚，输出最大允许电流
+- **反向计算** Reverse calculation — 输入目标电流，输出最小线宽
+- **压降分析** Voltage drop — 计算走线压降和功率损耗
+- **多宽度对比** Multi-width comparison — 同一需求下对比不同线宽方案
+- **内层/外层** Internal/External — 支持内层和外层走线的载流能力差异
+
+---
+
 ## 使用方式 Usage
 
 ### 离线模式（推荐）Offline Mode (Recommended)
@@ -126,9 +143,11 @@ auto-hardware-design/
 │   ├── i18n.js                    # 国际化（中/英双语）
 │   ├── capacitor.js               # 电解电容寿命 UI 层
 │   ├── safety.js                  # 安规距离 UI 层
+│   ├── pcb.js                     # PCB 载流能力 UI 层
 │   └── models/
 │       ├── capacitor-model.js     # 纯计算模型（Arrhenius + Miner，零 DOM）
-│       └── safety-model.js        # 纯计算模型（IEC 62109-1 / UL 840）
+│       ├── safety-model.js        # 纯计算模型（IEC 62109-1 / UL 840）
+│       └── pcb-model.js           # 纯计算模型（IPC-2221）
 ├── backend/                       # Node.js 后端服务
 │   ├── server.js                  # HTTP 服务器 + REST API
 │   ├── defaults.json              # 默认参数持久化存储
@@ -151,6 +170,7 @@ auto-hardware-design/
 |------|----------|----------|
 | `CapacitorModel` | `calcLifetime(params)` | Arrhenius + Miner 累积损伤 |
 | `SafetyModel` | `calcSafety(params)` | IEC 62109-1 §7.3.7 / UL 840 |
+| `PcbTraceModel` | `calcCurrent(params)` | IPC-2221 标准公式 |
 
 UI 层 (`capacitor.js`, `safety.js`) 仅负责 DOM 操作和事件绑定，通过 `window.CapacitorModel` / `window.SafetyModel` 调用计算。
 
