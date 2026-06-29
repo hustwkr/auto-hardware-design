@@ -53,17 +53,15 @@
     // Render results
     var el = document.getElementById("pcbResult");
     if (el) {
-      var html = "<div class=\"pcb-result\">";
+      var html = "<div class=\"result-grid\">";
       html += "<div class=\"ri\"><div class=\"rl\">" + _t("pcb.maxI") + "</div><div class=\"rv\"><span style=\"font-size:1.1rem;font-weight:600\">" + PM.fv(result.maxI, 3) + "</span> A</div></div>";
 
-      if (result.minWidthMil) {
-        html += "<div class=\"ri\"><div class=\"rl\">" + _t("pcb.minWidth") + "</div><div class=\"rv\">" + PM.fv(result.minWidthMil, 1) + " mil (" + PM.fv(result.minWidthMm, 2) + " mm)</div></div>";
-      }
+      html += "<div class=\"ri\"><div class=\"rl\">" + _t("pcb.vdrop") + "</div><div class=\"rv\">" + (result.vdrop !== null ? PM.fv(result.vdrop, 2) + " mV" : "-") + "</div></div>";
 
-      if (result.vdrop !== null) {
-        html += "<div class=\"ri\"><div class=\"rl\">" + _t("pcb.vdrop") + "</div><div class=\"rv\">" + PM.fv(result.vdrop, 2) + " mV</div></div>";
-        html += "<div class=\"ri\"><div class=\"rl\">" + _t("pcb.powerLoss") + "</div><div class=\"rv\">" + PM.fv(result.powerLoss, 2) + " mW</div></div>";
-      }
+      html += "<div class=\"ri\"><div class=\"rl\">" + _t("pcb.powerLoss") + "</div><div class=\"rv\">" + (result.powerLoss !== null ? PM.fv(result.powerLoss, 2) + " mW" : "-") + "</div></div>";
+
+      html += "<div class=\"ri\"><div class=\"rl\">" + _t("pcb.minWidth") + "</div><div class=\"rv\">" + (result.minWidthMil ? PM.fv(result.minWidthMil, 1) + " mil (" + PM.fv(result.minWidthMm, 2) + " mm)" : "-") + "</div></div>";
+
       html += "</div>";
       el.innerHTML = html;
     }
