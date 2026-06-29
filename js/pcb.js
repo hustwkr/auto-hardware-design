@@ -85,6 +85,8 @@
     var deltaT = gv("pcbDeltaT");
     var lengthMm = gv("pcbLength");
     var ambTemp = gv("pcbAmbTemp");
+    var widthUnit = document.getElementById("pcbWidthUnit") ? document.getElementById("pcbWidthUnit").value : "mm";
+    var unitLabel = widthUnit === "mm" ? "mm" : "mil";
 
     var data = PM.calcComparison({ copperOz: copperOz, position: position, deltaT: deltaT, lengthMm: lengthMm, ambTemp: ambTemp });
 
@@ -92,7 +94,7 @@
     if (!el) return;
 
     var html = "<table class=\"sg-tbl\"><thead><tr>";
-    html += "<th>" + _t("pcb.width") + " (mil)</th>";
+    html += "<th>" + _t("pcb.width") + " (" + unitLabel + ")</th>";
     html += "<th>" + _t("pcb.maxI") + " (A)</th>";
     html += "<th>" + _t("pcb.resistance") + " (mΩ)</th>";
     html += "<th>" + _t("pcb.inductance") + " (nH)</th>";
@@ -101,7 +103,8 @@
     html += "</tr></thead><tbody>";
 
     for (var i = 0; i < data.length; i++) {
-      html += "<tr><td>" + data[i].width + "</td>";
+      var w = widthUnit === "mm" ? PM.fv(data[i].width * PM.MIL_TO_MM, 2) : data[i].width;
+      html += "<tr><td>" + w + "</td>";
       html += "<td>" + PM.fv(data[i].current, 3) + "</td>";
       html += "<td>" + PM.fv(data[i].resistance * 1000, 2) + "</td>";
       html += "<td>" + PM.fv(data[i].inductance, 2) + "</td>";
