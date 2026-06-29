@@ -75,8 +75,8 @@
     };
   }
 
-  /* ── Voltage drop calculation ─── */
-  function calcVoltageDrop(params) {
+  /* ── Impedance calculation: resistance + inductance + voltage drop ─── */
+  function calcImpedance(params) {
     var current   = params.current;   // A
     var widthMil  = params.widthMil;  // mil
     var copperOz  = params.copperOz;
@@ -85,7 +85,7 @@
 
     if (!current || current <= 0 || !widthMil || widthMil <= 0 ||
         !copperOz || copperOz <= 0 || !lengthMm || lengthMm <= 0) {
-      return { resistance: null, vdrop: null, powerLoss: null };
+      return { resistance: null, inductance: null, vdrop: null, powerLoss: null };
     }
 
     var thicknessCm = copperOz * OZ_TO_UM * 1e-4; // cm
@@ -96,11 +96,20 @@
     var rho = RHO_20 * (1 + ALPHA * (ambTemp - 20));
     var R = rho * lengthCm / (widthCm * thicknessCm); // Ω
 
+    // PCB trace inductance (approximate microstrip formula, nH)
+    // L ≈ 0.2 × l × [ln(2l/(w+t)) + 0.5 + 0.2235×(w+t)/l]
+    var wT = widthMil * MIL_TO_MM; // mm
+    var tT = copperOz * OZ_TO_UM * 0.001;  // mm (1 μm = 0.001 mm)
+    var lT = lengthMm;              // mm
+    var sumWT = wT + tT;
+    var L_nH = 0.2 * lT * (Math.log(2 * lT / sumWT) + 0.5 + 0.2235 * sumWT / lT);
+
     var vdrop = current * R * 1000;  // mV
     var powerLoss = current * current * R * 1000; // mW
 
     return {
       resistance: Math.round(R * 1e8) / 1e8,  // Ω
+      inductance: Math.round(L_nH * 100) / 100, // nH
       vdrop: Math.round(vdrop * 100) / 100,    // mV
       powerLoss: Math.round(powerLoss * 100) / 100 // mW
     };
@@ -117,7 +126,7 @@
         position: params.position,
         deltaT: params.deltaT
       });
-      var vd = calcVoltageDrop({
+      var vd = calcImpedance({
         current: r.current,
         widthMil: widths[i],
         copperOz: params.copperOz,
@@ -127,6 +136,8 @@
       results.push({
         width: widths[i],
         current: r.current,
+        resistance: vd.resistance,
+        inductance: vd.inductance,
         vdrop: vd.vdrop,
         powerLoss: vd.powerLoss
       });
@@ -139,7 +150,7 @@
     fv: fv,
     calcCurrent: calcCurrent,
     calcWidth: calcWidth,
-    calcVoltageDrop: calcVoltageDrop,
+    calcImpedance: calcImpedance,
     calcComparison: calcComparison,
     OZ_TO_MIL: OZ_TO_MIL,
     MIL_TO_MM: MIL_TO_MM

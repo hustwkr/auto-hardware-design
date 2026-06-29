@@ -327,6 +327,8 @@
     "pcb.result":       { zh: "计算结果", en: "Calculation Results" },
     "pcb.maxI":         { zh: "最大允许电流", en: "Max Current" },
     "pcb.minWidth":     { zh: "最小线宽", en: "Min Width" },
+    "pcb.resistance":   { zh: "电阻", en: "Resistance" },
+    "pcb.inductance":   { zh: "电感", en: "Inductance" },
     "pcb.vdrop":        { zh: "压降", en: "Voltage Drop" },
     "pcb.powerLoss":    { zh: "功率损耗", en: "Power Loss" },
     "pcb.compare":      { zh: "多宽度对比", en: "Multi-Width Comparison" },

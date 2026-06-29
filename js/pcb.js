@@ -42,19 +42,24 @@
       result.minWidthMm = rev.widthMm;
     }
 
-    // Voltage drop
+    // Impedance (resistance + inductance + voltage drop)
     if (fwd.current > 0 && widthMil > 0) {
-      vd = PM.calcVoltageDrop({ current: fwd.current, widthMil: widthMil, copperOz: copperOz, lengthMm: lengthMm, ambTemp: ambTemp });
+      vd = PM.calcImpedance({ current: fwd.current, widthMil: widthMil, copperOz: copperOz, lengthMm: lengthMm, ambTemp: ambTemp });
     }
     result.vdrop = vd.vdrop;
     result.powerLoss = vd.powerLoss;
     result.resistance = vd.resistance;
+    result.inductance = vd.inductance;
 
     // Render results
     var el = document.getElementById("pcbResult");
     if (el) {
       var html = "<div class=\"result-grid\">";
       html += "<div class=\"ri\"><div class=\"rl\">" + _t("pcb.maxI") + "</div><div class=\"rv\"><span style=\"font-size:1.1rem;font-weight:600\">" + PM.fv(result.maxI, 3) + "</span> A</div></div>";
+
+      html += "<div class=\"ri\"><div class=\"rl\">" + _t("pcb.resistance") + "</div><div class=\"rv\">" + (result.resistance !== null ? PM.fv(result.resistance * 1000, 2) + " mΩ" : "-") + "</div></div>";
+
+      html += "<div class=\"ri\"><div class=\"rl\">" + _t("pcb.inductance") + "</div><div class=\"rv\">" + (result.inductance !== null ? PM.fv(result.inductance, 2) + " nH" : "-") + "</div></div>";
 
       html += "<div class=\"ri\"><div class=\"rl\">" + _t("pcb.vdrop") + "</div><div class=\"rv\">" + (result.vdrop !== null ? PM.fv(result.vdrop, 2) + " mV" : "-") + "</div></div>";
 
@@ -87,6 +92,8 @@
     var html = "<table class=\"sg-tbl\"><thead><tr>";
     html += "<th>" + _t("pcb.width") + " (mil)</th>";
     html += "<th>" + _t("pcb.maxI") + " (A)</th>";
+    html += "<th>" + _t("pcb.resistance") + " (mΩ)</th>";
+    html += "<th>" + _t("pcb.inductance") + " (nH)</th>";
     html += "<th>" + _t("pcb.vdrop") + " (mV)</th>";
     html += "<th>" + _t("pcb.powerLoss") + " (mW)</th>";
     html += "</tr></thead><tbody>";
@@ -94,6 +101,8 @@
     for (var i = 0; i < data.length; i++) {
       html += "<tr><td>" + data[i].width + "</td>";
       html += "<td>" + PM.fv(data[i].current, 3) + "</td>";
+      html += "<td>" + PM.fv(data[i].resistance * 1000, 2) + "</td>";
+      html += "<td>" + PM.fv(data[i].inductance, 2) + "</td>";
       html += "<td>" + PM.fv(data[i].vdrop, 2) + "</td>";
       html += "<td>" + PM.fv(data[i].powerLoss, 2) + "</td></tr>";
     }
