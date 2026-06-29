@@ -173,6 +173,8 @@
     html += "<div class=rep-footer><span>" + _t("pcb.repFooter") + " v1.0</span><span>" + _t("cap.report.date") + ": " + ds + " " + ts + "</span></div>";
 
     rep.innerHTML = html;
+    var eg = document.getElementById("exportPcbGroup");
+    if (eg) eg.style.display = "";
   }
 
   /* ── Word export ─── */
