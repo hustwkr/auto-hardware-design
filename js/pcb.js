@@ -19,7 +19,9 @@
 
   /* ── Core calculation ─── */
   function pcbCalc() {
-    var widthMil = gv("pcbWidth");
+    var widthVal = gv("pcbWidth");
+    var widthUnit = document.getElementById("pcbWidthUnit") ? document.getElementById("pcbWidthUnit").value : "mil";
+    var widthMil = widthUnit === "mm" ? widthVal / PM.MIL_TO_MM : widthVal;
     var copperOz = gv("pcbCopper");
     var position = document.getElementById("pcbPos") ? document.getElementById("pcbPos").value : "external";
     var deltaT   = gv("pcbDeltaT");
@@ -73,7 +75,7 @@
 
     // Store for report
     window._pcbResult = result;
-    window._pcbInput = { widthMil: widthMil, copperOz: copperOz, position: position, deltaT: deltaT, ambTemp: ambTemp, lengthMm: lengthMm, targetI: targetI };
+    window._pcbInput = { widthMil: widthMil, widthVal: widthVal, widthUnit: widthUnit, copperOz: copperOz, position: position, deltaT: deltaT, ambTemp: ambTemp, lengthMm: lengthMm, targetI: targetI };
   }
 
   /* ── Comparison table ─── */
@@ -136,7 +138,7 @@
     html += "<th>" + _t("pcb.tempRise") + "</th><th>" + _t("pcb.ambTemp") + "</th><th>" + _t("pcb.length") + "</th>";
     if (p.targetI > 0) html += "<th>" + _t("pcb.targetI") + "</th>";
     html += "</tr></thead><tbody><tr>";
-    html += "<td>" + p.widthMil + " mil</td><td>" + p.copperOz + " oz</td><td>" + posLabel + "</td>";
+    html += "<td>" + PM.fv(p.widthMil, 1) + " mil (" + PM.fv(p.widthMil * PM.MIL_TO_MM, 2) + " mm)</td><td>" + p.copperOz + " oz</td><td>" + posLabel + "</td>";
     html += "<td>" + p.deltaT + " °C</td><td>" + p.ambTemp + " °C</td><td>" + p.lengthMm + " mm</td>";
     if (p.targetI > 0) html += "<td>" + p.targetI + " A</td>";
     html += "</tr></tbody></table>";
@@ -219,7 +221,7 @@
 
   document.addEventListener("change", function (e) {
     var id = e.target.id;
-    if (id === "pcbPos") {
+    if (id === "pcbPos" || id === "pcbWidthUnit") {
       pcbCalc();
       pcbCompare();
     }
