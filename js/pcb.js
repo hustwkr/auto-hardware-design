@@ -87,8 +87,11 @@
     var ambTemp = gv("pcbAmbTemp");
     var widthUnit = document.getElementById("pcbWidthUnit") ? document.getElementById("pcbWidthUnit").value : "mm";
     var unitLabel = widthUnit === "mm" ? "mm" : "mil";
+    var cmpWidths = widthUnit === "mm"
+      ? [0.2, 0.3, 0.5, 0.6, 1].map(function(w){ return w / PM.MIL_TO_MM; })
+      : [5, 8, 10, 15, 20, 25, 30, 40, 50];
 
-    var data = PM.calcComparison({ copperOz: copperOz, position: position, deltaT: deltaT, lengthMm: lengthMm, ambTemp: ambTemp });
+    var data = PM.calcComparison({ widths: cmpWidths, copperOz: copperOz, position: position, deltaT: deltaT, lengthMm: lengthMm, ambTemp: ambTemp });
 
     var el = document.getElementById("pcbCompare");
     if (!el) return;
