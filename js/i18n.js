@@ -315,7 +315,7 @@
     "pcb.title":        { zh: "PCB 载流能力计算工具", en: "PCB Trace Current Capacity Calculator" },
     "pcb.subtitle":     { zh: "IPC-2221 标准公式 · 正向/反向计算 · 压降分析 · 多宽度对比", en: "IPC-2221 standard formula · Forward/Reverse calculation · Voltage drop · Multi-width comparison" },
     "pcb.basic":        { zh: "基础参数", en: "Basic Parameters" },
-    "pcb.width":        { zh: "走线宽度 (mil)", en: "Trace Width (mil)" },
+    "pcb.width":        { zh: "走线宽度", en: "Trace Width" },
     "pcb.copper":       { zh: "铜厚 (oz)", en: "Copper Weight (oz)" },
     "pcb.position":     { zh: "走线位置", en: "Trace Position" },
     "pcb.posExternal":  { zh: "外层", en: "External" },
