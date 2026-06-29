@@ -15,7 +15,7 @@
   <div class="nav-inner">
     <button class="tab-btn active" data-tab="capacitor" data-i18n="nav.capacitor">电解电容寿命计算</button>
     <button class="tab-btn" data-tab="safety" data-i18n="nav.safety">安规距离计算</button>
-    <button class="tab-btn" data-tab="pcb" data-i18n="nav.pcb">PCB载流能力</button>
+    <button class="tab-btn" data-tab="pcb" data-i18n="nav.pcb">PCB走线载流计算</button>
 
     <!-- Admin link -->
     <div class="nav-dropdown" style="margin-left:auto">
@@ -207,7 +207,7 @@
     <div class="fgi"><label data-i18n="pcb.tempRise">允许温升 (°C)</label><input type="number" id="pcbDeltaT" value="10" min="1" max="100" step="1"></div>
     <div class="fgi"><label data-i18n="pcb.ambTemp">环境温度 (°C)</label><input type="number" id="pcbAmbTemp" value="25" min="-40" max="125" step="1"></div>
     <div class="fgi"><label data-i18n="pcb.length">走线长度 (mm)</label><input type="number" id="pcbLength" value="50" min="1" step="1"></div>
-    <div class="fgi"><label data-i18n="pcb.targetI">目标电流 (A)</label><input type="number" id="pcbTargetI" value="0" min="0" step="0.1"><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;vertical-align:middle;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px" data-i18n-html="pcb.targetI.tip"></div></div>
+    <div class="fgi"><label data-i18n="pcb.targetI">目标电流 (A)<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;vertical-align:middle;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px" data-i18n-html="pcb.targetI.tip"></div></label><input type="number" id="pcbTargetI" value="0" min="0" step="0.1"></div>
   </div>
 </div>
 

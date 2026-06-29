@@ -9,7 +9,7 @@
     /* Nav */
     "nav.capacitor":     { zh: "电解电容寿命计算", en: "Capacitor Lifetime" },
     "nav.safety":        { zh: "安规距离计算", en: "Safety Distance" },
-    "nav.pcb":           { zh: "PCB载流能力", en: "PCB Trace Current" },
+    "nav.pcb":           { zh: "PCB走线载流计算", en: "PCB Trace Current" },
     "nav.admin":         { zh: "⚙ 后台", en: "⚙ Admin" },
     /* Theme */
     "theme.light":       { zh: "浅色", en: "Light" },
