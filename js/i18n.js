@@ -318,6 +318,7 @@
     "pcb.width":        { zh: "走线宽度", en: "Trace Width" },
     "pcb.copper":       { zh: "铜厚 (oz)", en: "Copper Weight (oz)" },
     "pcb.position":     { zh: "走线位置", en: "Trace Position" },
+    "pcb.position.tip": { zh: "IPC-2221 公式中，外层 K=0.048，内层 K=0.024。内层走线被夹在板层之间，散热受限，载流能力约为外层的一半。", en: "In the IPC-2221 formula, external K=0.048, internal K=0.024. Internal traces are sandwiched between board layers with limited heat dissipation, so current capacity is roughly half that of external traces." },
     "pcb.posExternal":  { zh: "外层", en: "External" },
     "pcb.posInternal":  { zh: "内层", en: "Internal" },
     "pcb.tempRise":     { zh: "允许温升 (°C)", en: "Allowed Temp Rise (°C)" },
