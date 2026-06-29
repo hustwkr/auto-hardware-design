@@ -424,10 +424,8 @@
 
     document.getElementById("sRc").innerHTML=
       (document.getElementById('sProjName').value?'<p><strong>'+_t("safe.report.proj")+': </strong>'+document.getElementById('sProjName').value+'</p>':'')
-      +"<h3>1. "+_t("safe.report.projInfo")+"</h3><table><tr><th>"+_t("safe.report.proj")+"</th><th>"+_t("safe.report.content")+"</th></tr>"
-        +"<tr><td>"+_t("cap.report.warr")+"</td><td>SA-"+ds.replace(/\//g,"")+"-" +(1e3+Math.floor(9e3*Math.random()))+"</td></tr>"
-        +"<tr><td>"+_t("safe.report.std")+"</td><td>"+ds+" "+ts+"</td></tr>"
-        +"<tr><td>"+_t("safe.projName")+"</td><td>"+(document.getElementById('sProjName').value||'-')+"</td></tr></table>"
+      +"<h3>1. "+_t("safe.report.projInfo")+"</h3><table><tr><th>"+_t("safe.report.std")+"</th><th>"+sot("sStd")+"</th></tr>"
+        +"<tr><td>"+_t("safe.report.proj")+"</td><td>"+(document.getElementById('sProjName').value||'-')+"</td></tr></table>"
       +"<h3>2. "+_t("safe.report.basic")+"</h3><table><tr><th>"+_t("safe.report.params")+"</th><th>"+_t("safe.report.val")+"</th></tr>"+baseTable+"</table>"
       +"<h3>3. "+_t("safe.report.nodes")+"</h3><table><tr><th>#</th><th>"+_t("safe.res.node")+"</th><th>"+_t("safe.nodeHdr.vrms")+"</th><th>"+_t("safe.res.ins")+"</th><th>"+_t("safe.nodeHdr.pcb")+"</th><th>"+_t("safe.res.clr")+"</th><th>"+_t("safe.res.crp")+"</th></tr>"+sr+"</table>"
       +"<h3>4. "+_t("safe.report.calcProc")+"</h3>" + buildCalcChains(d)
@@ -474,9 +472,8 @@
     var projInfo, baseParams;
     if(d.std === 'iec'){
       projInfo=
-        (pn?'<tr><td>'+pn+'</td><td>'+sot("sStd")+'</td></tr>':'')
-        +'<tr><td>'+_t("safe.report.std")+'</td><td>'+sot("sStd")+'</td></tr>'
-        +'<tr><td>'+_t("safe.report.iso")+'</td><td>'+isoLabel+'</td></tr>';
+        '<tr><td>'+_t("safe.report.std")+'</td><td>'+sot("sStd")+'</td></tr>'
+        +'<tr><td>'+_t("safe.report.proj")+'</td><td>'+(pn||'-')+'</td></tr>';
       baseParams=
         '<tr><td>'+_t("safe.report.pd")+'</td><td>PD '+d.pd+'</td></tr>'
         +'<tr><td>'+_t("safe.report.mg")+'</td><td>'+sot("sMg")+'</td></tr>'
@@ -488,8 +485,8 @@
         +'<tr><td>'+_t("safe.word.note")+'</td><td>'+_t("safe.word.noteIec")+'</td></tr>';
     } else {
       projInfo=
-        (pn?'<tr><td>'+pn+'</td><td>'+sot("sStd")+'</td></tr>':'')
-        +'<tr><td>'+_t("safe.report.std")+'</td><td>'+sot("sStd")+'</td></tr>';
+        '<tr><td>'+_t("safe.report.std")+'</td><td>'+sot("sStd")+'</td></tr>'
+        +'<tr><td>'+_t("safe.report.proj")+'</td><td>'+(pn||'-')+'</td></tr>';
       baseParams=
         '<tr><td>'+_t("safe.report.pd")+'</td><td>PD '+d.pd+' (UL §25.4a)</td></tr>'
         +'<tr><td>'+_t("safe.report.mg")+'</td><td>II (CTI >= 100, UL §25.4d)</td></tr>'
