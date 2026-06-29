@@ -219,10 +219,13 @@
   <div id="pcbCompare"></div>
 </div>
 
-<div class="card"><h2 data-i18n="pcb.repTitle">报告</h2>
-  <div style="display:flex;gap:8px;align-items:center">
-    <button class="btn" onclick="genPcbRep()" data-i18n="cap.report.gen">生成报告</button>
-    <div class="btn-export-group" id="exportPcbGroup" style="display:none"><button class="btn" onclick="pcbExportWord()" data-i18n="cap.report.export">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'pcb')">▼</button><div class="export-dropdown" id="exportPcbDropdown"><div onclick="pcbExportWord()">Word (.doc)</div></div></div>
+<div class="card">
+  <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <h2 style="font-size:1.1rem;font-weight:600" data-i18n="pcb.repTitle">报告</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn" onclick="genPcbRep()" data-i18n="cap.report.gen">生成报告</button>
+      <div class="btn-export-group" id="exportPcbGroup" style="display:none"><button class="btn" onclick="pcbExportWord()" data-i18n="cap.report.export">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'pcb')">▼</button><div class="export-dropdown" id="exportPcbDropdown"><div onclick="pcbExportWord()">Word (.doc)</div></div></div>
+    </div>
   </div>
   <div id="pcbRc"><h3 data-i18n="pcb.repTitle">PCB 载流能力评估报告</h3><p data-i18n="cap.report.empty">点击"生成报告"按钮后显示。</p></div>
 </div>
