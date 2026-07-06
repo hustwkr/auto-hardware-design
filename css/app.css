@@ -194,6 +194,13 @@
 /* Feedback button alignment */
 .nav-dropdown .feedback-btn { margin-left: 0; }
 
+/* Feedback modal placeholder consistency */
+#feedbackModal input::placeholder,
+#feedbackModal textarea::placeholder {
+  font-size: 0.9rem;
+  opacity: 0.5;
+}
+
 /* Hover dropdown menu */
 .nav-dropdown-menu {
   opacity: 0;
