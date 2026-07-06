@@ -130,6 +130,33 @@ function saveDefaults(d) {
   fs.writeFileSync(DEF_FILE, JSON.stringify(d, null, 2), "utf-8");
 }
 
+// ── Feedback helpers ───────────────────────────────────
+const FEEDBACK_FILE = path.join(__dirname, "feedback.json");
+
+function loadFeedback() {
+  try { return JSON.parse(fs.readFileSync(FEEDBACK_FILE, "utf-8")); }
+  catch (_) { return []; }
+}
+
+function saveFeedback(feedback) {
+  fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(feedback, null, 2), "utf-8");
+}
+
+function addFeedback(name, title, content) {
+  var feedback = loadFeedback();
+  var entry = {
+    id: Date.now() + '-' + crypto.randomBytes(8).toString('hex'),
+    name: name,
+    title: title,
+    content: content,
+    timestamp: new Date().toISOString(),
+    read: false
+  };
+  feedback.push(entry);
+  saveFeedback(feedback);
+  return entry;
+}
+
 // FIX: cd() fallback now matches defaults.json exactly
 function createDefaults() {
   return {
@@ -340,6 +367,27 @@ http.createServer(async function (req, res) {
   // ── PUBLIC defaults (CORS restricted — local engineering tool) ───
   if (p === "/api/defaults" && req.method === "GET") {
     json(res, 200, loadDefaults(), false);
+    return;
+  }
+
+  // ── Feedback submission (public) ────────────────────
+  if (p === "/api/feedback" && req.method === "POST") {
+    const body = await parseBody(req);
+    const { name, title, content } = body;
+    if (!name || !title || !content) {
+      json(res, 400, { error: "Missing required fields (name, title, content)" }, true);
+      return;
+    }
+    const entry = addFeedback(name, title, content);
+    console.log(`[FEEDBACK] New feedback from "${name}": "${title}" (ID: ${entry.id})`);
+    json(res, 201, { success: true, id: entry.id }, true);
+    return;
+  }
+
+  // ── Feedback list (admin only) ────────────────────
+  if (p === "/api/feedback" && req.method === "GET") {
+    if (!validateToken(tok)) { json(res, 401, { error: "Unauthorized" }, false); return; }
+    json(res, 200, loadFeedback(), false);
     return;
   }
 

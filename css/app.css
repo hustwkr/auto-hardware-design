@@ -191,6 +191,9 @@
 .nav-icon-btn:hover { background: var(--color-bg-hover); color: var(--color-text); }
 [data-theme="dark"] .nav-icon-btn:hover { background: #334155; }
 
+/* Feedback button alignment */
+.nav-dropdown .feedback-btn { margin-left: 0; }
+
 /* Hover dropdown menu */
 .nav-dropdown-menu {
   opacity: 0;
