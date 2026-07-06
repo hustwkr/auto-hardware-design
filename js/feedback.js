@@ -8,7 +8,10 @@
     if (!modal) return;
     if (modal.style.display === 'none' || modal.style.display === '') {
       modal.style.display = 'block';
+      // Compensate for scrollbar width to prevent layout shift
+      var scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = scrollbarWidth + 'px';
       // Reset form and hide success message
       var form = document.getElementById('feedbackForm');
       var success = document.getElementById('feedbackSuccess');
@@ -17,6 +20,7 @@
     } else {
       modal.style.display = 'none';
       document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
   }
   window.toggleFeedbackModal = toggleFeedbackModal;
