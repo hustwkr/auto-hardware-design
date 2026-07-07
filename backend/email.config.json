@@ -1,13 +1,13 @@
 {
   "smtp": {
-    "host": "smtp.example.com",
-    "port": 587,
-    "secure": false,
+    "host": "smtp.qiye.163.com",
+    "port": 465,
+    "secure": true,
     "auth": {
-      "user": "your-email@example.com",
-      "pass": "your-password"
+      "user": "wangkerou@solaxpower.com",
+      "pass": "Jing153ying%"
     }
   },
-  "from": "your-email@example.com",
+  "from": "wangkerou@solaxpower.com",
   "to": "wangkerou@solaxpower.com"
 }

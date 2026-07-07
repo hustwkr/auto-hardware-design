@@ -214,113 +214,173 @@ ${feedback.content}
 
 function sendSmtpEmail(smtpConfig, from, to, subject, body) {
   return new Promise((resolve, reject) => {
-    const socket = new net.Socket();
-    let response = '';
-    let commandQueue = [];
-    let currentCallback = null;
-
-    function sendCommand(cmd, callback) {
-      commandQueue.push({ cmd, callback });
-      if (commandQueue.length === 1) processNextCommand();
-    }
-
-    function processNextCommand() {
-      if (commandQueue.length === 0) return;
-      const { cmd, callback } = commandQueue[0];
-      currentCallback = callback;
-      if (cmd) socket.write(cmd + '\r\n');
-    }
-
-    function handleResponse(data) {
-      response += data.toString();
-      if (response.match(/^\d{3} /)) {
-        const code = parseInt(response.substring(0, 3));
-        if (currentCallback) currentCallback(code, response);
-        commandQueue.shift();
-        response = '';
-        processNextCommand();
-      }
-    }
-
-    socket.setTimeout(10000);
-    socket.on('timeout', () => { socket.destroy(); reject(new Error('SMTP timeout')); });
-    socket.on('error', (err) => reject(err));
-    socket.on('data', handleResponse);
-
     const port = smtpConfig.port || 587;
     const host = smtpConfig.host;
+    const useTLS = port === 465;
 
-    socket.connect(port, host, () => {
-      sendCommand(null, (code) => {
-        if (code !== 220) return reject(new Error(`SMTP greeting failed: ${code}`));
+    function onConnect(socket) {
+      let responseBuffer = '';
+      let currentResolve = null;
+      let currentReject = null;
 
-        sendCommand(`EHLO localhost`, (code) => {
-          if (code !== 250) return reject(new Error(`EHLO failed: ${code}`));
-
-          if (port === 465) {
-            // Direct TLS connection
-            const tlsSocket = tls.connect({ socket, rejectUnauthorized: false }, () => {
-              tlsSocket.write(`EHLO localhost\r\n`);
-            });
-            // For simplicity, just resolve after EHLO
-            resolve();
-          } else {
-            sendCommand(`STARTTLS`, (code) => {
-              if (code !== 220) return reject(new Error(`STARTTLS failed: ${code}`));
-
-              const tlsSocket = tls.connect({ socket, rejectUnauthorized: false }, () => {
-                sendCommand(`EHLO localhost`, (code) => {
-                  if (code !== 250) return reject(new Error(`EHLO after TLS failed: ${code}`));
-
-                  if (smtpConfig.auth) {
-                    sendCommand(`AUTH LOGIN`, (code) => {
-                      if (code !== 334) return reject(new Error(`AUTH LOGIN failed: ${code}`));
-
-                      sendCommand(Buffer.from(smtpConfig.auth.user).toString('base64'), (code) => {
-                        if (code !== 334) return reject(new Error(`Username failed: ${code}`));
-
-                        sendCommand(Buffer.from(smtpConfig.auth.pass).toString('base64'), (code) => {
-                          if (code !== 235) return reject(new Error(`Password failed: ${code}`));
-
-                          sendMail(tlsSocket);
-                        });
-                      });
-                    });
-                  } else {
-                    sendMail(tlsSocket);
-                  }
-                });
-              });
-            });
+      function onData(data) {
+        responseBuffer += data.toString();
+        // Check if we have a complete response (ends with space or newline after 3-digit code)
+        if (responseBuffer.match(/\r\n$/) || (responseBuffer.length >= 4 && responseBuffer.charAt(3) === ' ')) {
+          const code = parseInt(responseBuffer.substring(0, 3));
+          const response = responseBuffer;
+          responseBuffer = '';
+          if (currentResolve) {
+            const cb = currentResolve;
+            currentResolve = null;
+            cb(code, response);
           }
+        }
+      }
 
-          function sendMail(sock) {
-            sendCommand(`MAIL FROM:<${from}>`, (code) => {
-              if (code !== 250) return reject(new Error(`MAIL FROM failed: ${code}`));
-
-              sendCommand(`RCPT TO:<${to}>`, (code) => {
-                if (code !== 250) return reject(new Error(`RCPT TO failed: ${code}`));
-
-                sendCommand(`DATA`, (code) => {
-                  if (code !== 354) return reject(new Error(`DATA failed: ${code}`));
-
-                  const emailData = `From: ${from}\r\nTo: ${to}\r\nSubject: ${subject}\r\n\r\n${body}\r\n.`;
-                  sock.write(emailData + '\r\n', () => {
-                    sendCommand(null, (code) => {
-                      if (code !== 250) return reject(new Error(`Message failed: ${code}`));
-
-                      sendCommand(`QUIT`, () => {
-                        sock.destroy();
-                        resolve();
-                      });
-                    });
-                  });
-                });
-              });
-            });
+      function sendCommand(cmd) {
+        return new Promise((res, rej) => {
+          currentResolve = res;
+          currentReject = rej;
+          if (cmd) {
+            socket.write(cmd + '\r\n');
           }
         });
+      }
+
+      socket.on('data', onData);
+      socket.on('error', (err) => {
+        if (currentReject) currentReject(err);
       });
+
+      (async () => {
+        try {
+          // Wait for greeting
+          const [code] = await new Promise((res) => {
+            currentResolve = (c, r) => res([c, r]);
+            // Timeout for greeting
+            setTimeout(() => res([0, 'timeout']), 5000);
+          });
+
+          if (code !== 220) {
+            throw new Error(`SMTP greeting failed: ${code}`);
+          }
+
+          // EHLO
+          const ehloCode = await sendCommand('EHLO localhost');
+          if (ehloCode !== 250) {
+            throw new Error(`EHLO failed: ${ehloCode}`);
+          }
+
+          // If port 465, we're already in TLS (from tls.connect options)
+          // If port 587, we need STARTTLS
+          if (!useTLS) {
+            const starttlsCode = await sendCommand('STARTTLS');
+            if (starttlsCode !== 220) {
+              throw new Error(`STARTTLS failed: ${starttlsCode}`);
+            }
+
+            // Upgrade to TLS
+            const tlsSocket = tls.connect({
+              socket,
+              rejectUnauthorized: false
+            }, () => {
+              // Continue with TLS connection
+            });
+
+            // Replace socket event handlers for TLS
+            socket.removeListener('data', onData);
+            socket = tlsSocket;
+            socket.on('data', onData);
+            socket.on('error', (err) => {
+              if (currentReject) currentReject(err);
+            });
+
+            // Wait for TLS upgrade
+            await new Promise((res) => setTimeout(res, 100));
+
+            // EHLO again after TLS
+            const ehloCode2 = await sendCommand('EHLO localhost');
+            if (ehloCode2 !== 250) {
+              throw new Error(`EHLO after TLS failed: ${ehloCode2}`);
+            }
+          }
+
+          // AUTH
+          if (smtpConfig.auth) {
+            const authCode = await sendCommand('AUTH LOGIN');
+            if (authCode !== 334) {
+              throw new Error(`AUTH LOGIN failed: ${authCode}`);
+            }
+
+            // Username
+            const userCode = await sendCommand(Buffer.from(smtpConfig.auth.user).toString('base64'));
+            if (userCode !== 334) {
+              throw new Error(`Username failed: ${userCode}`);
+            }
+
+            // Password
+            const passCode = await sendCommand(Buffer.from(smtpConfig.auth.pass).toString('base64'));
+            if (passCode !== 235) {
+              throw new Error(`Password failed: ${passCode}`);
+            }
+          }
+
+          // MAIL FROM
+          const mailCode = await sendCommand(`MAIL FROM:<${from}>`);
+          if (mailCode !== 250) {
+            throw new Error(`MAIL FROM failed: ${mailCode}`);
+          }
+
+          // RCPT TO
+          const rcptCode = await sendCommand(`RCPT TO:<${to}>`);
+          if (rcptCode !== 250) {
+            throw new Error(`RCPT TO failed: ${rcptCode}`);
+          }
+
+          // DATA
+          const dataCode = await sendCommand('DATA');
+          if (dataCode !== 354) {
+            throw new Error(`DATA failed: ${dataCode}`);
+          }
+
+          // Send email content
+          const emailData = `From: ${from}\r\nTo: ${to}\r\nSubject: ${subject}\r\n\r\n${body}\r\n.`;
+          const messageCode = await sendCommand(emailData);
+          if (messageCode !== 250) {
+            throw new Error(`Message failed: ${messageCode}`);
+          }
+
+          // QUIT
+          await sendCommand('QUIT');
+
+          socket.destroy();
+          resolve();
+        } catch (err) {
+          socket.destroy();
+          reject(err);
+        }
+      })();
+    }
+
+    const socket = net.createConnection(port, host, () => {
+      if (useTLS) {
+        // For port 465, wrap in TLS immediately
+        const tlsSocket = tls.connect({
+          socket,
+          rejectUnauthorized: false
+        }, () => {
+          onConnect(tlsSocket);
+        });
+      } else {
+        onConnect(socket);
+      }
+    });
+
+    socket.on('error', (err) => reject(err));
+    socket.setTimeout(30000, () => {
+      socket.destroy();
+      reject(new Error('SMTP connection timeout'));
     });
   });
 }
