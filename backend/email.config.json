@@ -1,0 +1,13 @@
+{
+  "smtp": {
+    "host": "smtp.example.com",
+    "port": 587,
+    "secure": false,
+    "auth": {
+      "user": "your-email@example.com",
+      "pass": "your-password"
+    }
+  },
+  "from": "your-email@example.com",
+  "to": "wangkerou@solaxpower.com"
+}

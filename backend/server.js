@@ -157,6 +157,174 @@ function addFeedback(name, title, content) {
   return entry;
 }
 
+// ── Email notification for feedback ────────────────────
+const { exec } = require('child_process');
+const net = require('net');
+const tls = require('tls');
+
+const EMAIL_CONFIG_FILE = path.join(__dirname, 'email.config.json');
+
+function loadEmailConfig() {
+  try {
+    return JSON.parse(fs.readFileSync(EMAIL_CONFIG_FILE, 'utf-8'));
+  } catch (_) {
+    return null;
+  }
+}
+
+async function sendFeedbackEmail(feedback) {
+  const config = loadEmailConfig();
+  const recipient = config?.to || 'wangkerou@solaxpower.com';
+  const subject = `[Feedback] ${feedback.title}`;
+  const body = `
+New feedback received:
+
+From: ${feedback.name}
+Title: ${feedback.title}
+Time: ${feedback.timestamp}
+ID: ${feedback.id}
+
+Content:
+${feedback.content}
+`;
+
+  // If no email config, log to console
+  if (!config?.smtp?.host || config.smtp.host === 'smtp.example.com') {
+    console.log(`[EMAIL] No SMTP configured. Email content logged:`);
+    console.log(`To: ${recipient}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Body: ${body}`);
+    return false;
+  }
+
+  try {
+    // Send via SMTP
+    await sendSmtpEmail(config.smtp, config.from || config.smtp.auth.user, recipient, subject, body);
+    console.log(`[EMAIL] Notification sent to ${recipient}`);
+    return true;
+  } catch (error) {
+    console.error(`[EMAIL] SMTP failed: ${error.message}`);
+    console.log(`[EMAIL] Fallback - Email content logged:`);
+    console.log(`To: ${recipient}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Body: ${body}`);
+    return false;
+  }
+}
+
+function sendSmtpEmail(smtpConfig, from, to, subject, body) {
+  return new Promise((resolve, reject) => {
+    const socket = new net.Socket();
+    let response = '';
+    let commandQueue = [];
+    let currentCallback = null;
+
+    function sendCommand(cmd, callback) {
+      commandQueue.push({ cmd, callback });
+      if (commandQueue.length === 1) processNextCommand();
+    }
+
+    function processNextCommand() {
+      if (commandQueue.length === 0) return;
+      const { cmd, callback } = commandQueue[0];
+      currentCallback = callback;
+      if (cmd) socket.write(cmd + '\r\n');
+    }
+
+    function handleResponse(data) {
+      response += data.toString();
+      if (response.match(/^\d{3} /)) {
+        const code = parseInt(response.substring(0, 3));
+        if (currentCallback) currentCallback(code, response);
+        commandQueue.shift();
+        response = '';
+        processNextCommand();
+      }
+    }
+
+    socket.setTimeout(10000);
+    socket.on('timeout', () => { socket.destroy(); reject(new Error('SMTP timeout')); });
+    socket.on('error', (err) => reject(err));
+    socket.on('data', handleResponse);
+
+    const port = smtpConfig.port || 587;
+    const host = smtpConfig.host;
+
+    socket.connect(port, host, () => {
+      sendCommand(null, (code) => {
+        if (code !== 220) return reject(new Error(`SMTP greeting failed: ${code}`));
+
+        sendCommand(`EHLO localhost`, (code) => {
+          if (code !== 250) return reject(new Error(`EHLO failed: ${code}`));
+
+          if (port === 465) {
+            // Direct TLS connection
+            const tlsSocket = tls.connect({ socket, rejectUnauthorized: false }, () => {
+              tlsSocket.write(`EHLO localhost\r\n`);
+            });
+            // For simplicity, just resolve after EHLO
+            resolve();
+          } else {
+            sendCommand(`STARTTLS`, (code) => {
+              if (code !== 220) return reject(new Error(`STARTTLS failed: ${code}`));
+
+              const tlsSocket = tls.connect({ socket, rejectUnauthorized: false }, () => {
+                sendCommand(`EHLO localhost`, (code) => {
+                  if (code !== 250) return reject(new Error(`EHLO after TLS failed: ${code}`));
+
+                  if (smtpConfig.auth) {
+                    sendCommand(`AUTH LOGIN`, (code) => {
+                      if (code !== 334) return reject(new Error(`AUTH LOGIN failed: ${code}`));
+
+                      sendCommand(Buffer.from(smtpConfig.auth.user).toString('base64'), (code) => {
+                        if (code !== 334) return reject(new Error(`Username failed: ${code}`));
+
+                        sendCommand(Buffer.from(smtpConfig.auth.pass).toString('base64'), (code) => {
+                          if (code !== 235) return reject(new Error(`Password failed: ${code}`));
+
+                          sendMail(tlsSocket);
+                        });
+                      });
+                    });
+                  } else {
+                    sendMail(tlsSocket);
+                  }
+                });
+              });
+            });
+          }
+
+          function sendMail(sock) {
+            sendCommand(`MAIL FROM:<${from}>`, (code) => {
+              if (code !== 250) return reject(new Error(`MAIL FROM failed: ${code}`));
+
+              sendCommand(`RCPT TO:<${to}>`, (code) => {
+                if (code !== 250) return reject(new Error(`RCPT TO failed: ${code}`));
+
+                sendCommand(`DATA`, (code) => {
+                  if (code !== 354) return reject(new Error(`DATA failed: ${code}`));
+
+                  const emailData = `From: ${from}\r\nTo: ${to}\r\nSubject: ${subject}\r\n\r\n${body}\r\n.`;
+                  sock.write(emailData + '\r\n', () => {
+                    sendCommand(null, (code) => {
+                      if (code !== 250) return reject(new Error(`Message failed: ${code}`));
+
+                      sendCommand(`QUIT`, () => {
+                        sock.destroy();
+                        resolve();
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          }
+        });
+      });
+    });
+  });
+}
+
 // FIX: cd() fallback now matches defaults.json exactly
 function createDefaults() {
   return {
@@ -380,6 +548,12 @@ http.createServer(async function (req, res) {
     }
     const entry = addFeedback(name, title, content);
     console.log(`[FEEDBACK] New feedback from "${name}": "${title}" (ID: ${entry.id})`);
+
+    // Send email notification asynchronously
+    sendFeedbackEmail(entry).catch(err => {
+      console.error(`[FEEDBACK] Email notification failed: ${err.message}`);
+    });
+
     json(res, 201, { success: true, id: entry.id }, true);
     return;
   }
