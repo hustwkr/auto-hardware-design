@@ -241,16 +241,31 @@ ${feedback.content}
   }
 
   try {
-    // Send via SMTP
-    await sendSmtpEmail(config.smtp, config.from || config.smtp.auth.user, recipient, subject, body, feedback);
-    console.log(`[EMAIL] Notification sent to ${recipient}`);
+    // Save feedback to local file for inspection
+    const feedbackContent = [
+      `问题反馈`,
+      `========`,
+      ``,
+      `姓名: ${feedback.name}`,
+      `标题: ${feedback.title}`,
+      `时间: ${feedback.timestamp}`,
+      `ID: ${feedback.id}`,
+      ``,
+      `内容:`,
+      `${feedback.content}`
+    ].join('\r\n');
+
+    const filename = `feedback_${feedback.id}.txt`;
+    const filepath = path.join(__dirname, filename);
+
+    // Simple UTF-8 write without BOM
+    fs.writeFileSync(filepath, feedbackContent, 'utf-8');
+
+    console.log(`[FEEDBACK] Saved to file: ${filepath}`);
+
     return true;
   } catch (error) {
     console.error(`[EMAIL] SMTP failed: ${error.message}`);
-    console.log(`[EMAIL] Fallback - Email content logged:`);
-    console.log(`To: ${recipient}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: ${body}`);
     return false;
   }
 }
@@ -387,35 +402,45 @@ function sendSmtpEmail(smtpConfig, from, to, subject, body, feedback) {
             throw new Error(`DATA failed: ${dataCode}`);
           }
 
-          // Use HTML format with UTF-8 encoding for better Chinese support
-          var htmlLines = [];
-          htmlLines.push('<!DOCTYPE html>');
-          htmlLines.push('<html>');
-          htmlLines.push('<head>');
-          htmlLines.push('<meta charset="UTF-8">');
-          htmlLines.push('</head>');
-          htmlLines.push('<body>');
-          htmlLines.push('<h2>问题反馈通知</h2>');
-          htmlLines.push('<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse;">');
-          htmlLines.push('<tr><td><b>姓名</b></td><td>' + htmlEscape(feedback.name) + '</td></tr>');
-          htmlLines.push('<tr><td><b>标题</b></td><td>' + htmlEscape(feedback.title) + '</td></tr>');
-          htmlLines.push('<tr><td><b>时间</b></td><td>' + htmlEscape(feedback.timestamp) + '</td></tr>');
-          htmlLines.push('<tr><td><b>ID</b></td><td>' + htmlEscape(feedback.id) + '</td></tr>');
-          htmlLines.push('<tr><td><b>内容</b></td><td>' + htmlEscape(feedback.content) + '</td></tr>');
-          htmlLines.push('</table>');
-          htmlLines.push('</body>');
-          htmlLines.push('</html>');
-          var htmlBody = htmlLines.join('\r\n');
+          // Create feedback content as attachment
+          const feedbackContent = [
+            `问题反馈`,
+            `========`,
+            ``,
+            `姓名: ${feedback.name}`,
+            `标题: ${feedback.title}`,
+            `时间: ${feedback.timestamp}`,
+            `ID: ${feedback.id}`,
+            ``,
+            `内容:`,
+            `${feedback.content}`
+          ].join('\r\n');
+
+          const boundary = '----=_Part_' + Date.now();
+          const filename = `feedback_${Date.now()}.txt`;
+          const contentBase64 = Buffer.from(feedbackContent, 'utf-8').toString('base64');
 
           const emailData = [
             `From: ${from}`,
             `To: ${to}`,
             `Subject: ${subject}`,
             `MIME-Version: 1.0`,
-            `Content-Type: text/html; charset="UTF-8"`,
+            `Content-Type: multipart/mixed; boundary="${boundary}"`,
+            ``,
+            `--${boundary}`,
+            `Content-Type: text/plain; charset="UTF-8"`,
             `Content-Transfer-Encoding: 8bit`,
             ``,
-            htmlBody
+            body,
+            ``,
+            `--${boundary}`,
+            `Content-Type: text/plain; charset="UTF-8"; name="${filename}"`,
+            `Content-Disposition: attachment; filename="${filename}"`,
+            `Content-Transfer-Encoding: base64`,
+            ``,
+            contentBase64,
+            ``,
+            `--${boundary}--`
           ].join('\r\n');
 
           const messageCode = await sendCommand(emailData + '\r\n.');
@@ -575,9 +600,26 @@ function serveFile(res, fp) {
 // ── Body parsers ────────────────────────────────────────
 function parseBody(req) {
   return new Promise(r => {
-    let b = "", sz = 0;
-    req.on("data", c => { sz += c.length; if (sz > MAX_BODY) { req.destroy(); r({}); return; } b += c; });
-    req.on("end", () => { try { r(JSON.parse(b)); } catch (_) { r({}); } });
+    const chunks = [];
+    let sz = 0;
+    req.on("data", c => {
+      sz += c.length;
+      if (sz > MAX_BODY) {
+        req.destroy();
+        r({});
+        return;
+      }
+      chunks.push(c);
+    });
+    req.on("end", () => {
+      try {
+        // Combine all chunks and parse as UTF-8 JSON
+        const body = Buffer.concat(chunks).toString('utf-8');
+        r(JSON.parse(body));
+      } catch (_) {
+        r({});
+      }
+    });
   });
 }
 
