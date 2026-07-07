@@ -172,10 +172,53 @@ function loadEmailConfig() {
   }
 }
 
+// Quoted-Printable encode for MIME
+function quotedPrintableEncode(str) {
+  const encoded = [];
+  for (let i = 0; i < str.length; i++) {
+    const charCode = str.charCodeAt(i);
+    if (charCode < 128) {
+      encoded.push(str.charAt(i));
+    } else {
+      // Encode non-ASCII characters as =XX format
+      const buf = Buffer.from(str.substring(i, i + 1), 'utf-8');
+      for (let j = 0; j < buf.length; j++) {
+        encoded.push('=' + buf[j].toString(16).toUpperCase());
+      }
+    }
+  }
+  return encoded.join('');
+}
+
+// Base64 encode for MIME header
+function mimeBase64Encode(str) {
+  return Buffer.from(str, 'utf-8').toString('base64');
+}
+
+// Encode header for non-ASCII characters
+function encodeMimeHeader(str) {
+  if (/^[\x00-\x7F]*$/.test(str)) {
+    return str;
+  }
+  const encoded = mimeBase64Encode(str);
+  return `=?UTF-8?B?${encoded}?=`;
+}
+
+// HTML escape for email content (simple approach)
+function htmlEscape(str) {
+  if (!str) return '';
+  return str.toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 async function sendFeedbackEmail(feedback) {
   const config = loadEmailConfig();
   const recipient = config?.to || 'wangkerou@solaxpower.com';
-  const subject = `[Feedback] ${feedback.title}`;
+  const subject = encodeMimeHeader(`[Feedback] ${feedback.title}`);
   const body = `
 New feedback received:
 
@@ -199,7 +242,7 @@ ${feedback.content}
 
   try {
     // Send via SMTP
-    await sendSmtpEmail(config.smtp, config.from || config.smtp.auth.user, recipient, subject, body);
+    await sendSmtpEmail(config.smtp, config.from || config.smtp.auth.user, recipient, subject, body, feedback);
     console.log(`[EMAIL] Notification sent to ${recipient}`);
     return true;
   } catch (error) {
@@ -212,7 +255,7 @@ ${feedback.content}
   }
 }
 
-function sendSmtpEmail(smtpConfig, from, to, subject, body) {
+function sendSmtpEmail(smtpConfig, from, to, subject, body, feedback) {
   return new Promise((resolve, reject) => {
     const port = smtpConfig.port || 587;
     const host = smtpConfig.host;
@@ -344,9 +387,38 @@ function sendSmtpEmail(smtpConfig, from, to, subject, body) {
             throw new Error(`DATA failed: ${dataCode}`);
           }
 
-          // Send email content
-          const emailData = `From: ${from}\r\nTo: ${to}\r\nSubject: ${subject}\r\n\r\n${body}\r\n.`;
-          const messageCode = await sendCommand(emailData);
+          // Use HTML format with UTF-8 encoding for better Chinese support
+          var htmlLines = [];
+          htmlLines.push('<!DOCTYPE html>');
+          htmlLines.push('<html>');
+          htmlLines.push('<head>');
+          htmlLines.push('<meta charset="UTF-8">');
+          htmlLines.push('</head>');
+          htmlLines.push('<body>');
+          htmlLines.push('<h2>问题反馈通知</h2>');
+          htmlLines.push('<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse;">');
+          htmlLines.push('<tr><td><b>姓名</b></td><td>' + htmlEscape(feedback.name) + '</td></tr>');
+          htmlLines.push('<tr><td><b>标题</b></td><td>' + htmlEscape(feedback.title) + '</td></tr>');
+          htmlLines.push('<tr><td><b>时间</b></td><td>' + htmlEscape(feedback.timestamp) + '</td></tr>');
+          htmlLines.push('<tr><td><b>ID</b></td><td>' + htmlEscape(feedback.id) + '</td></tr>');
+          htmlLines.push('<tr><td><b>内容</b></td><td>' + htmlEscape(feedback.content) + '</td></tr>');
+          htmlLines.push('</table>');
+          htmlLines.push('</body>');
+          htmlLines.push('</html>');
+          var htmlBody = htmlLines.join('\r\n');
+
+          const emailData = [
+            `From: ${from}`,
+            `To: ${to}`,
+            `Subject: ${subject}`,
+            `MIME-Version: 1.0`,
+            `Content-Type: text/html; charset="UTF-8"`,
+            `Content-Transfer-Encoding: 8bit`,
+            ``,
+            htmlBody
+          ].join('\r\n');
+
+          const messageCode = await sendCommand(emailData + '\r\n.');
           if (messageCode !== 250) {
             throw new Error(`Message failed: ${messageCode}`);
           }
