@@ -36,7 +36,24 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 <div class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('capacitor')">电解电容寿命计算</button>
   <button class="tab-btn" onclick="switchTab('safety')">安规距离计算</button>
+  <button class="tab-btn" onclick="switchTab('email')">邮件配置</button>
 </div>
+
+<div id="tab-email" class="tab">
+<div class="card"><h2>SMTP 邮件配置</h2><div class="fg">
+<div class="fgl"><label>SMTP 服务器</label><input type="text" id="smtpHost" placeholder="smtp.example.com"></div>
+<div class="fgl"><label>SMTP 端口</label><input type="number" id="smtpPort" value="587"></div>
+<div class="fgl"><label>加密方式</label><select id="smtpSecure"><option value="false">STARTTLS (587)</option><option value="true">SSL/TLS (465)</option></select></div>
+<div class="fgl"><label>用户名</label><input type="text" id="smtpUser" placeholder="your-email@example.com"></div>
+<div class="fgl"><label>密码</label><input type="password" id="smtpPass" placeholder="邮箱密码或客户端专用密码"></div>
+<div class="fgl"><label>发件人邮箱</label><input type="email" id="emailFrom" placeholder="sender@example.com"></div>
+<div class="fgl"><label>收件人邮箱</label><input type="email" id="emailTo" placeholder="wangkerou@solaxpower.com"></div>
+</div></div>
+<div class="btn-bar">
+<button class="btn btn-p" onclick="saveEmailConfig()">保存邮件配置</button>
+<button class="btn" onclick="loadEmailConfig()">重新加载</button>
+<span class="status" id="emailStatus"></span>
+</div></div>
 
 <div id="tab-capacitor" class="tab active">
 <div class="card"><h2>电容器额定参数</h2><div class="fg">
@@ -124,7 +141,49 @@ async function saveDefaults(){
     else { var msg="保存失败"; try{var j=await r.text();msg+=" ("+r.status+": "+j+")";}catch(e){} showStatus(msg,"#ef4444"); }
 }
 
+async function loadEmailConfig(){
+  var r=await authFetch("/api/admin/email-config");
+  if(r.status===401){ alert("登录已过期"); localStorage.removeItem("admin_token"); window.location.href="/admin/login"; return; }
+  if(!r.ok){ showEmailStatus("加载失败","#ef4444"); return; }
+  var d=await r.json();
+  if(d.smtp){
+    document.getElementById("smtpHost").value=d.smtp.host||"";
+    document.getElementById("smtpPort").value=d.smtp.port||587;
+    document.getElementById("smtpSecure").value=d.smtp.secure?"true":"false";
+    if(d.smtp.auth){
+      document.getElementById("smtpUser").value=d.smtp.auth.user||"";
+      document.getElementById("smtpPass").value=d.smtp.auth.pass||"";
+    }
+  }
+  document.getElementById("emailFrom").value=d.from||"";
+  document.getElementById("emailTo").value=d.to||"";
+  showEmailStatus("已加载");
+}
+
+async function saveEmailConfig(){
+  var d={
+    smtp:{
+      host:document.getElementById("smtpHost").value,
+      port:parseInt(document.getElementById("smtpPort").value)||587,
+      secure:document.getElementById("smtpSecure").value==="true",
+      auth:{
+        user:document.getElementById("smtpUser").value,
+        pass:document.getElementById("smtpPass").value
+      }
+    },
+    from:document.getElementById("emailFrom").value,
+    to:document.getElementById("emailTo").value
+  };
+  var r=await authFetch("/api/admin/email-config",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});
+  if(r.status===401){ alert("登录已过期"); localStorage.removeItem("admin_token"); window.location.href="/admin/login"; return; }
+  if(r.ok) showEmailStatus("保存成功");
+    else showEmailStatus("保存失败","#ef4444");
+}
+
+function showEmailStatus(msg,color){ var el=document.getElementById("emailStatus"); el.textContent=msg; el.style.color=color||"#10b981"; setTimeout(function(){el.textContent=""},3000); }
+
 loadCurrent();
+loadEmailConfig();
 
 </script></body></html>
 

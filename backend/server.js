@@ -130,6 +130,18 @@ function saveDefaults(d) {
   fs.writeFileSync(DEF_FILE, JSON.stringify(d, null, 2), "utf-8");
 }
 
+// ── Email config helpers ─────────────────────────────────
+function loadEmailConfig() {
+  try { return JSON.parse(fs.readFileSync(EMAIL_CONFIG_FILE, "utf-8")); }
+  catch (_) { return { smtp: { host: "", port: 587, secure: false, auth: { user: "", pass: "" } }, from: "", to: "" }; }
+}
+
+function saveEmailConfig(d) {
+  fs.writeFileSync(EMAIL_CONFIG_FILE, JSON.stringify(d, null, 2), "utf-8");
+}
+
+const EMAIL_CONFIG_FILE = path.join(__dirname, "email.config.json");
+
 // ── Feedback helpers ───────────────────────────────────
 const FEEDBACK_FILE = path.join(__dirname, "feedback.json");
 
@@ -158,19 +170,8 @@ function addFeedback(name, title, content) {
 }
 
 // ── Email notification for feedback ────────────────────
-const { exec } = require('child_process');
 const net = require('net');
 const tls = require('tls');
-
-const EMAIL_CONFIG_FILE = path.join(__dirname, 'email.config.json');
-
-function loadEmailConfig() {
-  try {
-    return JSON.parse(fs.readFileSync(EMAIL_CONFIG_FILE, 'utf-8'));
-  } catch (_) {
-    return null;
-  }
-}
 
 // Quoted-Printable encode for MIME
 function quotedPrintableEncode(str) {
@@ -731,6 +732,20 @@ http.createServer(async function (req, res) {
       if (result.warnings) console.warn("[DEFAULTS] " + result.warnings.join("; "));
       saveDefaults(body);
       json(res, 200, { success: true, warnings: result.warnings || [] }, false);
+      return;
+    }
+    res.writeHead(405); res.end();
+    return;
+  }
+
+  // ── ADMIN email config ──────────────────────────────────
+  if (p === "/api/admin/email-config") {
+    if (!validateToken(tok)) { json(res, 401, { error: "Unauthorized" }, false); return; }
+    if (req.method === "GET") { json(res, 200, loadEmailConfig(), false); return; }
+    if (req.method === "PUT") {
+      const body = await parseBody(req);
+      saveEmailConfig(body);
+      json(res, 200, { success: true }, false);
       return;
     }
     res.writeHead(405); res.end();
