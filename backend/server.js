@@ -241,28 +241,9 @@ ${feedback.content}
   }
 
   try {
-    // Save feedback to local file for inspection
-    const feedbackContent = [
-      `问题反馈`,
-      `========`,
-      ``,
-      `姓名: ${feedback.name}`,
-      `标题: ${feedback.title}`,
-      `时间: ${feedback.timestamp}`,
-      `ID: ${feedback.id}`,
-      ``,
-      `内容:`,
-      `${feedback.content}`
-    ].join('\r\n');
-
-    const filename = `feedback_${feedback.id}.txt`;
-    const filepath = path.join(__dirname, filename);
-
-    // Simple UTF-8 write without BOM
-    fs.writeFileSync(filepath, feedbackContent, 'utf-8');
-
-    console.log(`[FEEDBACK] Saved to file: ${filepath}`);
-
+    // Send via SMTP
+    await sendSmtpEmail(config.smtp, config.from || config.smtp.auth.user, recipient, subject, body, feedback);
+    console.log(`[EMAIL] Notification sent to ${recipient}`);
     return true;
   } catch (error) {
     console.error(`[EMAIL] SMTP failed: ${error.message}`);
