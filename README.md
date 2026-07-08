@@ -7,6 +7,10 @@
 
 A one-stop automated hardware design assistant toolset covering electrolytic capacitor lifetime evaluation and safety distance calculations — core scenarios in power electronics hardware engineering. Developed by experienced hardware engineers and reviewed by senior power/safety engineers for accuracy and compliance.
 
+所有模块均支持一键生成详细设计报告（在线预览 + Word 导出），完整展示从输入参数到最终结果的每一步计算逻辑。
+
+All modules support one-click design report generation (online preview + Word export), with full calculation traceability from input parameters to final results.
+
 ---
 
 ## 模块列表 Modules
@@ -53,30 +57,6 @@ A creepage and clearance distance calculation tool based on IEC 62109-1 / UL 840
 - **过电压类别 (OVC)** Overvoltage category — 根据 OVC I-IV + 系统额定电压自动查表确定额定冲击电压
 - **海拔修正** Altitude correction — 海拔系数自动应用至电气间隙
 - **PCB/三防漆** PCB & coating — 每个节点独立设置走线方式和三防漆使用情况
-
----
-
-## 自动生成报告 Auto-Generated Reports
-
-两个计算模块均支持一键生成详细设计报告，报告中自动展示：
-
-- **完整计算逻辑链条** — 从输入参数到最终结果的每一步推导过程清晰列出
-- **电气间隙计算** — 冲击电压查表 → Table 13 查表 → 三准则取最严苛值 → 海拔修正，逐步展示
-- **爬电距离计算** — 工作电压 + 污染等级 + 材料组别 → Table 14 查表 → 绝缘倍率修正
-- **各节点独立计算链** — 每个测量节点的输入参数、计算过程、结果一目了然
-- **质保期评估** — 温度加速、电压修正、累积损伤、裕量判定全链路展示
-
-支持在线预览和 Word 文档导出。
-
-Both modules support one-click report generation with full calculation traceability:
-
-- **Complete logic chain** — every step from input parameters to final results is clearly shown
-- **Clearance calculation** — impulse voltage lookup → Table 13 → three criteria max → altitude correction
-- **Creepage calculation** — working voltage + PD + material group → Table 14 → insulation multiplier
-- **Per-node calculation chains** — inputs, process, and results for each measurement node
-- **Warranty assessment** — temperature acceleration, voltage correction, cumulative damage, margin verdict
-
-Supports online preview and Word document export.
 
 ---
 
@@ -176,12 +156,9 @@ UI 层 (`capacitor.js`, `safety.js`) 仅负责 DOM 操作和事件绑定，通�
 
 ### 安全特性 Security Features
 
-- **密码策略**: 必须设置 `ADMIN_PASSWORD` 环境变量（≥8 字符），否则拒绝启动
-- **Token 认证**: HttpOnly + SameSite=Lax Cookie，防止 XSS 窃取和 CSRF
-- **登录限频**: 每 IP 5 分钟最多 10 次失败尝试
-- **请求体限制**: 最大 1MB，防止 DoS
-- **路径穿越防护**: `serveFile()` 校验解析后的文件必须在项目根目录下
-- **输入验证**: defaults.json 结构完整性校验（白名单字段）
+密码保护、Token 认证、登录限频、路径穿越防护、输入校验。
+
+Password-protected admin panel with token auth, rate limiting, path traversal protection, and input validation.
 
 ## 路线图 Roadmap
 
