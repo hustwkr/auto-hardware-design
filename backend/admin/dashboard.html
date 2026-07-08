@@ -64,7 +64,10 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 <div class="fgl"><label>散热</label><select id="cooling"><option value="1.0">自然对流</option><option value="1.15">风冷1-2m/s</option><option value="1.30">风冷>2m/s</option></select></div>
 <div class="fgl"><label>年工作天数</label><input type="number" id="workdays" value="365"></div>
 <div class="fgl"><label>质保期 (年)</label><input type="number" id="warrantyTarget" value="5"></div>
-<div class="fgl"><label>应用场景</label><select id="scenario"><option value="consumer">消费电子</option><option value="industrial" selected>工业设备</option><option value="automotive">汽车电子</option><option value="medical">医疗设备</option></select></div>
+<div class="fgl"><label>应用场景</label><select id="scenario"><option value="none">无额外余量</option><option value="consumer">消费电子</option><option value="industrial" selected>工业设备</option><option value="automotive">汽车电子</option><option value="medical">医疗设备</option></select></div>
+<div class="fgl"><label>电容类型</label><select id="capType"><option value="lv" selected>低压引线/贴片型</option><option value="hv">高压牛角/螺栓型</option><option value="manual">手动设置 Kv 参数</option></select></div>
+<div class="fgl"><label>Kv 参数 a</label><input type="number" id="kva" value="0.56" min="0" max="5" step="0.01"></div>
+<div class="fgl"><label>Kv 参数 b</label><input type="number" id="kvb" value="1.0" min="0" max="5" step="0.1"></div>
 </div></div>
 <div class="card"><h2>运行工况剖面 (JSON)</h2><p style="font-size:.82rem;color:#64748b;margin-bottom:8px">每段: dur(h/天), ta(环温℃), vop(工作电压V), rips([{freq, current}])</p><textarea id="segmentsJson"></textarea></div>
 <div class="btn-bar">
@@ -116,9 +119,10 @@ async function loadCurrent(){
   var d=await r.json();
   if(d.capacitor){
     var c=d.capacitor;
-    ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget"].forEach(function(k){var el=document.getElementById(k);if(el)el.value=c[k]||""});
+    ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget","kva","kvb"].forEach(function(k){var el=document.getElementById(k);if(el)el.value=c[k]||""});
     document.getElementById("cooling").value=c.cooling||"1.0";
     document.getElementById("scenario").value=c.scenario||"industrial";
+    document.getElementById("capType").value=c.capType||"lv";
     document.getElementById("segmentsJson").value = JSON.stringify(c.segments || [], null, 2);
   }
   if(d.safety){
@@ -131,9 +135,10 @@ async function loadCurrent(){
 
 async function saveDefaults(){
   var d={capacitor:{},safety:{}};
-  ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget"].forEach(function(k){d.capacitor[k]=document.getElementById(k).value});
+  ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget","kva","kvb"].forEach(function(k){d.capacitor[k]=document.getElementById(k).value});
   d.capacitor.cooling=document.getElementById("cooling").value;
   d.capacitor.scenario=document.getElementById("scenario").value;
+  d.capacitor.capType=document.getElementById("capType").value;
   try{ d.capacitor.segments = JSON.parse(document.getElementById("segmentsJson").value); }catch(e){ showStatus("运行段JSON错误: "+e.message,"#ef4444"); return; }
   
   ["sStd","sPd","sMg","sAlt","sIsolation","sOvc_AC","sOvc_DC","sSysV_AC","sSysV_DC"].forEach(function(k){d.safety[k]=document.getElementById(k).value});

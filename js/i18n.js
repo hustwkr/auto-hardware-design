@@ -32,6 +32,7 @@
     "cap.workdays.unit": { zh: "天", en: "days" },
     "cap.warranty":      { zh: "产品质保期(年)", en: "Warranty Target (yr)" },
     "cap.scenario":      { zh: "场景", en: "Scenario" },
+    "cap.opt.none":      { zh: "无额外余量(1.0x)", en: "No extra margin (1.0x)" },
     "cap.opt.consumer":  { zh: "消费(1.3x)", en: "Consumer (1.3x)" },
     "cap.opt.industrial":{ zh: "工业(1.5x)", en: "Industrial (1.5x)" },
     "cap.opt.automotive":{ zh: "汽车(2.0x)", en: "Automotive (2.0x)" },
@@ -83,6 +84,15 @@
     "cap.segHdr.temp":   { zh: "芯温℃", en: "T_core°C" },
     "cap.segHdr.li":     { zh: "等效寿命Li(h)", en: "Life Li(h)" },
     "cap.segHdr.dmg":    { zh: "年损伤", en: "Dmg/yr" },
+
+    /* Capacitor type */
+    "cap.type":        { zh: "电容类型", en: "Capacitor Type" },
+    "cap.type.lv":     { zh: "低压引线/贴片型(≤100V)", en: "Low-Voltage Lead/SMD (≤100V)" },
+    "cap.type.hv":     { zh: "高压牛角/螺栓型(≥160V)", en: "High-Voltage Snap-in/Screw (≥160V)" },
+    "cap.type.manual": { zh: "手动设置 Kv 参数", en: "Manual Kv Parameters" },
+    "cap.type.hint":   { zh: "电容类型决定电压修正系数 K_V 的取值方式：<br><b>低压型 (≤100V)</b>：电压降额对寿命影响可忽略，K_V=1<br><b>高压型 (≥160V)</b>：电压降额效果显著，使用 Nichicon 指数模型<br><b>手动设置</b>：自行指定模型参数 a、b<br><br>详见《电解电容寿命计算中的电压修正系数探讨》", en: "Capacitor type determines K_V behavior:<br><b>Low-Voltage (≤100V)</b>: derating negligible, K_V=1<br><b>High-Voltage (≥160V)</b>: significant derating, Nichicon exponential model<br><b>Manual</b>: specify own a, b parameters" },
+    "cap.kva":         { zh: "Kv 参数 a（指数系数）", en: "Kv param a (exponent)" },
+    "cap.kvb":         { zh: "Kv 参数 b（曲率系数）", en: "Kv param b (curvature)" },
 
     /* Capacitor — model description */
     "cap.model.title":   { zh: "计算模型说明", en: "Calculation Model" },
@@ -136,6 +146,8 @@
     "cap.modelDesc.dmg": { zh: "累积损伤：Miner 线性疲劳准则 D = Σ(t_i·N_days / L_i)", en: "Cumulative Damage: Miner D = Σ(t_i·N_days / L_i)" },
     "cap.modelDesc.eol": { zh: "EOL 判据：容量下降 ≥20% 或 ESR ≥2× 初始值", en: "EOL: Capacitance drop ≥20% or ESR ≥2× initial" },
     "cap.modelDesc.ref": { zh: "参考标准", en: "Reference" },
+    "cap.modelDesc.voltLv":{ zh: "电压修正：低压引线型(V_r≤100V)，电压降额影响可忽略，K_V=1", en: "Voltage Correction: LV type (V_r≤100V), derating negligible, K_V=1" },
+    "cap.modelDesc.voltHv":{ zh: "电压修正：高压牛角/螺栓型(V_r≥160V)，Nichicon K_V = exp[a·((V_r/V_op)^b - 1)]", en: "Voltage Correction: HV type (V_r≥160V), Nichicon K_V = exp[a·((V_r/V_op)^b - 1)]" },
 
     /* Capacitor — model results (dynamically generated) */
     "cap.verdict.excellent":{ zh: "优秀", en: "Excellent" },

@@ -9,6 +9,7 @@
 
   /* ── Margin-of-safety multipliers by scenario ─── */
   var MG = {
+    none:{r:1,l:"不考虑额外余量"},
     consumer:{r:1.3,l:"消费电子"},
     industrial:{r:1.5,l:"工业设备"},
     automotive:{r:2,l:"汽车电子"},
@@ -85,8 +86,8 @@
     var wd       = params.wd       || 365;
     var wt       = params.wt       || 5;
     var scenario = params.scenario || "industrial";
-    var kva      = params.kva      || 0.56; // Kv exponential model parameter a (Nichicon)
-    var kvb      = params.kvb      || 1.0;  // Kv exponential model parameter b
+    var kva      = params.kva !== undefined ? params.kva : 0.56; // Kv exponential model parameter a (Nichicon)
+    var kvb      = params.kvb !== undefined ? params.kvb : 1.0;  // Kv exponential model parameter b
     var segments = params.segments || [];
 
     if (!segments.length) return null;

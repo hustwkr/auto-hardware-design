@@ -84,6 +84,18 @@
     b.closest("tr").remove();calc();
   }
 
+  /* ── Capacitor type toggle ──────────────── */
+  function onCapTypeChange(){
+    var sel=document.getElementById("capType");
+    var manual=sel&&sel.value==="manual";
+    var kvp=document.getElementById("kvParams");
+    if(kvp){
+      if(manual){kvp.style.display="grid";kvp.style.gridTemplateColumns="1fr 1fr"}
+      else kvp.style.display="none";
+    }
+    calc();
+  }
+
   /* ── LaTeX helpers (UI-only) ─────────────── */
   function l2r(l){
     try{return l.replace(/\\times/g,"×")
@@ -145,6 +157,13 @@
     wd   = cl(wd,1,365,_t("param.workdays"));
     wt   = cl(wt,0.5,50,_t("param.warranty"));
 
+    // Capacitor type → Kv parameters
+    var capType=(document.getElementById("capType").value)||"lv";
+    var kva,kvb;
+    if(capType==="lv"){kva=0; kvb=1}
+    else if(capType==="hv"){kva=0.56; kvb=1.0}
+    else{kva=+document.getElementById("kva").value||0.56; kvb=+document.getElementById("kvb").value||1.0}
+
     // Build segments array for model
     var segments=[];
     segs.forEach(function(seg){
@@ -172,7 +191,7 @@
     // P1-7: Error boundary — wrap model call in try/catch
     var result;
     try{
-      result = CM.calcLifetime({l0:l0,tmax:tmax,tau:tau,vrated:vrated,irated:irated,dt0:dt0,wd:wd,wt:wt,scenario:scenario,segments:segments});
+      result = CM.calcLifetime({l0:l0,tmax:tmax,tau:tau,vrated:vrated,irated:irated,dt0:dt0,wd:wd,wt:wt,scenario:scenario,segments:segments,kva:kva,kvb:kvb});
     }catch(e){
       var el=document.getElementById("capWarn");
       if(el){el.textContent=_t("cap.warn.calcErr")+" "+e.message;el.style.display="block"}
@@ -180,6 +199,9 @@
       return;
     }
     if(!result) return;
+    result.capType = capType;
+    result.kva = kva;
+    result.kvb = kvb;
 
     // P1-4: Show warnings if any clamping occurred
     (function(){var el=document.getElementById("capWarn");if(warns.length){el.textContent="⚠ "+warns.join("; ");el.style.display="block"}else{el.style.display="none"}})();
@@ -227,7 +249,12 @@
     fs+='<div class="rep-model-box">';
     fs+='<b>'+_t("cap.calc.modelDesc")+'</b><br>';
     fs+='• <b>'+_t("cap.calc.tempAccel")+'</b>: Arrhenius K_T = 2^((T_max - T_hs) / τ), τ='+d.tau+'°C<br>';
-    fs+='• <b>'+_t("cap.calc.voltCorr")+'</b>: Nichicon K_V = exp[a·((V_r/V_op)^b - 1)], a=0.56, b=1.0<br>';
+    var ct=d.capType||"lv";
+    if(ct==="lv"){
+      fs+='• <b>'+_t("cap.calc.voltCorr")+'</b>: '+_t("cap.modelDesc.voltLv")+'<br>';
+    } else {
+      fs+='• <b>'+_t("cap.calc.voltCorr")+'</b>: '+(ct==="hv"?_t("cap.modelDesc.voltHv"):"K_V = exp[a·((V_r/V_op)^b - 1)], a="+d.kva.toFixed(2)+", b="+d.kvb.toFixed(1))+'<br>';
+    }
     fs+='• <b>'+_t("cap.calc.freqCorr")+'</b>: K_freq '+_t("cap.calc.freqDesc")+'<br>';
     fs+='• <b>'+_t("cap.calc.cumDmg")+'</b>: Miner D = Σ(t_i·N_days / L_i)<br>';
     fs+='• <b>'+_t("cap.calc.eol")+'</b>: '+_t("cap.calc.eolDesc")+'<br>';
@@ -393,11 +420,11 @@
     h+='<h3>4. '+_t("cap.calc.calcProc")+'</h3>';
     h+='<div class="model-box"><b>'+_t("cap.calc.modelDesc")+'</b><br>'
       +'• <b>'+_t("cap.calc.tempAccel")+'</b>: Arrhenius K<sub>T</sub> = 2^((T<sub>max</sub> - T<sub>hs</sub>) / τ)<br>'
-      +'• <b>'+_t("cap.calc.voltCorr")+'</b>: Nichicon K<sub>V</sub> = exp[a·((V<sub>r</sub>/V<sub>op</sub>)^b - 1)]<br>'
+      +'• <b>'+_t("cap.calc.voltCorr")+'</b>: '+(d.capType==="lv"?"K<sub>V</sub> = 1 (低压电容)":"Nichicon K<sub>V</sub> = exp[a·((V<sub>r</sub>/V<sub>op</sub>)^b - 1)], a="+(d.kva||0.56).toFixed(2)+", b="+(d.kvb||1).toFixed(1))+'<br>'
       +'• <b>'+_t("cap.calc.freqCorr")+'</b>: K<sub>freq</sub> '+_t("cap.calc.freqDesc")+'<br>'
       +'• <b>'+_t("cap.calc.cumDmg")+'</b>: Miner D = Σ(t<sub>i</sub>·N<sub>days</sub> / L<sub>i</sub>)<br>'
       +'• <b>'+_t("cap.calc.eol")+'</b>: '+_t("cap.calc.eolDesc")+'<br>'
-      +'• '+_t("cap.calc.ref")+'Nichicon Technical Manual §"How to Calculate Life Time"</div>';
+      +'• '+_t("cap.calc.ref")+(d.capType==="lv"?"Capacitor Manufacturer Technical Guide":"Nichicon Technical Manual §\"How to Calculate Life Time\"")+'</div>';
     h+='<p class="formula">'+fh.replace(/<br\s*\/?>/g,'<br>').replace(/<\/?div[^>]*>/g,'').replace(/style="[^"]*"/g,'')+'</p>';
 
     h+='<h3>5. '+_t("cap.report.conclusion")+'</h3>';
@@ -470,7 +497,7 @@
   /* ── Expose to global scope (for inline handlers) ── */
   global.fv = fv; global.mU = mU; global.mSeg = mSeg; global.sdChange = sdChange;
   global.updT = updT; global.addSeg = addSeg; global.rmSeg = rmSeg; global.reNum = reNum;
-  global.addRR = addRR; global.removeRippleRow = removeRippleRow; global.l2r = l2r;
+  global.addRR = addRR; global.removeRippleRow = removeRippleRow; global.onCapTypeChange = onCapTypeChange; global.l2r = l2r;
   global.renderLatex = renderLatex; global.calc = calc; global.calcFormulas = calcFormulas;
   global.genRep = genRep; global.exportWord = exportWord; global.cExportReport = cExportReport;
   global.loadSegmentsFromDefaults = loadSegmentsFromDefaults;

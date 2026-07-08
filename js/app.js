@@ -106,6 +106,9 @@
       setVal('l0',c.l0);setVal('tmax',c.tmax);setVal('tau',c.tau||'10');setVal('vrated',c.vrated);setVal('irated',c.irated);
       setVal('dt0',c.dt0);setVal('workdays',c.workdays);setVal('warrantyTarget',c.warrantyTarget);
       if(c.scenario)document.getElementById('scenario').value=c.scenario;
+      if(c.capType)document.getElementById('capType').value=c.capType;
+      setVal('kva',c.kva);setVal('kvb',c.kvb);
+      if(typeof onCapTypeChange==='function')onCapTypeChange();
 
       /* Load segments from defaults — replaces initCapacitor placeholders */
       if(Array.isArray(c.segments)&&c.segments.length){

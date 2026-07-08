@@ -7,8 +7,11 @@
     "dt0": "10",
     "workdays": "365",
     "warrantyTarget": "10",
+    "kva": "0.46",
+    "kvb": "1",
     "cooling": "1.0",
     "scenario": "industrial",
+    "capType": "hv",
     "segments": [
       {
         "dur": 6,

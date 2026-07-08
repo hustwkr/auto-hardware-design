@@ -104,17 +104,22 @@
     <div class="fgi"><label data-i18n="cap.capModel">器件型号</label><input type="text" id="capModel" placeholder="选填"></div>
     <div class="fgi"><label data-i18n="cap.warranty">产品质保期(年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
     <div class="fgi"><label data-i18n="cap.workdays">每年工作天数</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"></div>
-    <div class="fgi"><label><span data-i18n="cap.scenario">场景</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="scenario" data-i18n-opts='{"consumer":"cap.opt.consumer","industrial":"cap.opt.industrial","automotive":"cap.opt.automotive","medical":"cap.opt.medical"}'><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select><div class="info-popup" style="width:320px">质保判定所需的最低寿命裕量系数，按应用场景可靠性要求预设：<br>• <b>消费 1.3x</b>：消费电子，裕量要求最低<br>• <b>工业 1.5x</b>：工业设备，中等裕量<br>• <b>汽车 2.0x</b>：车规级，高可靠性裕量<br>• <b>医疗 2.5x</b>：医疗设备，最高可靠性裕量<br><br>判定公式：实际寿命 ÷ 质保年限 ≥ 余量系数 → 合格。<br><br><i>注：以上系数为工程经验值预设，非强制标准要求，可根据项目实际需求调整。</i></div></div>
+    <div class="fgi"><label><span data-i18n="cap.scenario">场景</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="scenario" data-i18n-opts='{"none":"cap.opt.none","consumer":"cap.opt.consumer","industrial":"cap.opt.industrial","automotive":"cap.opt.automotive","medical":"cap.opt.medical"}'><option value="none">无额外余量(1.0x)</option><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select><div class="info-popup" style="width:320px">质保判定所需的最低寿命裕量系数，按应用场景可靠性要求预设：<br>• <b>无额外余量 1.0x</b>：寿命预测等于质保期即满足要求，不施加额外安全系数<br>• <b>消费 1.3x</b>：消费电子，裕量要求最低<br>• <b>工业 1.5x</b>：工业设备，中等裕量<br>• <b>汽车 2.0x</b>：车规级，高可靠性裕量<br>• <b>医疗 2.5x</b>：医疗设备，最高可靠性裕量<br><br>判定公式：实际寿命 ÷ 质保年限 ≥ 余量系数 → 合格。<br><br><i>注：以上系数为工程经验值预设，非强制标准要求，可根据项目实际需求调整。</i></div></div>
   </div></div>
 
 <div class="card"><h2 data-i18n="cap.device">器件参数</h2><div class="param-grid">
     <div class="fgi"><label data-i18n="cap.l0">额定寿命(h)</label><input type="number" id="l0" value="2000" min="100" step="100"></div>
     <div class="fgi"><label data-i18n="cap.tmax">最高温度(°C)</label><input type="number" id="tmax" value="105" min="60" max="150"></div>
     <div class="fgi" style="position:relative"><label><span data-i18n="cap.tau">Arrhenius τ(℃)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="tau" data-i18n-opts='{"8":"cap.tau.8","9":"cap.tau.9","10":"cap.tau.10"}'><option value="8">8 (长寿命型)</option><option value="9">9 (高可靠型)</option><option value="10" selected>10 (标准品)</option></select><div class="info-popup" style="width:260px"><strong>Arrhenius 温度系数 τ</strong><br>寿命公式中每降低 τ°C，寿命翻倍的参数。反映电解液蒸发速率对温度的敏感度。<br><br><strong>如何选取：</strong><br>• <b>τ=10</b>：标准品（大多数常规铝电解电容）<br>• <b>τ=9</b>：高可靠型（如 Nichicon PW/PWJ 系列）<br>• <b>τ=8</b>：超长寿命型（12000h+ 系列，如 Rubycon ZLH/ZSH）<br>• 以制造商 datasheet 为准</div></div>
+    <div class="fgi" style="position:relative"><label><span data-i18n="cap.type">电容类型</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="capType" onchange="onCapTypeChange()"><option value="lv" selected data-i18n="cap.type.lv">低压引线/贴片型(≤100V)</option><option value="hv" data-i18n="cap.type.hv">高压牛角/螺栓型(≥160V)</option><option value="manual" data-i18n="cap.type.manual">手动设置 Kv 参数</option></select><div class="info-popup" style="width:320px" data-i18n-html="cap.type.hint"></div></div>
     <div class="fgi"><label data-i18n="cap.vrated">额定电压(V)</label><input type="number" id="vrated" value="50" min="1" step="1"></div>
     <div class="fgi"><label data-i18n="cap.irated">额定纹波电流(mA)</label><input type="number" id="irated" value="500" min="1" step="10"></div>
     <div class="fgi" style="position:relative"><label><span data-i18n="cap.dt0">最大芯温升(°C)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><input type="number" id="dt0" value="10" min="1" max="30" step="1"><div class="info-popup" style="width:260px"><strong>最大芯温升 ΔT₀</strong><br>电容在额定纹波电流 Irated 下，芯部相对于外壳的最大允许温升。决定纹波发热计算基准。<br><br><strong>如何选取：</strong><br>• <b>标准型</b>：ΔT₀ = 10°C（大多数常规品）<br>• <b>长寿命型</b>：ΔT₀ = 5~6°C（低ESR设计，芯温更低，寿命更长）<br>• 具体数值以制造商数据手册为准</div></div>
     <div class="fgi"><label data-i18n="cap.capval">电容量(μF)</label><input type="number" id="cap" value="470" min="1" step="1"></div>
+    <div id="kvParams" style="display:none;grid-column:1/-1;gap:4px 28px;padding-top:6px;border-top:1px dashed #e2e8f0">
+      <div class="fgi"><label data-i18n="cap.kva">Kv 参数 a</label><input type="number" id="kva" value="0.56" min="0" max="5" step="0.01" oninput="calc()"></div>
+      <div class="fgi"><label data-i18n="cap.kvb">Kv 参数 b</label><input type="number" id="kvb" value="1.0" min="0" max="5" step="0.1" oninput="calc()"></div>
+    </div>
   </div></div>
 
 <div class="layout">
@@ -234,7 +239,7 @@
 </div><!-- /tab-safety -->
 
 <div id="tab-pcb" class="tab-content">
-<h1 data-i18n="pcb.title">PCB 载流能力计算工具</h1>
+<h1 style="font-size:1.4rem;margin-bottom:2px"><span data-i18n="pcb.title">PCB 载流能力计算工具</span></h1>
 <p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35" data-i18n="pcb.subtitle">IPC-2221 标准公式 · 正向/反向计算 · 压降分析 · 多宽度对比</p>
 
 <div class="card"><h2 data-i18n="pcb.basic">基础参数</h2>
@@ -274,13 +279,13 @@
 
 <!-- ── Scripts (order: i18n → models → ui modules → app) ── -->
 <script src="js/i18n.js?v=17"></script>
-<script src="js/models/capacitor-model.js?v=11"></script>
+<script src="js/models/capacitor-model.js?v=14"></script>
 <script src="js/models/safety-model.js?v=17"></script>
 <script src="js/models/pcb-model.js?v=1"></script>
-<script src="js/capacitor.js?v=19"></script>
+<script src="js/capacitor.js?v=20"></script>
 <script src="js/safety.js?v=40"></script>
 <script src="js/pcb.js?v=1"></script>
 <script src="js/feedback.js?v=1"></script>
-<script src="js/app.js?v=22"></script>
+<script src="js/app.js?v=23"></script>
 </body>
 </html>
