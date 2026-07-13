@@ -53,7 +53,7 @@
 
     /* Capacitor — mission profile */
     "cap.profile":       { zh: "运行工况", en: "Operating Conditions" },
-    "cap.profile.hint":  { zh: "多段工况 + 多频率纹波叠加，总温升按各频率 (I/K_freq)² 平方和计算", en: "Multi-segment + multi-frequency ripple; total ΔT by sum-of-squares of (I/K_freq)² per frequency" },
+    "cap.profile.hint":  { zh: "多段工况 + 多频率纹波叠加。<br><br>不同频率的纹波电流因电容 ESR 不同而发热不同，频率越高 ESR 越低。<br>各频率纹波先除以频率修正系数 K_freq 折算到 120Hz 等效值，再平方求和计算温升：<br>等效电流 I_eff = √[Σ(I_n ÷ Kfreq_n)²]<br>温升 ΔT = ΔT₀ × (I_eff / I_rated)²<br><br>频率修正系数表（典型铝电解电容）：<br>• 50/60Hz  → 0.85<br>• 120Hz    → 1.0（基准）<br>• 1kHz     → 1.25<br>• 10kHz    → 1.5<br>• 100kHz   → 1.65<br><br>注：不同系列/耐压的电容 K_freq 不同，以规格书为准。", en: "Multi-segment + multi-frequency ripple superposition.<br><br>Ripple current at different frequencies produces different heating due to ESR vs frequency characteristics. Higher frequency → lower ESR.<br>Each frequency is normalized to 120Hz equivalent via K_freq, then summed by squares:<br>I_eff = √[Σ(I_n ÷ Kfreq_n)²]<br>ΔT = ΔT₀ × (I_eff / I_rated)²<br><br>Typical frequency correction factors (Al electrolytic):<br>• 50/60Hz  → 0.85<br>• 120Hz    → 1.0 (reference)<br>• 1kHz     → 1.25<br>• 10kHz    → 1.5<br>• 100kHz   → 1.65<br><br>Note: Actual K_freq varies by series and voltage rating; refer to the datasheet." },
     "cap.addSeg":        { zh: "+ 添加时段", en: "+ Add Segment" },
     "cap.seg":           { zh: "时段", en: "Segment" },
     "cap.segDur":        { zh: "每天", en: "per day" },
