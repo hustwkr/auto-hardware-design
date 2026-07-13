@@ -61,8 +61,9 @@
       // Find matching deltaT from deltas array
       var dtInfo = deltas[i] || { rd: [], dt: 0 };
       var ths   = ta + dtInfo.dt;
-      // Arrhenius temperature acceleration: kt = 2^((Tmax - Ths) / tau)
-      var kt    = Math.pow(2, (tmax - ths) / tau);
+      // Arrhenius + ripple: Kt = 2^((Tmax - Ta + ΔT0 - ΔTx) / τ)
+      // Standard formula: 2^((Tmax - Ta)/τ) × 2^((ΔT0 - ΔTx)/τ)
+      var kt    = Math.pow(2, (tmax - ta + dt0 - dtInfo.dt) / tau);
       var kv    = kvf(vop, vrated, kva, kvb);
       var Li    = l0 * kt * kv;
       var d     = Li > 0 ? dur * wd / Li : Infinity;

@@ -140,7 +140,7 @@
     "cap.report.date":  { zh: "报告日期", en: "Report Date" },
 
     /* Capacitor — model description for report */
-    "cap.modelDesc.temp":{ zh: "温度加速：Arrhenius 模型 K_T = 2^((T_max - T_hs) / τ)", en: "Temp Acceleration: Arrhenius K_T = 2^((T_max - T_hs) / τ)" },
+    "cap.modelDesc.temp":{ zh: "温度加速：Arrhenius K_T = 2^((T_max - T_a + ΔT₀ - ΔT_x) / τ) [含纹波温升]", en: "Temp Acceleration: Arrhenius K_T = 2^((T_max - T_a + ΔT₀ - ΔT_x) / τ) [with ripple]" },
     "cap.modelDesc.volt":{ zh: "电压修正：Nichicon 指数模型 K_V = exp[a·((V_r/V_op)^b - 1)]，a=0.56, b=1.0", en: "Voltage Correction: Nichicon K_V = exp[a·((V_r/V_op)^b - 1)], a=0.56, b=1.0" },
     "cap.modelDesc.freq":{ zh: "频率修正：K_freq 查表法（铝电解电容 ESR-频率特性）", en: "Frequency Correction: K_freq lookup (Al electrolytic ESR-frequency)" },
     "cap.modelDesc.dmg": { zh: "累积损伤：Miner 线性疲劳准则 D = Σ(t_i·N_days / L_i)", en: "Cumulative Damage: Miner D = Σ(t_i·N_days / L_i)" },

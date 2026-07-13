@@ -248,7 +248,7 @@
     var fs='';
     fs+='<div class="rep-model-box">';
     fs+='<b>'+_t("cap.calc.modelDesc")+'</b><br>';
-    fs+='• <b>'+_t("cap.calc.tempAccel")+'</b>: Arrhenius K_T = 2^((T_max - T_hs) / τ), τ='+d.tau+'°C<br>';
+    fs+='• <b>'+_t("cap.calc.tempAccel")+'</b>: Arrhenius K_T = 2^((T_max - T_a + ΔT₀ - ΔT_x) / τ), τ='+d.tau+'°C<br>';
     var ct=d.capType||"lv";
     if(ct==="lv"){
       fs+='• <b>'+_t("cap.calc.voltCorr")+'</b>: '+_t("cap.modelDesc.voltLv")+'<br>';
@@ -279,9 +279,9 @@
 
       fs+='<p class="rep-section"><b>'+_t("cap.seg")+r.i+' — ② '+_t("cap.calc.lifeCalc")+'</b></p>';
       fs+='<p class="rep-formula">';
-      fs+='<span class=latex data-l="L_i = L_0 \\cdot 2^{\\frac{T_{max} - T_{hs,i}}{' + d.tau + '}} \\cdot K_V"></span></p>';
+      fs+='<span class=latex data-l="L_i = L_0 \\cdot 2^{\\frac{T_{max} - T_a + \\Delta T_0 - \\Delta T_x}{' + d.tau + '}} \\cdot K_V"></span></p>';
       fs+='<p class="rep-formula-sub">=';
-      fs+='<span class=latex data-l="L_'+r.i+' = '+d.l0+' \\cdot 2^{\\frac{'+d.tmax+' - '+r.ths.toFixed(1)+'}{' + d.tau + '}} \\cdot '+r.kv.toFixed(3)+'"></span></p>';
+      fs+='<span class=latex data-l="L_'+r.i+' = '+d.l0+' \\cdot 2^{\\frac{'+d.tmax+' - '+r.ta.toFixed(1)+' + '+d.dt0+' - '+r.dt.toFixed(1)+'}{' + d.tau + '}} \\cdot '+r.kv.toFixed(3)+'"></span></p>';
       fs+='<p class="rep-result">=';
       fs+='<span class=latex data-l="L_'+r.i+' = '+r.Li.toFixed(0)+' \\text{h}"></span></p>';
     });
@@ -419,7 +419,7 @@
 
     h+='<h3>4. '+_t("cap.calc.calcProc")+'</h3>';
     h+='<div class="model-box"><b>'+_t("cap.calc.modelDesc")+'</b><br>'
-      +'• <b>'+_t("cap.calc.tempAccel")+'</b>: Arrhenius K<sub>T</sub> = 2^((T<sub>max</sub> - T<sub>hs</sub>) / τ)<br>'
+      +'• <b>'+_t("cap.calc.tempAccel")+'</b>: Arrhenius K<sub>T</sub> = 2^((T<sub>max</sub> - T<sub>a</sub> + ΔT<sub>0</sub> - ΔT<sub>x</sub>) / τ)<br>'
       +'• <b>'+_t("cap.calc.voltCorr")+'</b>: '+(d.capType==="lv"?"K<sub>V</sub> = 1 (低压电容)":"Nichicon K<sub>V</sub> = exp[a·((V<sub>r</sub>/V<sub>op</sub>)^b - 1)], a="+(d.kva||0.56).toFixed(2)+", b="+(d.kvb||1).toFixed(1))+'<br>'
       +'• <b>'+_t("cap.calc.freqCorr")+'</b>: K<sub>freq</sub> '+_t("cap.calc.freqDesc")+'<br>'
       +'• <b>'+_t("cap.calc.cumDmg")+'</b>: Miner D = Σ(t<sub>i</sub>·N<sub>days</sub> / L<sub>i</sub>)<br>'
