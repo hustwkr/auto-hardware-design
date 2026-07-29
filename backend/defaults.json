@@ -10,12 +10,12 @@
     "kva": "0.46",
     "kvb": "1",
     "cooling": "1.0",
-    "scenario": "industrial",
+    "scenario": "none",
     "capType": "hv",
     "segments": [
       {
-        "dur": 6,
-        "ta": 75,
+        "dur": 8,
+        "ta": 80,
         "vop": 400,
         "rips": [
           {
@@ -29,7 +29,7 @@
         ]
       },
       {
-        "dur": 18,
+        "dur": 16,
         "ta": 40,
         "vop": 400,
         "rips": [
@@ -80,5 +80,14 @@
         "toGnd": 1
       }
     ]
+  },
+  "filter": {
+    "type": "mfb2",
+    "series": "e24",
+    "fc": 1000,
+    "gain": 1,
+    "Q": 0.707,
+    "C1": 1e-7,
+    "C2": 1e-7
   }
 }

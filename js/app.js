@@ -41,6 +41,9 @@
       if(this.dataset.tab==="pcb"&&!document.querySelector("#pcbResult .pcb-result")){
         if(typeof initPcb==='function')initPcb();
       }
+	      if(this.dataset.tab==="filter"&&!document.querySelector("#filterC1 option")){
+	        if(typeof initFilter==="function")initFilter();
+	      }
     });
   });
 
@@ -75,7 +78,7 @@
     if(_saveTimer)clearTimeout(_saveTimer);
     _saveTimer = setTimeout(function(){
       // Collect current form state from both tabs
-      var state = {capacitor:{}, safety:{}};
+      var state = {capacitor:{}, safety:{}, filter:{}};
 
       /* Capacitor fields */
       ['l0','tmax','tau','vrated','irated','dt0','workdays','warrantyTarget'].forEach(function(id){
@@ -89,6 +92,11 @@
       });
       ['sSysV_AC','sSysV_DC'].forEach(function(id){
         var el=document.getElementById(id); if(el) state.safety[id]=el.value;
+      });
+
+      /* Filter fields */
+      ['filterType','filterSeries','filterFc','filterGain','filterQ','filterC1','filterC2'].forEach(function(id){
+        var el=document.getElementById(id); if(el) state.filter[id]=el.value;
       });
 
       try{localStorage.setItem('hw-design-state', JSON.stringify(state))}catch(e){/* quota exceeded — ignore */}
@@ -129,7 +137,15 @@
       }
       setVal('sSysV_AC',s.sSysV_AC+'');setVal('sSysV_DC',s.sSysV_DC+'');
 
-      /* Load safety nodes from defaults — replaces initSafety fallback */
+      /* Filter defaults */
+      var f=d.filter;if(f&&typeof f==='object'){
+        if(f.type)setValSelect('filterType',f.type);
+        if(f.series)setValSelect('filterSeries',f.series);
+        setVal('filterFc',f.fc);setVal('filterGain',f.gain);setVal('filterQ',f.Q);
+        setVal('filterC1',f.C1);setVal('filterC2',f.C2);
+      }
+
+    /* Load safety nodes from defaults — replaces initSafety fallback */
       if(Array.isArray(s.nodes)&&s.nodes.length){
         if(typeof loadNodesFromDefaults==='function'){
           loadNodesFromDefaults(s.nodes);

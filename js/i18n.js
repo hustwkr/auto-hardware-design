@@ -504,7 +504,46 @@
 
     /* Safety — error/empty messages */
     "safe.msg.addNode":  { zh: "请添加测量节点。", en: "Please add measurement nodes." },
-    "safe.msg.checkNode":{ zh: "请检查节点配置。", en: "Please check node configuration." }
+    "safe.msg.checkNode":{ zh: "请检查节点配置。", en: "Please check node configuration." },
+
+    /* Filter Design page */
+    "nav.filter":        { zh: "信号滤波器设计", en: "Filter Design" },
+    "filter.title":      { zh: "信号滤波器设计工具", en: "Signal Filter Design Tool" },
+    "filter.subtitle":   { zh: "基于运放的有源低通滤波器 · 一阶差分 / 二阶 MFB · 幅频相频特性 · E24/E48 标准值", en: "Op-amp active low-pass filter · 1st-order Diff / 2nd-order MFB · Bode plot · E24/E48 standard values" },
+    "filter.spec":       { zh: "设计指标", en: "Design Specifications" },
+    "filter.type":       { zh: "滤波器类型", en: "Filter Type" },
+    "filter.type.diff1": { zh: "一阶差分 (Differential LPF)", en: "1st-Order Differential LPF" },
+    "filter.type.mfb2":  { zh: "二阶MFB (Multiple Feedback LPF)", en: "2nd-Order MFB LPF" },
+    "filter.series":     { zh: "电阻精度系列", en: "Resistor Series" },
+    "filter.series.e24": { zh: "E24 (5%)", en: "E24 (5%)" },
+    "filter.series.e48": { zh: "E48 (2%)", en: "E48 (2%)" },
+    "filter.fc":         { zh: "截止频率", en: "Cutoff Frequency" },
+    "filter.gain":       { zh: "直流增益", en: "DC Gain" },
+    "filter.q":          { zh: "Q值", en: "Q Factor" },
+    "filter.c1":         { zh: "C1 预设电容", en: "C1 Preset Capacitor" },
+    "filter.c2":         { zh: "C2 预设电容", en: "C2 Preset Capacitor" },
+    "filter.target":     { zh: "目标", en: "Target" },
+    "filter.actual":     { zh: "实际", en: "Actual" },
+    "filter.errFc":      { zh: "截止频率误差", en: "fc Error" },
+    "filter.errGain":    { zh: "增益误差", en: "Gain Error" },
+    "filter.topology":   { zh: "拓扑结构", en: "Topology" },
+    "filter.poleFreq":   { zh: "极点频率", en: "Pole Frequency" },
+    "filter.components": { zh: "器件参数", en: "Component Values" },
+    "filter.ref":        { zh: "位号", en: "Ref" },
+    "filter.refDes":     { zh: "参考编号", en: "Ref Des" },
+    "filter.value":      { zh: "参数值", en: "Value" },
+    "filter.results":    { zh: "计算结果", en: "Results" },
+    "filter.chart":      { zh: "幅频 / 相频特性", en: "Magnitude / Phase Response" },
+    "filter.circuit":    { zh: "滤波器电路", en: "Filter Circuit" },
+    "filter.noResult":   { zh: "请设置设计指标后查看电路。", en: "Set design targets to view the circuit." },
+
+    /* Filter — report */
+    "filter.report.title": { zh: "设计报告", en: "Design Report" },
+    "filter.report.info":  { zh: "设计信息", en: "Design Information" },
+    "filter.report.param": { zh: "参数", en: "Parameter" },
+    "filter.report.value": { zh: "值", en: "Value" },
+    "filter.report.date":  { zh: "报告日期", en: "Report Date" },
+    "filter.report.formulas": { zh: "计算公式", en: "Calculation Formulas" }
   };
 
   /* ── Translation function ─── */
@@ -582,6 +621,7 @@
     if (typeof calc === "function") { try { calc(); } catch(e) {} }
     if (typeof sCalc === "function") { try { sCalc(); } catch(e) {} }
     if (typeof pcbCalc === "function") { try { pcbCalc(); pcbCompare(); } catch(e) {} }
+    if (typeof filterCalc === "function") { try { filterCalc(); } catch(e) {} }
   }
 
   /* ── Expose ─── */

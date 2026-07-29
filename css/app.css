@@ -838,3 +838,53 @@ table.data-tbl tbody tr:hover {
   /* Ensure links show URLs */
   a[href]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #666; }
 }
+
+/* ============================================================
+   Filter Design Tab — Canvas, Schematic, Component Table
+   ============================================================ */
+#filterChart {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  background: var(--color-surface);
+}
+
+[data-theme="dark"] #filterChart {
+  background: var(--color-surface);
+}
+
+#filterSchematic {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  overflow: hidden;
+}
+
+[data-theme="dark"] #filterSchematic {
+  background: var(--color-surface);
+}
+
+/* Filter component table inside results */
+#filterResultsContent .sg-tbl {
+  font-size: var(--fs-xs);
+}
+
+/* Filter results — ensure chart container has proper spacing */
+#filterChart + .filter-chart-label {
+  font-size: var(--fs-xs);
+  color: var(--color-text-soft);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Print styles for filter tab */
+@media print {
+  #filterChart {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+  #filterSchematic {
+    page-break-inside: avoid;
+  }
+}
