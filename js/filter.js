@@ -307,11 +307,10 @@
   }
 
   /* ── Render phase (Bode phase) chart ─── */
-  function renderPhaseChart(r) {
+    function renderPhaseChart(r) {
     var setup = chartSetup("filterChartPhase");
     if (!setup) return;
     var ctx = setup.ctx, W = setup.w, H = setup.h;
-
     var data = r.freqResp; if (!data || data.length < 2) return;
     var C = chartColors();
     var axis = freqAxisData(data);
@@ -319,48 +318,55 @@
     var pw = W - margin.left - margin.right, ph = H - margin.top - margin.bottom;
     var fToX = function(f) { return margin.left + pw * Math.log(f/axis.fMin) / Math.log(axis.fMax/axis.fMin); };
 
-    // Expand Y range so 0° trace has breathing room, -180° not squashed at bottom
-    var phMin = -190, phMax = 10;
-    var phY = function(deg) { return margin.top + ph * (1 - (deg - phMin)/(phMax - phMin)); };
+    var offset = data[0].phaseDeg > 150 ? -360 : 0;
+    var prev = data[0].phaseDeg + offset;
+    data[0]._ph = prev;
+    for (var i = 1; i < data.length; i++) {
+      var raw = data[i].phaseDeg + offset;
+      var d = raw - prev;
+      if (d > 180) raw -= 360;
+      else if (d < -180) raw += 360;
+      data[i]._ph = raw;
+      prev = raw;
+    }
+    var hMin = data[0]._ph, hMax = data[0]._ph;
+    for (var i = 0; i < data.length; i++) {
+      if (data[i]._ph < hMin) hMin = data[i]._ph;
+      if (data[i]._ph > hMax) hMax = data[i]._ph;
+    }
+    var phY = function(deg) { return margin.top + ph * (1 - (deg - hMin) / (hMax - hMin)); };
 
-    // Clip all drawing to the plot area so trace doesn't bleed outside
     ctx.save();
-    ctx.beginPath();
-    ctx.rect(margin.left, margin.top, pw, ph);
-    ctx.clip();
+    ctx.beginPath(); ctx.rect(margin.left, margin.top, pw, ph); ctx.clip();
+    ctx.fillStyle = C.bg; ctx.fillRect(margin.left, margin.top, pw, ph);
 
-    // Background
-    ctx.fillStyle = C.bg;
-    ctx.fillRect(margin.left, margin.top, pw, ph);
-
-    // Grid
-    ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5; ctx.fillStyle = C.text;
-    ctx.font = "10px " + getComputedStyle(document.body).fontFamily; ctx.textAlign = "right";
-    for (var ph = -180; ph <= 0; ph += 45) {
-      var y = phY(ph);
-      ctx.beginPath(); ctx.moveTo(margin.left, y); ctx.lineTo(margin.left+pw, y); ctx.stroke();
-      ctx.fillText(ph+"\u00B0", margin.left-4, y+4);
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+    ctx.fillStyle = C.text; ctx.font = "10px " + getComputedStyle(document.body).fontFamily; ctx.textAlign = "right";
+    var g0 = Math.ceil(hMin / 45) * 45;
+    for (var g = g0; g <= hMax; g += 45) {
+      var gy = phY(g);
+      ctx.beginPath(); ctx.moveTo(margin.left, gy); ctx.lineTo(margin.left+pw, gy); ctx.stroke();
+      ctx.fillText(g + "°", margin.left-4, gy+4);
     }
     drawFreqAxis(ctx, axis, margin, pw, ph);
 
-    // Trace
     ctx.strokeStyle = C.phase; ctx.lineWidth = 1.5; ctx.beginPath();
-    data.forEach(function(d, i) { var x = fToX(d.f), y = phY(d.phaseDeg); i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); });
+    for (var i = 0; i < data.length; i++) {
+      var x = fToX(data[i].f), y = phY(data[i]._ph);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
     ctx.stroke();
-
     ctx.restore();
 
-    // Frame & Y label (drawn outside clip)
     ctx.strokeStyle = C.axis; ctx.lineWidth = 1;
     ctx.strokeRect(margin.left, margin.top, pw, ph);
     ctx.save(); ctx.translate(10, margin.top+ph/2); ctx.rotate(-Math.PI/2);
     ctx.textAlign = "center"; ctx.fillStyle = C.text; ctx.font = "11px "+getComputedStyle(document.body).fontFamily;
-    ctx.fillText("Phase (°)", 0, 0); ctx.restore();
+    ctx.fillText("Phase", 0, 0); ctx.restore();
 
-    // Legend
     ctx.fillStyle = C.phase; ctx.fillRect(margin.left+pw-70, margin.top+5, 10, 10);
     ctx.textAlign = "left"; ctx.fillStyle = C.text; ctx.font = "10px "+getComputedStyle(document.body).fontFamily;
-    ctx.fillText("∠H(f)", margin.left+pw-56, margin.top+14);
+    ctx.fillText("phase", margin.left+pw-56, margin.top+14);
   }
 
   /* ── Render both charts ─── */
