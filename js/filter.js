@@ -193,16 +193,19 @@
   }
 
   /* ── Shared helpers for chart rendering ─── */
-  function chartSetup(canvasId, w, h) {
+  function chartSetup(canvasId) {
     var canvas = document.getElementById(canvasId);
     if (!canvas) return null;
     var ctx = canvas.getContext("2d");
     if (!ctx) return null;
     var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var w = rect.width, h = rect.height;
+    if (w <= 0 || h <= 0) return null;
     canvas.width = w * dpr; canvas.height = h * dpr;
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, w, h);
-    return ctx;
+    return { ctx: ctx, w: w, h: h };
   }
 
   function freqAxisData(data) {
@@ -240,9 +243,9 @@
 
   /* ── Render magnitude (Bode gain) chart ─── */
   function renderMagChart(r) {
-    var W = 640, H = 240;
-    var ctx = chartSetup("filterChartMag", W, H);
-    if (!ctx) return;
+    var setup = chartSetup("filterChartMag");
+    if (!setup) return;
+    var ctx = setup.ctx, W = setup.w, H = setup.h;
 
     var data = r.freqResp; if (!data || data.length < 2) return;
     var C = chartColors();
@@ -302,9 +305,9 @@
 
   /* ── Render phase (Bode phase) chart ─── */
   function renderPhaseChart(r) {
-    var W = 640, H = 200;
-    var ctx = chartSetup("filterChartPhase", W, H);
-    if (!ctx) return;
+    var setup = chartSetup("filterChartPhase");
+    if (!setup) return;
+    var ctx = setup.ctx, W = setup.w, H = setup.h;
 
     var data = r.freqResp; if (!data || data.length < 2) return;
     var C = chartColors();
