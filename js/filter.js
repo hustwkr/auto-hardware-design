@@ -65,6 +65,7 @@
   function filterTypeChange() {
     var type = gvs("filterType");
     document.getElementById("filterQGroup").style.display = (type === "mfb2") ? "" : "none";
+    document.getElementById("filterC2Group").style.display = (type === "mfb2") ? "" : "none";
     filterCalc();
   }
 
