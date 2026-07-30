@@ -172,112 +172,64 @@
     if (!fc || fc <= 0) return null;
     if (!gain || gain <= 0) gain = 1;
     if (!Q || Q <= 0) Q = 0.707;
-    if (Q < 0.5) Q = 0.5;  // MFB needs Q ≥ 0.5
-
+    if (Q < 0.5) Q = 0.5;
     var w0 = 2 * Math.PI * fc;
     var Rmin = 1e3, Rmax = 470e3;
-    var preferredCaps = [1.0, 1.5, 2.2, 3.3, 4.7, 6.8];
+    var seriesArr = series === "e48" ? E48 : E24;
 
-    // If hints given, use them; otherwise auto-pick C1
-    var C1_nom, C2_nom;
-    if (C1_hint && C1_hint > 0) { C1_nom = C1_hint; } else { C1_nom = 0; }
-    if (C2_hint && C2_hint > 0) { C2_nom = C2_hint; } else { C2_nom = 0; }
-
-    if (C1_nom <= 0 || C2_nom <= 0) {
-      // Auto-pick C1, C2: use C2 = C1 initially, then sweep C1 values
-      // R1 ≈ 1/(2·Q·ω0·C1),  R2 ≈ 2·Q/(ω0·C1)
-      var bestC1 = 1e-7, bestC2 = 1e-7, bestScore = Infinity;
+    function allCaps() {
+      var caps = [];
       for (var decade = -12; decade <= -3; decade++) {
-        for (var j = 0; j < preferredCaps.length; j++) {
-          var c1t = preferredCaps[j] * Math.pow(10, decade);
-          var r1t = 1 / (2 * Q * w0 * c1t);
-          var r2t = 2 * Q / (w0 * c1t);
-          if (r1t >= Rmin && r1t <= Rmax && r2t >= Rmin && r2t <= Rmax) {
-            var score = Math.abs(Math.log(r1t) - 0.5*Math.log(Rmin*Rmax))
-                      + Math.abs(Math.log(r2t) - 0.5*Math.log(Rmin*Rmax));
-            if (score < bestScore) { bestScore = score; bestC1 = c1t; bestC2 = c1t; }
-            // also try C2 half/equal/double of C1 for better matching
-            for (var m = -1; m <= 1; m++) {
-              var c2t = c1t * Math.pow(2, m);
-              var r1tm = 1 / (2 * Q * w0 * c1t);
-              var r2tm = 2 * Q / (w0 * c2t);
-              if (r1tm >= Rmin && r1tm <= Rmax && r2tm >= Rmin && r2tm <= Rmax) {
-                var sc2 = Math.abs(Math.log(r1tm) - 0.5*Math.log(Rmin*Rmax))
-                        + Math.abs(Math.log(r2tm) - 0.5*Math.log(Rmin*Rmax));
-                if (sc2 < bestScore) { bestScore = sc2; bestC1 = c1t; bestC2 = c2t; }
-              }
-            }
-          }
-        }
+        for (var j = 0; j < seriesArr.length; j++) caps.push(seriesArr[j] * Math.pow(10, decade));
       }
-      if (C1_nom <= 0) C1_nom = bestC1;
-      if (C2_nom <= 0) C2_nom = bestC2;
+      return caps;
+    }
+    var CAPS = allCaps();
+
+    function actualQ(R1,R2,C1,C2){var d1=R2*C2+C1*R1/2,d2=C1*C2*R1*R2/2;return d1>0&&d2>0?Math.sqrt(d2)/d1:0;}
+    function actualFc(R1,R2,C1,C2){var d2=C1*C2*R1*R2/2;return d2>0?1/(2*Math.PI*Math.sqrt(d2)):0;}
+    function score(R1,R2,C1,C2){
+      var qA=actualQ(R1,R2,C1,C2), fcA=actualFc(R1,R2,C1,C2), gA=R2/(2*R1);
+      return 10*Math.abs(qA-Q)/Q + Math.abs(fcA-fc)/fc + Math.abs(gA-gain)/gain;
     }
 
-    // Snap to standard values
-    var C1 = nearestStdCap(C1_nom, series);
-    var C2 = nearestStdCap(C2_nom, series);
-
-    // Compute R1, R2 from the standard C1, C2
-    var R1_ideal = 1 / (2 * Q * w0 * C1);
-    var R2_ideal = 2 * Q / (w0 * C1);
-    var R3_ideal = R1_ideal;
-
-    var R1 = nearestStd(R1_ideal, series);
-    var R2 = nearestStd(R2_ideal, series);
-    var R3 = nearestStd(R3_ideal, series);
-
-    // Actual performance
-    var n0 = -R2 / (R1 + R3);
-    var d1 = R2 * C2 + C1 * R1 * R3 / (R1 + R3);
-    var d2 = C1 * C2 * R1 * R2 * R3 / (R1 + R3);
-
-    var actual_w0 = 1 / Math.sqrt(d2);
-    var actual_Q = (d2 > 0 && d1 > 0) ? Math.sqrt(d2) / d1 : 0;
-    var actual_fc = actual_w0 / (2 * Math.PI);
-    var actual_gain = Math.abs(n0);
-
-    var freqs = genFreqPoints(actual_fc * 0.01, actual_fc * 100, 300);
-    var freqResp = [];
-    for (var i = 0; i < freqs.length; i++) {
-      var w = 2 * Math.PI * freqs[i];
-      var realPart = n0 * (1 - w*w*d2) / ((1 - w*w*d2)*(1 - w*w*d2) + (w*d1)*(w*d1));
-      var imagPart = -n0 * w * d1 / ((1 - w*w*d2)*(1 - w*w*d2) + (w*d1)*(w*d1));
-      var mag = Math.sqrt(realPart*realPart + imagPart*imagPart);
-      var p = Math.atan2(imagPart, realPart) * 180 / Math.PI;
-      freqResp.push({f: freqs[i], mag: mag, phase: p, magDb: 20 * Math.log10(mag || 1e-30), phaseDeg: p});
+    var best=null, bestS=Infinity;
+    for(var ci=0;ci<CAPS.length;ci++){
+      var c1t=CAPS[ci];
+      var r1t=1/(w0*Math.sqrt(c1t*c1t*gain));
+      if(r1t<Rmin||r1t>Rmax) continue;
+      for(var cj=ci;cj<CAPS.length;cj++){
+        var c2t=CAPS[cj];
+        var r2t=2*gain*r1t;
+        if(r2t<Rmin||r2t>Rmax) continue;
+        var R1=nearestStd(r1t,series),R2=nearestStd(r2t,series),C1s=nearestStdCap(c1t,series),C2s=nearestStdCap(c2t,series);
+        if(R1<Rmin||R2<Rmin) continue;
+        var sc=score(R1,R2,C1s,C2s);
+        if(sc<bestS){bestS=sc;best={R1:R1,R2:R2,R3:R1,C1:C1s,C2:C2s};}
+      }
     }
+    if(!best)return null;
+    var R1=best.R1,R2=best.R2,R3=best.R3,C1=best.C1,C2=best.C2;
 
-    var a = d2, b = d1;
-    var disc = b*b - 4*a;
-    var poles = [];
-    if (disc >= 0) {
-      poles.push({real: -b/(2*a) + Math.sqrt(disc)/(2*a), imag: 0});
-      poles.push({real: -b/(2*a) - Math.sqrt(disc)/(2*a), imag: 0});
-    } else {
-      poles.push({real: -b/(2*a), imag: Math.sqrt(-disc)/(2*a)});
-      poles.push({real: -b/(2*a), imag: -Math.sqrt(-disc)/(2*a)});
+    var n0=-R2/(R1+R3),d1=R2*C2+C1*R1*R3/(R1+R3),d2=C1*C2*R1*R2*R3/(R1+R3);
+    var actual_w0=1/Math.sqrt(d2),actual_Q=(d2>0&&d1>0)?Math.sqrt(d2)/d1:0;
+    var actual_fc=actual_w0/(2*Math.PI),actual_gain=Math.abs(n0);
+
+    var freqs=genFreqPoints(actual_fc*0.01,actual_fc*100,300),freqResp=[];
+    for(var i=0;i<freqs.length;i++){
+      var w=2*Math.PI*freqs[i];
+      var re=n0*(1-w*w*d2)/((1-w*w*d2)*(1-w*w*d2)+(w*d1)*(w*d1));
+      var im=-n0*w*d1/((1-w*w*d2)*(1-w*w*d2)+(w*d1)*(w*d1));
+      var mag=Math.sqrt(re*re+im*im),p=Math.atan2(im,re)*180/Math.PI;
+      freqResp.push({f:freqs[i],mag:mag,phase:p,magDb:20*Math.log10(mag||1e-30),phaseDeg:p});
     }
+    var a=d2,b=d1,disc=b*b-4*a,poles=[];
+    if(disc>=0){poles.push({real:-b/(2*a)+Math.sqrt(disc)/(2*a),imag:0});poles.push({real:-b/(2*a)-Math.sqrt(disc)/(2*a),imag:0});}
+    else{poles.push({real:-b/(2*a),imag:Math.sqrt(-disc)/(2*a)});poles.push({real:-b/(2*a),imag:-Math.sqrt(-disc)/(2*a)});}
 
-    return {
-      type: "mfb2",
-      fc_target: fc,
-      gain_target: gain,
-      Q_target: Q,
-      fc_actual: actual_fc,
-      gain_actual: actual_gain,
-      Q_actual: actual_Q,
-      components: {
-        R1: R1, R2: R2, R3: R3, C1: C1, C2: C2,
-        R1_label: valLabel(R1) + "Ω",
-        R2_label: valLabel(R2) + "Ω",
-        R3_label: valLabel(R3) + "Ω",
-        C1_label: capLabel(C1),
-        C2_label: capLabel(C2)
-      },
-      freqResp: freqResp,
-      poles: poles
-    };
+    return{type:"mfb2",fc_target:fc,gain_target:gain,Q_target:Q,fc_actual:actual_fc,gain_actual:actual_gain,Q_actual:actual_Q,
+      components:{R1:R1,R2:R2,R3:R3,C1:C1,C2:C2,R1_label:valLabel(R1)+"Ω",R2_label:valLabel(R2)+"Ω",R3_label:valLabel(R3)+"Ω",C1_label:capLabel(C1),C2_label:capLabel(C2)},
+      freqResp:freqResp,poles:poles};
   }
 
   /* ── Evaluate from existing component values ─── */
