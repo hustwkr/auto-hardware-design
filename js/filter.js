@@ -225,12 +225,15 @@
   }
 
   function drawFreqAxis(ctx, axis, margin, plotW, plotH) {
-    var txt = ctx.fillStyle, grid = ctx.strokeStyle, lw = ctx.lineWidth;
     ctx.textAlign = "center";
     axis.steps.forEach(function(s) {
       var x = margin.left + plotW * Math.log(s.f / axis.fMin) / Math.log(axis.fMax / axis.fMin);
-      ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, margin.top + plotH); ctx.stroke();
-      if (s.label) ctx.fillText(s.label, x, margin.top + plotH + 16);
+      ctx.save();
+      ctx.strokeStyle = ctx.fillStyle; /* use current grid color from caller */
+      ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, margin.top + plotH);
+      ctx.stroke();
+      ctx.restore();
+      if (s.label) ctx.fillText(s.label, x, margin.top + plotH + 14);
     });
   }
 
@@ -253,7 +256,7 @@
     var data = r.freqResp; if (!data || data.length < 2) return;
     var C = chartColors();
     var axis = freqAxisData(data);
-    var margin = {top: 12, bottom: 28, left: 52, right: 16};
+    var margin = {top: 12, bottom: 36, left: 52, right: 16};
     var pw = W - margin.left - margin.right, ph = H - margin.top - margin.bottom;
     var fToX = function(f) { return margin.left + pw * Math.log(f/axis.fMin) / Math.log(axis.fMax/axis.fMin); };
 
@@ -264,7 +267,6 @@
     if (magMax-magMin<20) magMax = magMin+20;
     var magY = function(db) { return margin.top + ph * (1 - (db - magMin)/(magMax-magMin)); };
 
-    // Background
     ctx.fillStyle = C.bg;
     ctx.fillRect(margin.left, margin.top, pw, ph);
 
@@ -286,87 +288,129 @@
     // -3dB reference
     if (r.gain_actual) {
       var gDb = 20*Math.log10(r.gain_actual||1e-10), y3 = magY(gDb-3);
-      ctx.strokeStyle = C.ref; ctx.lineWidth = 0.5; ctx.setLineDash([3,3]);
+      ctx.setLineDash([3,3]); ctx.strokeStyle = C.ref; ctx.lineWidth = 0.5;
       ctx.beginPath(); ctx.moveTo(margin.left, y3); ctx.lineTo(margin.left+pw, y3); ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = C.ref; ctx.font = "9px "+getComputedStyle(document.body).fontFamily; ctx.textAlign = "left";
+      ctx.fillStyle = C.ref; ctx.textAlign = "left"; ctx.font = "9px "+getComputedStyle(document.body).fontFamily;
       ctx.fillText("-3 dB", margin.left+3, y3-2);
     }
 
-    // Frame & Y label
+    // Frame
     ctx.strokeStyle = C.axis; ctx.lineWidth = 1;
     ctx.strokeRect(margin.left, margin.top, pw, ph);
+
+    // Y-axis title
     ctx.save(); ctx.translate(10, margin.top+ph/2); ctx.rotate(-Math.PI/2);
     ctx.textAlign = "center"; ctx.fillStyle = C.text; ctx.font = "11px "+getComputedStyle(document.body).fontFamily;
-    ctx.fillText("Magnitude (dB)", 0, 0); ctx.restore();
+    ctx.fillText("|H| (dB)", 0, 0); ctx.restore();
+
+    // X-axis title
+    ctx.textAlign = "center"; ctx.fillStyle = C.text;
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText("Frequency (Hz)", margin.left + pw/2, margin.top + ph + 30);
 
     // Legend
-    ctx.fillStyle = C.mag; ctx.fillRect(margin.left+pw-110, margin.top+5, 10, 10);
+    ctx.fillStyle = C.mag; ctx.fillRect(margin.left+pw-110, margin.top+6, 10, 10);
     ctx.textAlign = "left"; ctx.fillStyle = C.text; ctx.font = "10px "+getComputedStyle(document.body).fontFamily;
-    ctx.fillText("|H(f)|", margin.left+pw-96, margin.top+14);
+    ctx.fillText("|H(f)|", margin.left+pw-96, margin.top+15);
   }
 
-  /* ── Render phase (Bode phase) chart ─── */
-    function renderPhaseChart(r) {
+  /* Render phase (Bode phase) chart */
+  function renderPhaseChart(r) {
     var setup = chartSetup("filterChartPhase");
     if (!setup) return;
     var ctx = setup.ctx, W = setup.w, H = setup.h;
     var data = r.freqResp; if (!data || data.length < 2) return;
     var C = chartColors();
     var axis = freqAxisData(data);
-    var margin = {top: 12, bottom: 28, left: 52, right: 16};
+
+    /* increase left/bottom margins so labels aren't clipped */
+    var margin = {top: 12, bottom: 36, left: 48, right: 16};
     var pw = W - margin.left - margin.right, ph = H - margin.top - margin.bottom;
     var fToX = function(f) { return margin.left + pw * Math.log(f/axis.fMin) / Math.log(axis.fMax/axis.fMin); };
 
+    /* unwrap positive atan2 values into [-360°,0°] */
     var offset = data[0].phaseDeg > 150 ? -360 : 0;
-    var prev = data[0].phaseDeg + offset;
-    data[0]._ph = prev;
+    data[0]._ph = data[0].phaseDeg + offset;
     for (var i = 1; i < data.length; i++) {
       var raw = data[i].phaseDeg + offset;
-      var d = raw - prev;
+      var d = raw - data[i-1]._ph;
       if (d > 180) raw -= 360;
       else if (d < -180) raw += 360;
       data[i]._ph = raw;
-      prev = raw;
     }
     var hMin = data[0]._ph, hMax = data[0]._ph;
     for (var i = 0; i < data.length; i++) {
       if (data[i]._ph < hMin) hMin = data[i]._ph;
       if (data[i]._ph > hMax) hMax = data[i]._ph;
     }
+    hMin = Math.floor(hMin / 45) * 45 - 45;
+    hMax = Math.ceil(hMax / 45) * 45 + 45;
+    if (hMax - hMin < 180) { hMax = hMin + 225; }
+
     var phY = function(deg) { return margin.top + ph * (1 - (deg - hMin) / (hMax - hMin)); };
 
     ctx.save();
     ctx.beginPath(); ctx.rect(margin.left, margin.top, pw, ph); ctx.clip();
     ctx.fillStyle = C.bg; ctx.fillRect(margin.left, margin.top, pw, ph);
 
+    /* horizontal grid + Y-axis tick labels at every 45° */
     ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
-    ctx.fillStyle = C.text; ctx.font = "10px " + getComputedStyle(document.body).fontFamily; ctx.textAlign = "right";
+    ctx.fillStyle = C.text;
+    ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = "right";
     var g0 = Math.ceil(hMin / 45) * 45;
     for (var g = g0; g <= hMax; g += 45) {
       var gy = phY(g);
-      ctx.beginPath(); ctx.moveTo(margin.left, gy); ctx.lineTo(margin.left+pw, gy); ctx.stroke();
-      ctx.fillText(g + "°", margin.left-4, gy+4);
+      ctx.beginPath(); ctx.moveTo(margin.left, gy); ctx.lineTo(margin.left + pw, gy); ctx.stroke();
+      ctx.fillText(g + "°", margin.left - 4, gy + 4);
     }
-    drawFreqAxis(ctx, axis, margin, pw, ph);
 
-    ctx.strokeStyle = C.phase; ctx.lineWidth = 1.5; ctx.beginPath();
-    for (var i = 0; i < data.length; i++) {
-      var x = fToX(data[i].f), y = phY(data[i]._ph);
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    /* frequency-axis labels laid out BELOW the plot area, so they are visible */
+    function drawPhaseFreqLabels() {
+      ctx.textAlign = "center";
+      ctx.fillStyle = C.text;
+      ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+      axis.steps.forEach(function(s) {
+        var x = margin.left + pw * Math.log(s.f / axis.fMin) / Math.log(axis.fMax / axis.fMin);
+        if (s.label !== null) {
+          // put label just under the bottom frame
+          ctx.fillText(s.label, x, margin.top + ph + 15);
+        }
+      });
     }
-    ctx.stroke();
-    ctx.restore();
 
+    ctx.restore(); /* un-clip so axis labels / frame are drawn in full */
+
+    /* frame (after clip is restored) */
     ctx.strokeStyle = C.axis; ctx.lineWidth = 1;
     ctx.strokeRect(margin.left, margin.top, pw, ph);
-    ctx.save(); ctx.translate(10, margin.top+ph/2); ctx.rotate(-Math.PI/2);
-    ctx.textAlign = "center"; ctx.fillStyle = C.text; ctx.font = "11px "+getComputedStyle(document.body).fontFamily;
-    ctx.fillText("Phase", 0, 0); ctx.restore();
 
-    ctx.fillStyle = C.phase; ctx.fillRect(margin.left+pw-70, margin.top+5, 10, 10);
-    ctx.textAlign = "left"; ctx.fillStyle = C.text; ctx.font = "10px "+getComputedStyle(document.body).fontFamily;
-    ctx.fillText("phase", margin.left+pw-56, margin.top+14);
+    /* Y-axis title */
+    ctx.save();
+    ctx.translate(10, margin.top + ph / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = "center";
+    ctx.fillStyle = C.text;
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText("Phase (deg)", 0, 0);
+    ctx.restore();
+
+    /* X-axis title */
+    ctx.textAlign = "center";
+    ctx.fillStyle = C.text;
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText("Frequency (Hz)", margin.left + pw / 2, margin.top + ph + 30);
+
+    drawPhaseFreqLabels();
+
+    /* legend */
+    ctx.fillStyle = C.phase;
+    ctx.fillRect(margin.left + pw - 70, margin.top + 6, 10, 10);
+    ctx.textAlign = "left";
+    ctx.fillStyle = C.text;
+    ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText("phase", margin.left + pw - 56, margin.top + 15);
   }
 
   /* ── Render both charts ─── */
