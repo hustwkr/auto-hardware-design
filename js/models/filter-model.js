@@ -75,34 +75,56 @@
 
   /* ================================================================
      1st-Order Differential Low-Pass Filter
-     Transfer function: H(s) = (R2/R1) / (1 + s*R2*C1)
+     Transfer function: H(s) = -(R2/R1) / (1 + s·R2·C1)
      DC gain: G = R2/R1
-     Cutoff: fc = 1/(2π*R2*C1)
+     Cutoff: fc = 1/(2π·R2·C1)
+
+     Design: choose C1 so that R2 falls in the sweet-spot range
+     (Rmin…Rmax, default 1kΩ…470kΩ), then snap R1,R2,C1 to standard values.
      ================================================================ */
-  function designDiff1(fc, gain, C1, series) {
+  function designDiff1(fc, gain, series, C1_hint) {
     series = series || "e24";
     if (!fc || fc <= 0) return null;
     if (!gain || gain <= 0) gain = 1;
-    if (!C1 || C1 <= 0) C1 = 1e-7; // default 100nF
 
-    // Calculate ideal values
-    var R2_ideal = 1 / (2 * Math.PI * fc * C1);
+    var Rmin = 1e3, Rmax = 470e3;  // sweet-spot for op-amp circuits
+
+    // If C1_hint is given (>0) and usable, keep it; otherwise auto-pick
+    var C1_nominal;
+    if (C1_hint && C1_hint > 0) {
+      C1_nominal = C1_hint;
+    } else {
+      // Choose C1 from E12 preferred values so R2=R2_ideal lands near Rmid=sqrt(Rmin*Rmax)≈21.8k
+      // R2_ideal = 1/(2π·fc·C1)  ⇒  C1 = 1/(2π·fc·R2_ideal)
+      // Try each standard cap decade until R2_ideal is in range
+      var preferredCaps = [1.0, 1.5, 2.2, 3.3, 4.7, 6.8];
+      var bestC1 = 1e-7, bestScore = Infinity;
+      for (var decade = -12; decade <= -3; decade++) {  // pF to μF
+        for (var j = 0; j < preferredCaps.length; j++) {
+          var c = preferredCaps[j] * Math.pow(10, decade);
+          var r2d = 1 / (2 * Math.PI * fc * c);
+          if (r2d >= Rmin && r2d <= Rmax) {
+            var score = Math.abs(Math.log(r2d) - 0.5 * Math.log(Rmin * Rmax));
+            if (score < bestScore) { bestScore = score; bestC1 = c; }
+          }
+        }
+      }
+      C1_nominal = bestC1;
+    }
+
+    var R2_ideal = 1 / (2 * Math.PI * fc * C1_nominal);
     var R1_ideal = R2_ideal / gain;
 
-    // Snap to standard values
+    var C1 = nearestStdCap(C1_nominal, series);  // snap cap to nearest E-series value
     var R2 = nearestStd(R2_ideal, series);
-    // Recompute C1 from snapped R2 to maintain fc
-    var C1_snapped = C1; // keep original C1
     var R1 = nearestStd(R1_ideal, series);
 
-    // Actual performance with snapped values
-    var actual_fc = 1 / (2 * Math.PI * R2 * C1_snapped);
+    var actual_fc = 1 / (2 * Math.PI * R2 * C1);
     var actual_gain = R2 / R1;
 
-    // Generate frequency response
     var freqs = genFreqPoints(actual_fc * 0.01, actual_fc * 100, 300);
     var freqResp = [];
-    var tau = R2 * C1_snapped;
+    var tau = R2 * C1;
     for (var i = 0; i < freqs.length; i++) {
       var w = 2 * Math.PI * freqs[i];
       var denom = Math.sqrt(1 + (w * tau) * (w * tau));
@@ -117,12 +139,12 @@
       gain_target: gain,
       fc_actual: actual_fc,
       gain_actual: actual_gain,
-      Q: 0.5, // 1st-order
+      Q: 0.5,
       components: {
-        R1: R1, R2: R2, C1: C1_snapped,
+        R1: R1, R2: R2, C1: C1,
         R1_label: valLabel(R1) + "Ω",
         R2_label: valLabel(R2) + "Ω",
-        C1_label: capLabel(C1_snapped)
+        C1_label: capLabel(C1)
       },
       freqResp: freqResp,
       poles: [{real: -1/tau, imag: 0}]
@@ -133,56 +155,79 @@
      2nd-Order MFB Low-Pass Filter
 
      Topology: R2 || C2 as feedback, R3 in series, C1 from node to GND
+     Simplified design: R3 = R1
 
-        Vin --[R1]--+--[R3]--+--->(-) op-amp --> Vout
-                    |        |       |
-                   [C1]     |   +--+
-                    |       [R2]  |
-                   GND      |   [C2]
-                            |    |
-                           GND   |
-                                (+)
-                                 |
-                                GND
+     H0 = -R2/(2·R1)
+     ω0² = 2/(C1·C2·R1·R2)
 
-     H(s) = -(R2/(R1+R3)) / [1 + s*(R2*C2 + C1*R1*R3/(R1+R3)) + s²*C1*C2*R1*R2*R3/(R1+R3)]
-
-     Simplified design: Let R3 = R1. Then:
-     H0 = -R2/(2*R1)
-     ω0² = 2/(C1*C2*R1*R2)
-     ω0/Q = (R2*C2 * ω0²) + (C1*R1/2 * ω0²) = 2/(C1*R1) + 1/(C2*R2)
+     Design approach (classic MFB cookbook):
+       Let C2 = n·C1  (default n=1 for unity-gain, or auto-tune)
+       Choose C1 so that R1,R2 land in the op-amp sweet-spot (1k…470k)
+       R1 = 1/(2·Q·ω0·C1)          [approximately, when R3=R1]
+       R2 = 2·Q/(ω0·C1)
+       Then snap C1,C2,R1,R2,R3 to nearest standard values.
      ================================================================ */
-  function designMfb2(fc, gain, Q, C1, C2, series) {
+  function designMfb2(fc, gain, Q, series, C1_hint, C2_hint) {
     series = series || "e24";
     if (!fc || fc <= 0) return null;
     if (!gain || gain <= 0) gain = 1;
-    if (!Q || Q <= 0) Q = 0.707; // Butterworth default
-    if (!C1 || C1 <= 0) C1 = 1e-7; // default 100nF
-    if (!C2 || C2 <= 0) C2 = C1; // default equal values
-
-    // Use simplified design with R3 = R1
-    // From: H0 = -R2/(2*R1) → R2 = 2*|H0|*R1
-    // ω0² = 2/(C1*C2*R1*R2) → ω0 = 1/√(C1*C2*R1*R2/2)
-    // Q: ω0/Q = 2/(C1*R1) + 1/(C2*R2)
+    if (!Q || Q <= 0) Q = 0.707;
+    if (Q < 0.5) Q = 0.5;  // MFB needs Q ≥ 0.5
 
     var w0 = 2 * Math.PI * fc;
+    var Rmin = 1e3, Rmax = 470e3;
+    var preferredCaps = [1.0, 1.5, 2.2, 3.3, 4.7, 6.8];
 
-    // Solve: R1 and R2 from gain and fc
-    // R2 = 2*gain*R1 (from H0)
-    // ω0² = 2/(C1*C2*R1*(2*gain*R1)) = 1/(C1*C2*gain*R1²)
-    // R1 = 1/(w0*√(C1*C2*gain))
+    // If hints given, use them; otherwise auto-pick C1
+    var C1_nom, C2_nom;
+    if (C1_hint && C1_hint > 0) { C1_nom = C1_hint; } else { C1_nom = 0; }
+    if (C2_hint && C2_hint > 0) { C2_nom = C2_hint; } else { C2_nom = 0; }
 
-    var sqrtC1C2K = Math.sqrt(C1 * C2 * gain);
-    var R1_ideal = 1 / (w0 * sqrtC1C2K);
-    var R2_ideal = 2 * gain * R1_ideal;
-    var R3_ideal = R1_ideal;
+    if (C1_nom <= 0 || C2_nom <= 0) {
+      // Auto-pick C1, C2: use C2 = C1 initially, then sweep C1 values
+      // R1 ≈ 1/(2·Q·ω0·C1),  R2 ≈ 2·Q/(ω0·C1)
+      var bestC1 = 1e-7, bestC2 = 1e-7, bestScore = Infinity;
+      for (var decade = -12; decade <= -3; decade++) {
+        for (var j = 0; j < preferredCaps.length; j++) {
+          var c1t = preferredCaps[j] * Math.pow(10, decade);
+          var r1t = 1 / (2 * Q * w0 * c1t);
+          var r2t = 2 * Q / (w0 * c1t);
+          if (r1t >= Rmin && r1t <= Rmax && r2t >= Rmin && r2t <= Rmax) {
+            var score = Math.abs(Math.log(r1t) - 0.5*Math.log(Rmin*Rmax))
+                      + Math.abs(Math.log(r2t) - 0.5*Math.log(Rmin*Rmax));
+            if (score < bestScore) { bestScore = score; bestC1 = c1t; bestC2 = c1t; }
+            // also try C2 half/equal/double of C1 for better matching
+            for (var m = -1; m <= 1; m++) {
+              var c2t = c1t * Math.pow(2, m);
+              var r1tm = 1 / (2 * Q * w0 * c1t);
+              var r2tm = 2 * Q / (w0 * c2t);
+              if (r1tm >= Rmin && r1tm <= Rmax && r2tm >= Rmin && r2tm <= Rmax) {
+                var sc2 = Math.abs(Math.log(r1tm) - 0.5*Math.log(Rmin*Rmax))
+                        + Math.abs(Math.log(r2tm) - 0.5*Math.log(Rmin*Rmax));
+                if (sc2 < bestScore) { bestScore = sc2; bestC1 = c1t; bestC2 = c2t; }
+              }
+            }
+          }
+        }
+      }
+      if (C1_nom <= 0) C1_nom = bestC1;
+      if (C2_nom <= 0) C2_nom = bestC2;
+    }
 
     // Snap to standard values
+    var C1 = nearestStdCap(C1_nom, series);
+    var C2 = nearestStdCap(C2_nom, series);
+
+    // Compute R1, R2 from the standard C1, C2
+    var R1_ideal = 1 / (2 * Q * w0 * C1);
+    var R2_ideal = 2 * Q / (w0 * C1);
+    var R3_ideal = R1_ideal;
+
     var R1 = nearestStd(R1_ideal, series);
     var R2 = nearestStd(R2_ideal, series);
     var R3 = nearestStd(R3_ideal, series);
 
-    // Actual performance with snapped values
+    // Actual performance
     var n0 = -R2 / (R1 + R3);
     var d1 = R2 * C2 + C1 * R1 * R3 / (R1 + R3);
     var d2 = C1 * C2 * R1 * R2 * R3 / (R1 + R3);
@@ -192,7 +237,6 @@
     var actual_fc = actual_w0 / (2 * Math.PI);
     var actual_gain = Math.abs(n0);
 
-    // Generate frequency response
     var freqs = genFreqPoints(actual_fc * 0.01, actual_fc * 100, 300);
     var freqResp = [];
     for (var i = 0; i < freqs.length; i++) {
@@ -204,9 +248,8 @@
       freqResp.push({f: freqs[i], mag: mag, phase: p, magDb: 20 * Math.log10(mag || 1e-30), phaseDeg: p});
     }
 
-    // Calculate poles
-    var a = d2, b = d1, c = 1;
-    var disc = b*b - 4*a*c;
+    var a = d2, b = d1;
+    var disc = b*b - 4*a;
     var poles = [];
     if (disc >= 0) {
       poles.push({real: -b/(2*a) + Math.sqrt(disc)/(2*a), imag: 0});
@@ -314,12 +357,27 @@
     return fv(v * 1e12, 1) + "pF";
   }
 
+  /* ── Nearest standard capacitor value ─── */
+  function nearestStdCap(val, series) {
+    var seriesArr = series === "e48" ? E48 : E24;
+    // Find the appropriate decade
+    var decade = Math.pow(10, Math.floor(Math.log10(val)));
+    var norm = val / decade;
+    var nearest = seriesArr[0];
+    var minDiff = Infinity;
+    for (var i = 0; i < seriesArr.length; i++) {
+      var diff = Math.abs(seriesArr[i] - norm);
+      if (diff < minDiff) { minDiff = diff; nearest = seriesArr[i]; }
+    }
+    return nearest * decade;
+  }
+
   /* ── Design entry point ──────────────── */
   function designFilter(type, params) {
     if (type === "diff1") {
-      return designDiff1(params.fc, params.gain, params.C1, params.series);
+      return designDiff1(params.fc, params.gain, params.series, params.C1);
     } else if (type === "mfb2") {
-      return designMfb2(params.fc, params.gain, params.Q, params.C1, params.C2, params.series);
+      return designMfb2(params.fc, params.gain, params.Q, params.series, params.C1, params.C2);
     }
     return null;
   }
@@ -340,6 +398,7 @@
     valLabel: valLabel,
     capLabel: capLabel,
     nearestStd: nearestStd,
+    nearestStdCap: nearestStdCap,
     E24: E24,
     E48: E48,
     designFilter: designFilter,

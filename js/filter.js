@@ -91,10 +91,10 @@
     var result;
     try {
       if (type === "diff1") {
-        result = FM.designFilter(type, { fc: fc, gain: gain, C1: C1, series: series });
+        result = FM.designFilter(type, { fc: fc, gain: gain, series: series });
       } else {
         var qVal = Q > 0 ? Q : 0.707;
-        result = FM.designFilter(type, { fc: fc, gain: gain, Q: qVal, C1: C1, C2: C2, series: series });
+        result = FM.designFilter(type, { fc: fc, gain: gain, Q: qVal, series: series });
       }
     } catch(e) {
       var warn = document.getElementById("filterWarn");
