@@ -410,7 +410,6 @@
     ctx.fillStyle = C.text; ctx.textAlign = "left"; ctx.font = "11px " + getComputedStyle(canvas).fontFamily;
     ctx.fillText("phase", ml + pw - 54, mt + 18);
   }
-
   /* ── Render both charts ─── */
   function renderFilterChart(r) {
     renderMagChart(r);
