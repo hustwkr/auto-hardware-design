@@ -1,24 +1,364 @@
-  <div class="layout" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-  <div>
-    <div class="card"><h2 data-i18n="filter.results">计算结果</h2>
-      <div id="filterResultsContent"></div>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自动硬件设计工具</title>
+<link rel="icon" type="image/png" href="/hwlogo.png">
+<link rel="stylesheet" href="css/app.css?v=34">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>
+</head>
+<body>
+<!-- ── Tab Navigation (full-width top bar) ─────────────── -->
+<nav class="tab-nav">
+  <div class="nav-inner">
+    <button class="tab-btn active" data-tab="capacitor" data-i18n="nav.capacitor">电解电容寿命计算</button>
+    <button class="tab-btn" data-tab="safety" data-i18n="nav.safety">安规距离计算</button>
+    <button class="tab-btn" data-tab="pcb" data-i18n="nav.pcb">PCB走线载流计算</button>
+	    <button class="tab-btn" data-tab="filter" data-i18n="nav.filter">信号滤波器设计</button>
+
+    <!-- Admin link -->
+    <div class="nav-dropdown" style="margin-left:auto">
+      <a href="/admin/login" class="nav-icon-btn" title="Admin / 后台" aria-label="Go to admin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </a>
     </div>
-    <div id="filterWarn" class="input-warn" style="display:none"></div>
-  </div>
-  <div>
-    <div class="card"><h2 data-i18n="filter.circuit">滤波器电路</h2>
-      <div id="filterSchematic" style="min-height:230px;display:flex;align-items:center;justify-content:center;">
-        <p style="color:var(--color-text-soft);font-size:.85rem" data-i18n="filter.noResult">请设置设计指标后查看电路。</p>
+
+    <!-- Language switcher -->
+    <div class="nav-dropdown" id="langDropdownWrap">
+      <button class="nav-icon-btn" id="langBtn" title="Language / 语言" aria-label="Switch language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </button>
+      <div class="nav-dropdown-menu" id="langMenu">
+        <div data-action="setLang" data-value="zh"><span class="dd-icon">🇨🇳</span><span>中文</span></div>
+        <div data-action="setLang" data-value="en"><span class="dd-icon">🇺🇸</span><span>English</span></div>
       </div>
     </div>
+
+    <!-- Theme switcher -->
+    <div class="nav-dropdown" id="themeDropdownWrap">
+      <button class="nav-icon-btn" id="themeBtn" title="Theme / 颜色模式" aria-label="Switch theme">
+        <!-- Sun icon (shown in dark mode) -->
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <!-- Moon icon (shown in light mode) -->
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <div class="nav-dropdown-menu" id="themeMenu">
+        <div data-action="setTheme" data-value="system"><span class="dd-icon-sv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span><span data-i18n-html="theme.system">系统</span></div>
+        <div data-action="setTheme" data-value="light"><span class="dd-icon-sv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span><span data-i18n-html="theme.light">Light</span></div>
+        <div data-action="setTheme" data-value="dark"><span class="dd-icon-sv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span><span data-i18n-html="theme.dark">Dark</span></div>
+      </div>
+    </div>
+
+    <!-- Feedback button -->
+    <div class="nav-dropdown">
+      <button class="nav-icon-btn feedback-btn" onclick="toggleFeedbackModal()" title="问题反馈" aria-label="Submit feedback">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); overflow: auto;">
+  <div class="modal-content" style="background-color: var(--color-surface); margin: 8% auto; padding: 24px; border-radius: var(--radius-lg); width: 450px; max-width: 90%; box-shadow: var(--shadow-lg); position: relative;">
+    <span onclick="toggleFeedbackModal()" style="float: right; font-size: 24px; font-weight: bold; cursor: pointer; color: var(--color-text-soft); line-height: 1;">&times;</span>
+    <h2 style="font-size: 1.2rem; margin-bottom: 16px; color: var(--color-text)">问题反馈</h2>
+    <form id="feedbackForm">
+      <div style="margin-bottom: 12px">
+        <label for="feedbackName" style="display: block; font-size: 0.85rem; color: var(--color-text-mid); margin-bottom: 4px">姓名 <span style="color: var(--color-danger)">*</span></label>
+        <input type="text" id="feedbackName" required placeholder="请输入您的姓名" style="width: 100%; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.9rem; box-sizing: border-box; background: var(--color-surface); color: var(--color-text)">
+      </div>
+      <div style="margin-bottom: 12px">
+        <label for="feedbackTitle" style="display: block; font-size: 0.85rem; color: var(--color-text-mid); margin-bottom: 4px">标题 <span style="color: var(--color-danger)">*</span></label>
+        <input type="text" id="feedbackTitle" required placeholder="请简要描述问题" style="width: 100%; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.9rem; box-sizing: border-box; background: var(--color-surface); color: var(--color-text)">
+      </div>
+      <div style="margin-bottom: 16px">
+        <label for="feedbackContent" style="display: block; font-size: 0.85rem; color: var(--color-text-mid); margin-bottom: 4px">问题内容 <span style="color: var(--color-danger)">*</span></label>
+        <textarea id="feedbackContent" required rows="5" placeholder="详细描述您想反馈的问题..." style="width: 100%; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.9rem; resize: vertical; box-sizing: border-box; background: var(--color-surface); color: var(--color-text)"></textarea>
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end">
+        <button type="button" onclick="toggleFeedbackModal()" style="padding: 8px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text); cursor: pointer; font-size: 0.85rem">取消</button>
+        <button type="submit" style="padding: 8px 16px; border: 1px solid var(--color-primary); border-radius: var(--radius-sm); background: var(--color-primary); color: #fff; cursor: pointer; font-size: 0.85rem">提交反馈</button>
+      </div>
+    </form>
+    <div id="feedbackSuccess" style="display: none; text-align: center; padding: 20px; color: var(--color-success)">
+      <div style="font-size: 1.5rem; margin-bottom: 8px">✓</div>
+      <div style="font-weight: 600">反馈已提交</div>
+      <div style="font-size: 0.85rem; color: var(--color-text-soft); margin-top: 4px">感谢您的反馈！</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ════════════════════════════════════════ -->
+<!-- Tab: Capacitor Lifetime                  -->
+<!-- ════════════════════════════════════════ -->
+<div id="tab-capacitor" class="tab-content active">
+<h1 style="font-size:1.4rem;margin-bottom:2px"><span data-i18n="cap.title">电解电容寿命计算工具</span></h1>
+<p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35" data-i18n="cap.subtitle">Arrhenius + Miner 累积损伤 + 多段运行剖面 + 多频率纹波叠加 + 质保期判定</p>
+
+<div class="card"><h2 data-i18n="cap.basic">基本信息</h2><div class="param-grid">
+    <div class="fgi"><label data-i18n="cap.projName">项目名称</label><input type="text" id="projName" placeholder="选填" data-i18n-placeholder="cap.projName"></div>
+    <div class="fgi"><label data-i18n="cap.capModel">器件型号</label><input type="text" id="capModel" placeholder="选填"></div>
+    <div class="fgi"><label data-i18n="cap.warranty">产品质保期(年)</label><input type="number" id="warrantyTarget" value="5" min="1" max="50" step="0.5"></div>
+    <div class="fgi"><label data-i18n="cap.workdays">每年工作天数</label><input type="number" id="workdays" value="365" min="1" max="365" step="1"></div>
+    <div class="fgi"><label><span data-i18n="cap.scenario">场景</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="scenario" data-i18n-opts='{"none":"cap.opt.none","consumer":"cap.opt.consumer","industrial":"cap.opt.industrial","automotive":"cap.opt.automotive","medical":"cap.opt.medical"}'><option value="none">无额外余量(1.0x)</option><option value="consumer">消费(1.3x)</option><option value="industrial" selected>工业(1.5x)</option><option value="automotive">汽车(2.0x)</option><option value="medical">医疗(2.5x)</option></select><div class="info-popup" style="width:320px">质保判定所需的最低寿命裕量系数，按应用场景可靠性要求预设：<br>• <b>无额外余量 1.0x</b>：寿命预测等于质保期即满足要求，不施加额外安全系数<br>• <b>消费 1.3x</b>：消费电子，裕量要求最低<br>• <b>工业 1.5x</b>：工业设备，中等裕量<br>• <b>汽车 2.0x</b>：车规级，高可靠性裕量<br>• <b>医疗 2.5x</b>：医疗设备，最高可靠性裕量<br><br>判定公式：实际寿命 ÷ 质保年限 ≥ 余量系数 → 合格。<br><br><i>注：以上系数为工程经验值预设，非强制标准要求，可根据项目实际需求调整。</i></div></div>
+  </div></div>
+
+<div class="card"><h2 data-i18n="cap.device">器件参数</h2><div class="param-grid">
+    <div class="fgi"><label data-i18n="cap.l0">额定寿命(h)</label><input type="number" id="l0" value="2000" min="100" step="100"></div>
+    <div class="fgi"><label data-i18n="cap.tmax">最高温度(°C)</label><input type="number" id="tmax" value="105" min="60" max="150"></div>
+    <div class="fgi" style="position:relative"><label><span data-i18n="cap.tau">Arrhenius τ(℃)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="tau" data-i18n-opts='{"8":"cap.tau.8","9":"cap.tau.9","10":"cap.tau.10"}'><option value="8">8 (长寿命型)</option><option value="9">9 (高可靠型)</option><option value="10" selected>10 (标准品)</option></select><div class="info-popup" style="width:260px"><strong>Arrhenius 温度系数 τ</strong><br>寿命公式中每降低 τ°C，寿命翻倍的参数。反映电解液蒸发速率对温度的敏感度。<br><br><strong>如何选取：</strong><br>• <b>τ=10</b>：标准品（大多数常规铝电解电容）<br>• <b>τ=9</b>：高可靠型（如 Nichicon PW/PWJ 系列）<br>• <b>τ=8</b>：超长寿命型（12000h+ 系列，如 Rubycon ZLH/ZSH）<br>• 以制造商 datasheet 为准</div></div>
+    <div class="fgi" style="position:relative"><label><span data-i18n="cap.type">电容类型</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="capType" onchange="onCapTypeChange()"><option value="lv" selected data-i18n="cap.type.lv">低压引线/贴片型(≤100V)</option><option value="hv" data-i18n="cap.type.hv">高压牛角/螺栓型(≥160V)</option><option value="manual" data-i18n="cap.type.manual">手动设置 Kv 参数</option></select><div class="info-popup" style="width:320px" data-i18n-html="cap.type.hint"></div></div>
+    <div class="fgi"><label data-i18n="cap.vrated">额定电压(V)</label><input type="number" id="vrated" value="50" min="1" step="1"></div>
+    <div class="fgi"><label data-i18n="cap.irated">额定纹波电流(mA)</label><input type="number" id="irated" value="500" min="1" step="10"></div>
+    <div class="fgi" style="position:relative"><label><span data-i18n="cap.dt0">最大芯温升(°C)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><input type="number" id="dt0" value="10" min="1" max="30" step="1"><div class="info-popup" style="width:260px"><strong>最大芯温升 ΔT₀</strong><br>电容在额定纹波电流 Irated 下，芯部相对于外壳的最大允许温升。决定纹波发热计算基准。<br><br><strong>如何选取：</strong><br>• <b>标准型</b>：ΔT₀ = 10°C（大多数常规品）<br>• <b>长寿命型</b>：ΔT₀ = 5~6°C（低ESR设计，芯温更低，寿命更长）<br>• 具体数值以制造商数据手册为准</div></div>
+    <div class="fgi"><label data-i18n="cap.capval">电容量(μF)</label><input type="number" id="cap" value="470" min="1" step="1"></div>
+    <div id="kvParams" style="display:none;grid-column:1/-1;gap:4px 28px;padding-top:6px;border-top:1px dashed #e2e8f0">
+      <div class="fgi"><label data-i18n="cap.kva">Kv 参数 a</label><input type="number" id="kva" value="0.56" min="0" max="5" step="0.01" oninput="calc()"></div>
+      <div class="fgi"><label data-i18n="cap.kvb">Kv 参数 b</label><input type="number" id="kvb" value="1.0" min="0" max="5" step="0.1" oninput="calc()"></div>
+    </div>
+  </div></div>
+
+<div class="layout">
+<!-- Left column: inputs -->
+<div>
+  <div class="card"><h2 data-i18n="cap.profile">运行工况<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:4px;vertical-align:middle;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:380px" data-i18n-html="cap.profile.hint"></div></h2>
+    <div id="sc"></div>
+    <button class="btn-sm" id="addSegBtn" data-i18n="cap.addSeg">+ 添加时段</button>
+    <span id="stt" style="font-size:.72rem;color:#64748b;margin-left:10px"></span>
+    <div id="stw" style="font-size:.72rem;color:#ef4444;margin-top:3px;display:none"></div>
+  </div>
+</div>
+
+<!-- Right column: results -->
+<div>
+  <div class="card"><h2 data-i18n="cap.results">计算结果</h2><div class="result-grid">
+    <div class="ri"><div class="rl" data-i18n="cap.r.life">预计总寿命</div><div class="rv"><span id="lh">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px">h</span></div></div>
+    <div class="ri"><div class="rl" data-i18n="cap.r.years">预计服役年限</div><div class="rv"><span id="ly">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px" data-i18n="cap.r.unit.yr">年</span></div></div>
+    <div class="ri"><div class="rl" data-i18n="cap.r.warranty">质保期判定</div><div class="rv"><span id="wb">-</span></div></div>
+    <div class="ri"><div class="rl" data-i18n="cap.r.damage">年损伤率</div><div class="rv"><span id="ad">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px" data-i18n="cap.r.unit.pct">%/年</span></div></div>
+    <div class="ri"><div class="rl" data-i18n="cap.r.worstT">最恶劣时段芯温</div><div class="rv"><span id="wt">-</span><span style="font-size:.78rem;color:#64748b;margin-left:3px">℃</span></div></div>
+    <div class="ri"><div class="rl" data-i18n="cap.r.worstKt">最恶劣时段 K<sub>T</sub></div><div class="rv"><span id="wk">-</span></div></div>
+  </div>
+  <div style="margin-top:10px"><h3 class="section-h3" data-i18n="cap.margin.title">质保期裕量</h3>
+    <div style="display:flex;justify-content:space-between;font-size:.78rem;color:#64748b"><span id="wd">-</span></div>
+    <div class="wb" style="margin-top:6px;overflow:visible"><div class="wf" id="wf" style="width:0;background:#10b981"></div><div class="wm" id="wm" style="left:0"></div><span id="wtl" class="wml">-</span></div>
+    <div style="display:flex;font-size:.7rem;color:#64748b"><span>0</span><span id="wml" style="margin-left:auto">-</span></div>
+  </div>
+  <div style="margin-top:10px"><h3 class="section-h3" data-i18n="cap.segment.title">各时段寿命消耗</h3>
+    <table class="sg-tbl"><thead><tr><th data-i18n="cap.segHdr.seg">时段</th><th data-i18n="cap.segHdr.dur">时长(h)</th><th data-i18n="cap.segHdr.temp">芯温℃</th><th>K<sub>T</sub></th><th>K<sub>V</sub></th><th data-i18n="cap.segHdr.li">等效寿命Li(h)</th><th data-i18n="cap.segHdr.dmg">年损伤</th></tr></thead><tbody id="srb"></tbody></table>
   </div>
   </div>
 
-  <div class="card" style="margin-top:16px"><h2 data-i18n="filter.chartMag">幅频特性</h2>
+<div id="capWarn" class="input-warn" style="display:none"></div>
+
+</div><!-- /right column -->
+</div><!-- /layout -->
+
+<!-- Report section -->
+<div style="margin-top:16px">
+  <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <h2 style="font-size:1.1rem;font-weight:600" data-i18n="cap.report.title">设计报告</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn" onclick="genRep()" id="generateCapBtn" data-i18n="cap.report.gen">生成报告</button>
+      <div class="btn-export-group" id="exportCapGroup" style="display:none"><button class="btn" onclick="cExportReport('word')" id="exportCapBtn" data-i18n="cap.report.export">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'cap')">▼</button><div class="export-dropdown" id="exportCapDropdown"><div onclick="cExportReport('word')">Word (.doc)</div><div onclick="cExportReport('pdf')">PDF</div></div></div>
+    </div>
+  </div>
+  <div id="rc"><h3 data-i18n="cap.report.rptTitle">电解电容寿命评估报告</h3><p data-i18n="cap.report.empty">点击"生成报告"按钮后显示。</p></div>
+</div>
+
+</div><!-- /tab-capacitor -->
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- Tab: Safety Distance                     -->
+<!-- ════════════════════════════════════════ -->
+<div id="tab-safety" class="tab-content">
+<h1 style="font-size:1.4rem;margin-bottom:2px"><span data-i18n="safe.title">安规距离计算工具</span></h1>
+<p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35" data-i18n="safe.subtitle">IEC 62109-1 / UL 1741 爬电距离 + 电气间隙 | 适用于并网逆变器</p>
+
+<div class="layout">
+<!-- Left column -->
+<div>
+  <div class="card"><h2 data-i18n="safe.standard">标准体系</h2><div class="fgi" style="position:relative"><label data-i18n="safe.standard">标准体系</label><select id="sStd"><option value="iec" selected>IEC 62109-1</option><option value="ul">UL 1741</option></select></div></div>
+
+  <div class="card"><h2 data-i18n="safe.basic">基础参数</h2><div class="param-grid">
+    <div class="fgi" style="grid-column:1/-1;margin-bottom:8px"><label data-i18n="safe.projName">项目名称</label><input type="text" id="sProjName" placeholder="选填"></div>
+    <div class="fgi" data-standard="iec"><label data-i18n="safe.pd">污染等级</label><span id="sPd_iec_hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8"></span><select id="sPd" data-i18n-opts='{"1":"safe.pd.1","2":"safe.pd.2","3":"safe.pd.3"}'><option value="1">PD 1 (无污染/密封)</option><option value="2" selected>PD 2 (一般污染)</option><option value="3">PD 3 (严重污染)</option></select></div>
+    <div class="fgi" data-standard="ul" style="display:none"><label data-i18n="safe.pd">污染等级</label><span id="sPd_ul_hint" class="hint" data-i18n="safe.pd.hint.ul" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">UL §25.4a 固定 PD3</span><input type="text" value="PD 3 (UL 1741 §25.4a 强制)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
+    <div class="fgi" data-standard="iec"><label data-i18n="safe.mg">材料组别 (CTI)</label><select id="sMg" data-i18n-opts='{"i":"safe.mg.i","ii":"safe.mg.ii","iiia":"safe.mg.iiia","iiib":"safe.mg.iiib"}'><option value="i">I 组 (CTI >= 600)</option><option value="ii" selected>II 组 (400 <= CTI &lt; 600)</option><option value="iiia">IIIa 组 (175 <= CTI &lt; 400)</option><option value="iiib">IIIb 组 (100 <= CTI &lt; 175)</option></select></div>
+    <div class="fgi" data-standard="ul" style="display:none"><label data-i18n="safe.mg">材料组别</label><span id="sMg_ul_hint" class="hint" data-i18n="safe.mg.hint.ul" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">UL §25.4d 固定 II 组</span><input type="text" value="II 组 (CTI >= 100, UL §25.4d)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
+    <div class="fgi"><label data-i18n="safe.alt">海拔</label><select id="sAlt"><option value="2000" selected>&lt;= 2000 m</option><option value="3000">2000 - 3000 m</option><option value="4000">3000 - 4000 m</option><option value="5000">4000 - 5000 m</option></select></div>
+    <div class="fgi" data-standard="iec" style="position:relative"><label><span data-i18n="safe.iso.label">电网 ↔ PV/DC 侧</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="sIsolation" data-i18n-opts='{"isolated":"safe.iso.isolated","non-isolated":"safe.iso.noniso"}'><option value="isolated" selected>有隔离</option><option value="non-isolated">无隔离</option></select><div class="info-popup">IEC 62109-1 §7.3.7：<br>• <b>有隔离</b>：AC与DC之间有隔离变压器等器件，DC侧过电压类别比AC侧降低一档（但最低为I档）<br>• <b>无隔离</b>：AC与DC直接相连，DC侧过电压类别取AC侧和PV固有类别中较高的那个<br><br>该设置影响DC侧冲击电压、电气间隙和爬电距离的计算。</div></div>
+    <div class="fgi" data-standard="iec"><label data-i18n="safe.ovc.ac">AC侧过电压类别</label><select id="sOvc_AC" data-i18n-opts='{"i":"safe.ovc.i","ii":"safe.ovc.ii","iii":"safe.ovc.iii","iv":"safe.ovc.iv"}'><option value="i">I — 经SPD保护电路</option><option value="ii" selected>II — 插接式设备</option><option value="iii">III — 固定安装/配电盘下游</option><option value="iv">IV — 建筑入口/电表上游</option></select></div>
+    <div class="fgi" data-standard="ul" style="display:none"><label data-i18n="safe.ovc.ac">过电压类别</label><span id="sOvc_ul_hint" class="hint" data-i18n="safe.ovc.ul.hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">UL §25.4b 固定 OVC IV</span><input type="text" value="IV (UL 1741 §25.4b 强制)" readonly style="width:180px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:4px 8px;font-size:.82rem;color:#64748b"></div>
+    <div class="fgi" data-standard="iec"><label data-i18n="safe.ovc.dc">DC侧过电压类别</label><select id="sOvc_DC" data-i18n-opts='{"i":"safe.ovc.dc.i","ii":"safe.ovc.dc.ii","iii":"safe.ovc.dc.iii","iv":"safe.ovc.dc.iv"}'><option value="i">I — 经SPD保护电路</option><option value="ii" selected>II — PV默认/插接式设备</option><option value="iii">III — 固定安装</option><option value="iv">IV — 建筑入口</option></select></div>
+    <div class="fgi" data-standard="iec"><label><span data-i18n="safe.sysVac">AC系统电压 (Vrms)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><input type="number" id="sSysV_AC" value="300" min="0" step="10"><div id="acVoltageInfo" class="info-popup">For clearance distances and solid insulation the voltage used is as described in 7.3.7.2.2 to 7.3.7.2.4.<br>The impulse voltage and temporary overvoltage are taken from Table 12.<br>When using Table 12, the system voltage in column 1 is:<br>• in TN and TT systems: the r.m.s. value of the rated voltage between a phase and earth;<br>NOTE 1 A corner-earthed system is a TN system with one phase earthed, in which the system voltage is the r.m.s. value of the rated voltage between a non-earthed phase and earth (i.e. the phase-phase voltage).</div></div>
+    <div class="fgi" data-standard="ul" style="display:none"><label><span data-i18n="safe.sysVac">AC系统电压 (V)</span><span id="sSysV_AC_ul_hint" class="hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">UL: 相地额定系统电压</span></label><input type="number" id="sSysV_AC_ul" value="300" min="0" step="10"><span class="hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">Phase-to-Ground Rated System Voltage (kVRMS)</span></div>
+    <div class="fgi" data-standard="iec"><label data-i18n="safe.sysVdc">DC系统电压 (V)</label><input type="number" id="sSysV_DC" value="600" min="0" step="10"></div>
+    <div class="fgi" data-standard="ul" style="display:none"><label><span data-i18n="safe.sysVdc">DC系统电压 (V)</span><span id="sSysV_DC_ul_hint" class="hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">UL: 相地额定系统电压</span></label><input type="number" id="sSysV_DC_ul" value="600" min="0" step="10"><span class="hint" style="display:block;margin-top:2px;font-size:.7rem;color:#94a3b8">Phase-to-Ground Rated System Voltage (kVRMS)</span></div>
+  </div></div>
+
+  <div class="card" data-standard="iec"><h2 data-i18n="safe.impulse" style="display:inline-flex;align-items:center;gap:6px">冲击电压 / 暂态过电压<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;flex-shrink:0;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:420px" data-i18n-html="safe.imp.tipAll"></div></h2>
+    <div id="sImpulseInfo" class="rep-model-box"></div>
+  </div>
+
+  <div class="card"><h2 data-i18n="safe.nodes">测量节点定义</h2>
+    <p style="font-size:.78rem;color:#64748b;margin-bottom:8px" data-i18n="safe.nodes.hint">定义逆变器中各需要计算安规距离的节点及其电气参数</p>
+    <div style="overflow-x:auto"><table class="node-tbl" id="sNt"><thead><tr><th>#</th><th data-i18n="safe.nodeHdr.name">节点名称</th><th data-i18n="safe.nodeHdr.circ">电路位置</th><th data-i18n="safe.nodeHdr.gnd">是否对地<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:320px"><b>对地节点的影响：</b><br>① <b>强制加强绝缘</b> — 对地节点必须使用加强绝缘 (§7.3.7)<br>② <b>冲击电压不降档</b> — 线间节点内部功能绝缘可降一档，对地不降 (§7.3.7.1.2f)<br>③ <b>TOV适用</b> — 暂态过电压仅用于对地绝缘 (§7.3.7.1.2f)<br>④ PCB走线到PE电位不受①限制 — 属于不可触及，适用§7.3.7.7 PWB豁免</div></th><th data-i18n="safe.nodeHdr.vrms">工作电压Vrms(V)</th><th data-i18n="safe.nodeHdr.ins">绝缘类型</th><th data-i18n="safe.nodeHdr.pcb">是否PCB走线<span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span><div class="info-popup" style="width:340px"><b>PCB走线对安规距离的影响：</b><br>① <b>爬电距离更短</b> — PD1/PD2环境下PCB走线使用Table 14的PWBs列，距离远小于常规值<br>② <b>不强制加强绝缘</b> — PCB走线属于不可触及部分，对地时不强制要求加强绝缘 (§7.3.7.7 PWB豁免)<br>③ <b>绝缘类型保持原值</b> — 不会像非PCB对地节点那样被自动提升为加强绝缘</div></th><th data-i18n="safe.nodeHdr.coat">三防漆</th><th></th></tr></thead><tbody id="sN"></tbody></table></div>
+    <button class="btn-sm" id="addNodeBtn" data-i18n="safe.addNode">+ 添加测量节点</button>
+  </div>
+</div>
+
+<!-- Right column -->
+<div>
+  <div class="card"><h2 data-i18n="safe.res.title">计算结果</h2><div class="result-grid">
+  </div>
+  <h3 class="section-h3" data-i18n="safe.res.req">各节点所需安规距离</h3>
+  <table class="sg-tbl"><thead><tr><th>#</th><th data-i18n="safe.res.node">节点</th><th data-i18n="safe.nodeHdr.vrms">工作电压Vrms(V)</th><th data-i18n="safe.res.ins">绝缘类型</th><th data-i18n="safe.nodeHdr.pcb">是否PCB走线</th><th data-i18n="safe.res.clr">电气间隙(mm)</th><th data-i18n="safe.res.crp">爬电距离(mm)</th></tr></thead><tbody id="sRtb"></tbody></table>
+  </div>
+<div id="safeWarn" class="input-warn" style="display:none"></div>
+</div>
+</div><!-- /layout -->
+
+<!-- Report section -->
+<div style="margin-top:16px">
+  <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <h2 style="font-size:1.1rem;font-weight:600" data-i18n="safe.report.title">安距设计报告</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn" onclick="sGenRep()" id="generateSafeBtn" data-i18n="safe.report.gen">生成报告</button>
+      <div class="btn-export-group" id="exportSafeGroup" style="display:none"><button class="btn" onclick="sExportReport('word')" id="exportSafeBtn" data-i18n="safe.report.export">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'safe')">▼</button><div class="export-dropdown" id="exportSafeDropdown"><div onclick="sExportReport('word')">Word (.doc)</div><div onclick="sExportReport('pdf')">PDF</div></div></div>
+    </div>
+  </div>
+  <div id="sRc"><h3 data-i18n="safe.report.rptTitle">安规距离评估报告</h3><p data-i18n="safe.report.empty">点击"生成报告"按钮后显示。</p></div>
+</div>
+
+</div><!-- /tab-safety -->
+
+<div id="tab-pcb" class="tab-content">
+<h1 style="font-size:1.4rem;margin-bottom:2px"><span data-i18n="pcb.title">PCB 载流能力计算工具</span></h1>
+<p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35" data-i18n="pcb.subtitle">IPC-2221 标准公式 · 正向/反向计算 · 压降分析 · 多宽度对比</p>
+
+<div class="card"><h2 data-i18n="pcb.basic">基础参数</h2>
+  <div class="param-grid">
+    <div class="fgi"><label data-i18n="pcb.width">走线宽度</label><input type="number" id="pcbWidth" value="0.25" min="0.01" step="0.01" style="width:70px"><select id="pcbWidthUnit" style="width:55px;min-width:55px"><option value="mm" selected>mm</option><option value="mil">mil</option></select></div>
+    <div class="fgi"><label data-i18n="pcb.copper">铜厚 (oz)</label><select id="pcbCopper"><option value="0.5">0.5 oz (17.5μm)</option><option value="1" selected>1 oz (35μm)</option><option value="2">2 oz (70μm)</option><option value="3">3 oz (105μm)</option></select></div>
+    <div class="fgi"><label><span data-i18n="pcb.position">走线位置</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;vertical-align:middle;transition:background .15s;user-select:none">?</span></label><select id="pcbPos"><option value="external" data-i18n="pcb.posExternal">外层</option><option value="internal" data-i18n="pcb.posInternal">内层</option></select><div class="info-popup" style="width:340px" data-i18n-html="pcb.position.tip"></div></div>
+    <div class="fgi"><label data-i18n="pcb.tempRise">允许温升 (°C)</label><input type="number" id="pcbDeltaT" value="10" min="1" max="100" step="1"></div>
+    <div class="fgi"><label data-i18n="pcb.ambTemp">环境温度 (°C)</label><input type="number" id="pcbAmbTemp" value="25" min="-40" max="125" step="1"></div>
+    <div class="fgi"><label data-i18n="pcb.length">走线长度 (mm)</label><input type="number" id="pcbLength" value="50" min="1" step="1"></div>
+    <div class="fgi"><label><span data-i18n="pcb.targetI">目标电流 (A)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;vertical-align:middle;transition:background .15s;user-select:none">?</span></label><input type="number" id="pcbTargetI" value="0" min="0" step="0.1"><div class="info-popup" style="width:320px" data-i18n-html="pcb.targetI.tip"></div></div>
+  </div>
+</div>
+
+<div class="card"><h2 data-i18n="pcb.result">计算结果</h2>
+  <div id="pcbResult"></div>
+</div>
+
+<div class="card"><h2 data-i18n="pcb.via.title">过孔载流能力</h2>
+  <div class="param-grid">
+    <div class="fgi"><label data-i18n="pcb.via.drill">过孔内径 (mm)</label><select id="pcbViaDrill">
+      <option value="0.15">0.15 mm</option><option value="0.2">0.2 mm</option>
+      <option value="0.25">0.25 mm</option><option value="0.3" selected>0.3 mm</option>
+      <option value="0.35">0.35 mm</option><option value="0.4">0.4 mm</option>
+      <option value="0.45">0.45 mm</option><option value="0.5">0.5 mm</option>
+      <option value="0.6">0.6 mm</option><option value="0.8">0.8 mm</option>
+      <option value="1.0">1.0 mm</option><option value="1.2">1.2 mm</option>
+    </select></div>
+    <div class="fgi"><label data-i18n="pcb.via.wall">孔壁铜厚</label><select id="pcbViaWall">
+      <option value="20" data-i18n="pcb.via.wall20">20μm (IPC Class 2 min)</option>
+      <option value="25" selected data-i18n="pcb.via.wall25">25μm (1oz plating)</option>
+      <option value="35" data-i18n="pcb.via.wall35">35μm (2oz plating)</option>
+    </select></div>
+    <div class="fgi"><label data-i18n="pcb.position">走线位置</label><select id="pcbViaPos">
+      <option value="external" selected data-i18n="pcb.posExternal">外层</option>
+      <option value="internal" data-i18n="pcb.posInternal">内层</option>
+    </select></div>
+    <div class="fgi"><label data-i18n="pcb.tempRise">允许温升 (°C)</label><input type="number" id="pcbViaDeltaT" value="10" min="1" max="100" step="1"></div>
+    <div class="fgi"><label><span data-i18n="pcb.via.targetI">目标电流 (A)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;vertical-align:middle;user-select:none">?</span></label><input type="number" id="pcbViaTargetI" value="5" min="0" step="0.1"><div class="info-popup" style="width:340px" data-i18n-html="pcb.via.targetI.tip"></div></div>
+  </div>
+  <div id="pcbViaResult" style="margin-top:8px"></div>
+</div>
+
+<div class="card"><h2 data-i18n="pcb.compare">多宽度对比</h2>
+  <div id="pcbCompare"></div>
+</div>
+
+<div class="card">
+  <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <h2 style="font-size:1.1rem;font-weight:600" data-i18n="pcb.repTitle">报告</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn" onclick="genPcbRep()" data-i18n="cap.report.gen">生成报告</button>
+      <div class="btn-export-group" id="exportPcbGroup" style="display:none"><button class="btn" onclick="pcbExportWord()" data-i18n="cap.report.export">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'pcb')">▼</button><div class="export-dropdown" id="exportPcbDropdown"><div onclick="pcbExportWord()">Word (.doc)</div></div></div>
+    </div>
+  </div>
+  <div id="pcbRc"><h3 data-i18n="pcb.repTitle">PCB 载流能力评估报告</h3><p data-i18n="cap.report.empty">点击"生成报告"按钮后显示。</p></div>
+</div>
+
+</div><!-- /tab-pcb -->
+
+<!-- ════════════════════════════════════════ -->
+<!-- Tab: Signal Filter Design               -->
+<!-- ════════════════════════════════════════ -->
+<div id="tab-filter" class="tab-content">
+<h1 style="font-size:1.4rem;margin-bottom:2px"><span data-i18n="filter.title">信号滤波器设计工具</span></h1>
+<p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35" data-i18n="filter.subtitle">基于运放的有源低通滤波器 · 一阶差分 / 二阶 MFB · 幅频相频特性 · E24/E48 标准值</p>
+
+<div class="card"><h2 data-i18n="filter.spec">设计指标</h2><div class="param-grid">
+  <div class="fgi"><label data-i18n="filter.type">滤波器类型</label><select id="filterType" onchange="filterTypeChange()">
+    <option value="diff1" data-i18n="filter.type.diff1">一阶差分 (Differential LPF)</option>
+    <option value="mfb2" selected data-i18n="filter.type.mfb2">二阶MFB (Multiple Feedback LPF)</option>
+  </select></div>
+  <div class="fgi"><label data-i18n="filter.series">电阻精度系列</label><select id="filterSeries" onchange="filterCalc()">
+    <option value="e24" selected data-i18n="filter.series.e24">E24 (5%)</option>
+    <option value="e48" data-i18n="filter.series.e48">E48 (2%)</option>
+  </select></div>
+  <div class="fgi"><label data-i18n="filter.fc">截止频率 (Hz)</label><input type="number" id="filterFc" value="1000" min="0.1" step="any" oninput="filterCalc()"></div>
+  <div class="fgi"><label data-i18n="filter.gain">直流增益 (V/V)</label><input type="number" id="filterGain" value="1" min="0.01" step="0.1" oninput="filterCalc()"></div>
+  <div class="fgi" id="filterQGroup"><label data-i18n="filter.q">Q值</label><input type="number" id="filterQ" value="0.707" min="0.1" step="0.001" oninput="filterCalc()"><span class="unit">(Butterworth: 0.707)</span></div>
+  <div class="fgi"><label data-i18n="filter.c1">C1 预设电容</label><select id="filterC1" onchange="filterCalc()"></select></div>
+  <div class="fgi" id="filterC2Group"><label data-i18n="filter.c2">C2 预设电容</label><select id="filterC2" onchange="filterCalc()"></select></div>
+</div></div>
+
+<div class="layout">
+<div>
+  <div class="card"><h2 data-i18n="filter.results">计算结果</h2>
+    <div id="filterResultsContent"></div>
+  </div>
+
+  <div id="filterWarn" class="input-warn" style="display:none"></div>
+</div>
+
+<div>
+  <div class="card"><h2 data-i18n="filter.chartMag">幅频特性</h2>
     <canvas id="filterChartMag" style="width:100%;height:260px;border-radius:var(--radius-sm)"></canvas>
     <h2 data-i18n="filter.chartPhase" style="margin-top:12px">相频特性</h2>
     <canvas id="filterChartPhase" style="width:100%;height:220px;border-radius:var(--radius-sm)"></canvas>
   </div>
+</div>
+</div><!-- /layout -->
+
+<div class="card"><h2 data-i18n="filter.circuit">滤波器电路</h2>
+  <div id="filterSchematic" style="min-height:220px;display:flex;align-items:center;justify-content:center;">
+    <p style="color:var(--color-text-soft);font-size:.85rem" data-i18n="filter.noResult">请设置设计指标后查看电路。</p>
+  </div>
+</div>
+
+<!-- Report section -->
+<div style="margin-top:16px">
+  <div class="_np" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <h2 style="font-size:1.1rem;font-weight:600" data-i18n="filter.report.title">设计报告</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn" onclick="filterGenRep()" id="generateFilterBtn" data-i18n="cap.report.gen">生成报告</button>
+      <div class="btn-export-group" id="exportFilterGroup" style="display:none"><button class="btn" onclick="filterExportWord()" id="exportFilterBtn" data-i18n="cap.report.export">导出报告</button><button class="btn-export-arrow" onclick="toggleExportDropdown(event,'filter')">▼</button><div class="export-dropdown" id="exportFilterDropdown"><div onclick="filterExportWord()">Word (.doc)</div></div></div>
+    </div>
+  </div>
+  <div id="filterRc"><h3 data-i18n="filter.report.title">信号滤波器设计报告</h3><p data-i18n="cap.report.empty">点击"生成报告"按钮后显示。</p></div>
+</div>
 
 </div><!-- /tab-filter -->
 
@@ -33,7 +373,7 @@
 <script src="js/safety.js?v=40"></script>
 <script src="js/pcb.js?v=3"></script>
 <script src="js/models/filter-model.js?v=6"></script>
-<script src="js/filter.js?v=39"></script>
+<script src="js/filter.js?v=38"></script>
 <script src="js/feedback.js?v=1"></script>
 <script src="js/app.js?v=25"></script>
 </body>
