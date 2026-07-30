@@ -205,8 +205,6 @@
     canvas.height = h * dpr;
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, w, h);
-    canvas.style.width = w + "px";
-    canvas.style.height = h + "px";
     return { ctx: ctx, w: w, h: h };
   }
 
@@ -318,7 +316,7 @@
     var pw = W - margin.left - margin.right, ph = H - margin.top - margin.bottom;
     var fToX = function(f) { return margin.left + pw * Math.log(f/axis.fMin) / Math.log(axis.fMax/axis.fMin); };
 
-    var phMin = -200, phMax = 20;
+    var phMin = -185, phMax = 5;
     var phY = function(deg) { return margin.top + ph * (1 - (deg - phMin)/(phMax - phMin)); };
 
     // Background
@@ -331,7 +329,7 @@
     for (var ph = -180; ph <= 0; ph += 45) {
       var y = phY(ph);
       ctx.beginPath(); ctx.moveTo(margin.left, y); ctx.lineTo(margin.left+pw, y); ctx.stroke();
-      ctx.fillText(ph+"°", margin.left-4, y+4);
+      ctx.fillText(ph+"\u00B0", margin.left-4, y+4);
     }
     drawFreqAxis(ctx, axis, margin, pw, ph);
 
