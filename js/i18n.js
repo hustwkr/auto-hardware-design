@@ -355,6 +355,21 @@
     "pcb.repCompare":   { zh: "多宽度对比", en: "Multi-Width Comparison" },
     "pcb.repFooter":    { zh: "PCB载流能力计算器", en: "PCB Trace Current Calculator" },
 
+    /* Via current */
+    "pcb.via.title":    { zh: "过孔载流能力", en: "Via Current Capacity" },
+    "pcb.via.drill":    { zh: "过孔内径 (mm)", en: "Via Drill Dia. (mm)" },
+    "pcb.via.wall":     { zh: "孔壁铜厚", en: "Plating Thickness" },
+    "pcb.via.wall20":   { zh: "20μm (IPC Class 2 min)", en: "20μm (IPC Class 2 min)" },
+    "pcb.via.wall25":   { zh: "25μm (1oz plating)", en: "25μm (1oz plating)" },
+    "pcb.via.wall35":   { zh: "35μm (2oz plating)", en: "35μm (2oz plating)" },
+    "pcb.via.targetI":  { zh: "目标电流 (A)", en: "Target Current (A)" },
+    "pcb.via.targetI.tip":{ zh: "输入目标电流可反向计算所需最小孔径和建议并联过孔数。填0则不进行反向计算。", en: "Enter a target current to reverse-calculate the minimum drill size and recommended parallel vias. Set 0 to skip." },
+    "pcb.via.maxI":     { zh: "单孔最大电流", en: "Max Current per Via" },
+    "pcb.via.area":     { zh: "等效截面积", en: "Equivalent Area" },
+    "pcb.via.minDrill": { zh: "最小建议孔径", en: "Recommended Drill" },
+    "pcb.via.viasRec":  { zh: "建议并联过孔数", en: "Recommended Vias" },
+    "pcb.via.singleI":  { zh: "单孔载流", en: "Single Via Current" },
+
     /* Common warnings */
     "common.warn.calcErr":{ zh: "⚠ 计算错误:", en: "⚠ Calculation error:" },
     "common.noRipple":   { zh: "无纹波输入, ΔT = 0°C", en: "No ripple input, ΔT = 0°C" },

@@ -145,6 +145,81 @@
     return results;
   }
 
+  /* ── Via hole wall cross-section area ─── */
+  /* drillMm: finished hole diameter     */
+  /* wallUm:  plating thickness in μm    */
+  /* returns cross-section in mm²        */
+  function viaArea(drillMm, wallUm) {
+    var tw = wallUm / 1000;           // μm → mm
+    var rInner = drillMm / 2;
+    var rOuter = rInner + tw;
+    return Math.PI * (rOuter * rOuter - rInner * rInner);
+  }
+
+  /* ── Forward: via drill diameter → max current ─── */
+  function calcViaCurrent(params) {
+    var drillMm  = params.drillMm;
+    var wallUm   = params.wallUm || 25;
+    var position = params.position || "external";
+    var deltaT   = params.deltaT || 10;
+
+    if (!drillMm || drillMm <= 0 || !wallUm || wallUm <= 0 || !deltaT || deltaT <= 0) {
+      return { current: null, areaMm2: null, areaMil2: null };
+    }
+
+    var areaMm2 = viaArea(drillMm, wallUm);
+    var areaMil2 = areaMm2 / (MIL_TO_MM * MIL_TO_MM);
+
+    var c = CONST[position] || CONST.external;
+    var I = c.K * Math.pow(deltaT, c.b) * Math.pow(areaMil2, c.c);
+
+    return {
+      current:   Math.round(I * 1000) / 1000,
+      areaMm2:   Math.round(areaMm2 * 10000) / 10000,
+      areaMil2:  Math.round(areaMil2 * 100) / 100
+    };
+  }
+
+  /* ── Reverse: target current → min drill + parallel vias ─── */
+  function calcViaDrill(params) {
+    var targetI  = params.targetI;
+    var wallUm   = params.wallUm || 25;
+    var position = params.position || "external";
+    var deltaT   = params.deltaT || 10;
+
+    if (!targetI || targetI <= 0 || !wallUm || wallUm <= 0 || !deltaT || deltaT <= 0) {
+      return { drillMm: null, singleCurrent: null, viasNeeded: null, areaNeededMm2: null };
+    }
+
+    var c = CONST[position] || CONST.external;
+    var factor = c.K * Math.pow(deltaT, c.b);
+    var areaNeededMil2 = Math.pow(targetI / factor, 1 / c.c);
+    var areaNeededMm2  = areaNeededMil2 * MIL_TO_MM * MIL_TO_MM;
+
+    var tw = wallUm / 1000; // mm
+    // area = π × tw × (d + tw)  →  d = area/(π×tw) − tw
+    var dApprox = (areaNeededMm2 / (Math.PI * tw)) - tw;
+    if (dApprox < 0.15) dApprox = 0.15;
+
+    // Nearest standard drill (0.05mm steps below 0.5, 0.1mm above)
+    var STD = [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.6, 0.8, 1.0, 1.2, 1.5, 2.0];
+    var minDrill = 2.0;
+    for (var i = 0; i < STD.length; i++) {
+      if (STD[i] >= dApprox) { minDrill = STD[i]; break; }
+    }
+
+    var single = calcViaCurrent({ drillMm: minDrill, wallUm: wallUm, position: position, deltaT: deltaT });
+    var viasNeeded = single.current > 0 ? Math.ceil(targetI / single.current) : 1;
+    if (viasNeeded < 1) viasNeeded = 1;
+
+    return {
+      drillMm:       minDrill,
+      singleCurrent: single.current,
+      viasNeeded:    viasNeeded,
+      areaNeededMm2: Math.round(areaNeededMm2 * 10000) / 10000
+    };
+  }
+
   /* ── Public API ─── */
   global.PcbTraceModel = {
     fv: fv,
@@ -152,6 +227,9 @@
     calcWidth: calcWidth,
     calcImpedance: calcImpedance,
     calcComparison: calcComparison,
+    viaArea: viaArea,
+    calcViaCurrent: calcViaCurrent,
+    calcViaDrill: calcViaDrill,
     OZ_TO_MIL: OZ_TO_MIL,
     MIL_TO_MM: MIL_TO_MM
   };

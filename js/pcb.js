@@ -125,6 +125,8 @@
     if (!r || !p) { pcbCalc(); r = window._pcbResult; p = window._pcbInput; }
     if (!r || !p) return;
 
+    var vr = window._pcbViaResult; // via result for report
+
     var n = new Date(), locale = _getLang() === "en" ? "en-US" : "zh-CN";
     var ds = n.toLocaleDateString(locale, { year: "numeric", month: "2-digit", day: "2-digit" });
     var ts = n.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
@@ -168,12 +170,23 @@
       html += "<p>P = I²R = <b>" + PM.fv(r.powerLoss, 2) + " mW</b></p>";
     }
 
+    // Section 2b: Via calculation (if available)
+    if (vr && vr.current !== null) {
+      html += "<h3>2b. " + _t("pcb.via.title") + "</h3>";
+      html += "<p><b>" + _t("pcb.via.drill") + ":</b> " + (vr.drillMm || "") + " mm  |  <b>" + _t("pcb.via.wall") + ":</b> " + (vr.wallUm || "") + "μm</p>";
+      html += "<p>" + _t("pcb.via.area") + " = π × " + (vr.wallUm||"") + "μm × (" + (vr.drillMm||"") + "mm + " + (vr.wallUm||"") + "μm) = <b>" + PM.fv(vr.areaMm2, 4) + " mm²</b></p>";
+      html += "<p>" + _t("pcb.via.maxI") + " = " + posConst.split("=")[1] + " × " + PM.fv(p.deltaT, 1) + "^0.44 × " + PM.fv(vr.areaMil2, 2) + "^0.725 = <b>" + PM.fv(vr.current, 3) + " A</b></p>";
+      if (vr.viasNeeded) {
+        html += "<p><b>" + _t("pcb.via.viasRec") + ":</b> " + _t("pcb.via.targetI") + " = " + PM.fv(vr.targetI, 1) + " A → " + _t("pcb.via.minDrill") + " = " + vr.drillRev + " mm, " + _t("pcb.via.singleI") + " = " + PM.fv(vr.singleRev, 2) + " A → ≥ <b>" + vr.viasNeeded + "</b> 个</p>";
+      }
+    }
+
     // Section 3: Comparison
     html += "<h3>3. " + _t("pcb.repCompare") + "</h3>";
     html += document.getElementById("pcbCompare") ? document.getElementById("pcbCompare").innerHTML : "";
 
     // Footer
-    html += "<div class=rep-footer><span>" + _t("pcb.repFooter") + " v1.0</span><span>" + _t("cap.report.date") + ": " + ds + " " + ts + "</span></div>";
+    html += "<div class=rep-footer><span>" + _t("pcb.repFooter") + " v1.1</span><span>" + _t("cap.report.date") + ": " + ds + " " + ts + "</span></div>";
 
     rep.innerHTML = html;
     var eg = document.getElementById("exportPcbGroup");
@@ -212,10 +225,50 @@
     }
   }
 
+  /* ── Via current calculation ─── */
+  function viaCalc() {
+    var drillMm = parseFloat(document.getElementById("pcbViaDrill").value) || 0.3;
+    var wallUm  = parseInt(document.getElementById("pcbViaWall").value) || 25;
+    var position = document.getElementById("pcbViaPos").value;
+    var deltaT  = parseInt(document.getElementById("pcbViaDeltaT").value) || 10;
+    var targetI = parseFloat(document.getElementById("pcbViaTargetI").value) || 0;
+
+    var fwd = PM.calcViaCurrent({ drillMm: drillMm, wallUm: wallUm, position: position, deltaT: deltaT });
+    var rev = targetI > 0 ? PM.calcViaDrill({ targetI: targetI, wallUm: wallUm, position: position, deltaT: deltaT }) : null;
+
+    // Store for report
+    window._pcbViaResult = {
+      drillMm: drillMm, wallUm: wallUm, position: position, deltaT: deltaT,
+      current: fwd.current, areaMm2: fwd.areaMm2, areaMil2: fwd.areaMil2,
+      targetI: targetI,
+      drillRev: rev ? rev.drillMm : null,
+      singleRev: rev ? rev.singleCurrent : null,
+      viasNeeded: rev ? rev.viasNeeded : null
+    };
+
+    var el = document.getElementById("pcbViaResult");
+    if (!el) return;
+
+    var html = '<div class="result-grid">';
+    html += '<div class="ri"><div class="rl">' + _t("pcb.via.maxI") + '</div><div class="rv"><span style="font-size:1.1rem;font-weight:600">' + PM.fv(fwd.current, 3) + '</span> A</div></div>';
+    html += '<div class="ri"><div class="rl">' + _t("pcb.via.area") + '</div><div class="rv">' + PM.fv(fwd.areaMm2, 4) + ' mm² (' + PM.fv(fwd.areaMil2, 2) + ' mil²)</div></div>';
+
+    if (rev && rev.drillMm) {
+      html += '<div class="ri"><div class="rl">' + _t("pcb.via.targetI") + '</div><div class="rv">' + PM.fv(targetI, 1) + ' A</div></div>';
+      html += '<div class="ri"><div class="rl">' + _t("pcb.via.minDrill") + '</div><div class="rv">' + rev.drillMm + ' mm</div></div>';
+      html += '<div class="ri"><div class="rl">' + _t("pcb.via.singleI") + '</div><div class="rv">' + PM.fv(rev.singleCurrent, 2) + ' A</div></div>';
+      html += '<div class="ri"><div class="rl">' + _t("pcb.via.viasRec") + '</div><div class="rv"><span style="font-size:1.1rem;font-weight:600;color:var(--color-accent)">≥ ' + rev.viasNeeded + '</span> 个 (' + PM.fv(rev.drillMm, 2) + 'mm 孔径)</div></div>';
+    }
+
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
   /* ── Init ─── */
   function initPcb() {
     pcbCalc();
     pcbCompare();
+    viaCalc();
   }
 
   /* ── Event binding ─── */
@@ -225,6 +278,9 @@
       pcbCalc();
       pcbCompare();
     }
+    if (id && ["pcbViaDeltaT", "pcbViaTargetI"].indexOf(id) >= 0) {
+      viaCalc();
+    }
   });
 
   document.addEventListener("change", function (e) {
@@ -233,12 +289,16 @@
       pcbCalc();
       pcbCompare();
     }
+    if (id && ["pcbViaDrill", "pcbViaWall", "pcbViaPos"].indexOf(id) >= 0) {
+      viaCalc();
+    }
   });
 
   /* ── Expose to window ─── */
   global.initPcb = initPcb;
   global.pcbCalc = pcbCalc;
   global.pcbCompare = pcbCompare;
+  global.viaCalc = viaCalc;
   global.genPcbRep = genPcbRep;
   global.pcbExportWord = pcbExportWord;
 
