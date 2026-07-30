@@ -50,9 +50,7 @@
       if(this.dataset.tab==="pcb"&&!document.querySelector("#pcbResult .pcb-result")){
         if(typeof initPcb==='function')initPcb();
       }
-	      if(this.dataset.tab==="filter"&&!document.querySelector("#filterC1 option")){
-	        if(typeof initFilter==="function")initFilter();
-	      }
+	      if(typeof initFilter==="function")initFilter();
     });
   });
 
@@ -104,7 +102,7 @@
       });
 
       /* Filter fields */
-      ['filterType','filterSeries','filterFc','filterGain','filterQ','filterC1','filterC2'].forEach(function(id){
+      ['filterType','filterSeries','filterFc','filterGain','filterQ'].forEach(function(id){
         var el=document.getElementById(id); if(el) state.filter[id]=el.value;
       });
 
@@ -148,7 +146,6 @@
         if(f.type)setValSelect('filterType',f.type);
         if(f.series)setValSelect('filterSeries',f.series);
         setVal('filterFc',f.fc);setVal('filterGain',f.gain);setVal('filterQ',f.Q);
-        setVal('filterC1',f.C1);setVal('filterC2',f.C2);
       }
 
     /* Load safety nodes from defaults — replaces initSafety fallback */

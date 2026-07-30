@@ -12,115 +12,79 @@
   function gv(id) { var el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
   function gvs(id) { var el = document.getElementById(id); return el ? el.value : ""; }
 
-  /* ── Design parameter presets ─── */
-  var CAP_PRESETS = [
-    {label_zh: "100 pF", label_en: "100 pF", value: 1e-10},
-    {label_zh: "1 nF", label_en: "1 nF", value: 1e-9},
-    {label_zh: "10 nF", label_en: "10 nF", value: 1e-8},
-    {label_zh: "47 nF", label_en: "47 nF", value: 47e-9},
-    {label_zh: "100 nF", label_en: "100 nF", value: 1e-7},
-    {label_zh: "220 nF", label_en: "220 nF", value: 220e-9},
-    {label_zh: "470 nF", label_en: "470 nF", value: 470e-9},
-    {label_zh: "1 μF", label_en: "1 μF", value: 1e-6},
-    {label_zh: "2.2 μF", label_en: "2.2 μF", value: 2.2e-6},
-    {label_zh: "4.7 μF", label_en: "4.7 μF", value: 4.7e-6},
-    {label_zh: "10 μF", label_en: "10 μF", value: 10e-6}
-  ];
-
-  /* ── Initialize tab —─*/
+  /* ── Lazy init — show placeholder results ─── */
   function initFilter() {
-    populateCapSelect();
-  }
-
-  function populateCapSelect() {
-    var sel = document.getElementById("filterC1");
-    if (!sel) return;
-    var lang = global._getLang ? global._getLang() : "zh";
-    sel.innerHTML = "";
-    CAP_PRESETS.forEach(function(p, i) {
-      var opt = document.createElement("option");
-      opt.value = p.value;
-      opt.textContent = lang === "en" ? p.label_en : p.label_zh;
-      // Set 100nF as default
-      if (Math.abs(p.value - 1e-7) < 1e-12) opt.selected = true;
-      sel.appendChild(opt);
-    });
-
-    var sel2 = document.getElementById("filterC2");
-    if (sel2) {
-      sel2.innerHTML = "";
-      CAP_PRESETS.forEach(function(p, i) {
-        var opt = document.createElement("option");
-        opt.value = p.value;
-        opt.textContent = lang === "en" ? p.label_en : p.label_zh;
-        sel2.appendChild(opt);
-      });
-      sel2.value = "1e-7"; // default 100nF
-    }
+    filterShowPlaceholders();
   }
 
   /* ── Type change handler ─── */
   function filterTypeChange() {
     var type = gvs("filterType");
     document.getElementById("filterQGroup").style.display = (type === "mfb2") ? "" : "none";
-    document.getElementById("filterC2Group").style.display = (type === "mfb2") ? "" : "none";
+    filterShowPlaceholders();
   }
 
-  /* refresh cap dropdown from auto-calculated result */
-  function updateCapDropdowns(r) {
-    if (!r) return;
-    var lang = global._getLang ? global._getLang() : "zh";
-    var c1sel = document.getElementById("filterC1");
-    var c2sel = document.getElementById("filterC2");
-    if (!c1sel) return;
-    // Replace dropdowns with read‑only <span>s showing the auto‑picked values
-    var c1v = FM.capLabel(r.components.C1);
-    var c2v = r.components.C2 ? FM.capLabel(r.components.C2) : "";
-    // Update labels
-    var c1label = document.querySelector('label[data-i18n="filter.c1"]');
-    var c2label = document.querySelector('label[data-i18n="filter.c2"]');
-    if (c1label) c1label.textContent = (lang === "en" ? "C1 (auto)" : "C1 (自动)");
-    if (c2label && r.type === "mfb2") c2label.textContent = (lang === "en" ? "C2 (auto)" : "C2 (自动)");
+  /* ── Show placeholder rows matching the selected filter type ─── */
+  function filterShowPlaceholders() {
+    var t = global._t || function(k){return k;};
+    var type = gvs("filterType");
 
-    // Replace <select> with inline value display + hidden <input> (keep DOM id for auto-save)
-    function replaceWithDisplay(id, value) {
-      var sel = document.getElementById(id);
-      if (!sel) return;
-      var parent = sel.parentNode;
-      var span = document.createElement("span");
-      span.className = "auto-cap-value";
-      span.textContent = value;
-      span.style.cssText = "font-weight:600;color:var(--color-text);font-size:.9rem;display:inline-block;padding:2px 8px;background:var(--color-surface);border-radius:4px";
-      span.id = id + "_display";
-      // Remove existing display span
-      var existing = document.getElementById(id + "_display");
-      if (existing) existing.remove();
-      sel.style.display = "none";
-      parent.insertBefore(span, sel.nextSibling);
+    // Result grid
+    var el = document.getElementById("filterResultsContent");
+    if (el) {
+      var html = '<div class="result-grid"><div class="ri"><div class="rl">' + t("filter.topology") + '</div><div class="rv rv-placeholder">—</div></div><div class="ri"><div class="rl">' + t("filter.fc") + '</div><div class="rv rv-placeholder">—</div></div><div class="ri"><div class="rl">' + t("filter.gain") + '</div><div class="rv rv-placeholder">—</div></div>';
+      if (type === "mfb2") {
+        html += '<div class="ri"><div class="rl">' + t("filter.q") + '</div><div class="rv rv-placeholder">—</div></div>';
+      }
+      html += '</div>';
+      el.innerHTML = html;
     }
-    replaceWithDisplay("filterC1", c1v);
-    if (r.type === "mfb2") {
-      var c2grp = document.getElementById("filterC2Group");
-      if (c2grp) c2grp.style.display = "";
-      replaceWithDisplay("filterC2", c2v);
-    } else {
-      // diff1: hide C2 display
-      var c2disp = document.getElementById("filterC2_display");
-      if (c2disp) c2disp.remove();
+
+    // Component table
+    var cel = document.getElementById("filterComponentsTable");
+    if (cel) {
+      var ch = '<table class="sg-tbl"><thead><tr><th>' + t("filter.ref") + '</th><th>' + t("filter.value") + '</th></tr></thead><tbody>';
+      if (type === "diff1") {
+        ch += '<tr><td>R1</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>R2</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>C1</td><td><span class="rv-placeholder">—</span></td></tr>';
+      } else {
+        ch += '<tr><td>R1</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>R2</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>R3</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>C1</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>C2</td><td><span class="rv-placeholder">—</span></td></tr>';
+      }
+      ch += '</tbody></table>';
+      cel.innerHTML = ch;
     }
+
+    // Clear other state
+    var ctx1 = (document.getElementById("filterChartMag")||{}).getContext;
+    if (ctx1) { var c = document.getElementById("filterChartMag"); var x = c.getContext("2d"); x.clearRect(0,0,c.width,c.height); }
+    var ctx2 = (document.getElementById("filterChartPhase")||{}).getContext;
+    if (ctx2) { var c = document.getElementById("filterChartPhase"); var x = c.getContext("2d"); x.clearRect(0,0,c.width,c.height); }
+    var schematic = document.getElementById("filterSchematic");
+    if (schematic) schematic.innerHTML = "";
+    global._filterResult = null;
+    global._filterPrevResult = null;
   }
 
   /* ── Core calculation ─── */
   function filterCalc() {
+    var btn = document.getElementById("filterCalcBtn");
+    if (!btn) return;
+    btn.textContent = "计算中…";
+    btn.disabled = true;
+
+    // Defer actual calculation so browser repaints the button text first
+    setTimeout(function() { doFilterCalc(btn); }, 50);
+  }
+
+  function doFilterCalc(btn) {
     var type = gvs("filterType");
     var series = gvs("filterSeries");
     var fc = gv("filterFc");
     var gain = gv("filterGain");
     var Q = gv("filterQ");
-    var C1 = gv("filterC1") || 1e-7;
-    var C2 = gv("filterC2") || 1e-7;
 
-    if (!fc || fc <= 0) { filterClearResults(); return; }
+    function restoreBtn() { if (btn) { btn.textContent = "开始计算"; btn.disabled = false; } }
+
+    if (!fc || fc <= 0) { filterClearResults(); restoreBtn(); return; }
 
     var result;
     try {
@@ -133,10 +97,11 @@
     } catch(e) {
       var warn = document.getElementById("filterWarn");
       if (warn) { warn.textContent = "⚠ " + (e.message || "Calculation error"); warn.style.display = "block"; }
+      restoreBtn();
       return;
     }
 
-    if (!result) return;
+    if (!result) { restoreBtn(); return; }
 
     // Store for chart & report
     global._filterResult = result;
@@ -149,13 +114,53 @@
     renderFilterResults(result);
     renderFilterChart(result);
     renderFilterSchematic(result);
-    updateCapDropdowns(result);
+
+    // Highlight values that actually changed vs previous run
+    setTimeout(function() {
+      var prev = global._filterPrevResult;
+      var highlights = [];
+
+      // Result grid values: .rv elements in order: topology, fc, gain, Q(if mfb2)
+      var rvs = document.querySelectorAll("#filterResultsContent .rv");
+      var gridIdx = 0;
+      rvs.forEach(function(el) {
+        var val = el.textContent.trim();
+        // topology is static — skip index 0
+        if (gridIdx === 0) { gridIdx++; return; }
+        if (prev && prev.grid && prev.grid[gridIdx] === val) { gridIdx++; return; }
+        highlights.push(el);
+        gridIdx++;
+      });
+
+      // Component table: every 2nd <td> (value column)
+      var tds = document.querySelectorAll("#filterComponentsTable td");
+      tds.forEach(function(td, i) {
+        if (i % 2 !== 1) return; // only value cells (1,3,5...)
+        var val = td.textContent.trim();
+        var ci = Math.floor(i / 2);
+        if (prev && prev.comp && prev.comp[ci] === val) return;
+        highlights.push(td);
+      });
+
+      highlights.forEach(function(el) { el.classList.add("filter-rv-highlight"); });
+      setTimeout(function() {
+        highlights.forEach(function(el) { el.classList.remove("filter-rv-highlight"); });
+      }, 2600);
+
+      // Snapshot current values
+      var snap = { grid: [], comp: [] };
+      rvs.forEach(function(el, i) { snap.grid[i] = el.textContent.trim(); });
+      tds.forEach(function(td, i) {
+        if (i % 2 === 1) snap.comp.push(td.textContent.trim());
+      });
+      global._filterPrevResult = snap;
+    }, 10);
+
+    restoreBtn();
   }
 
-  /* ── Clear results ─── */
+  /* ── Clear results (keep placeholders) ─── */
   function filterClearResults() {
-    var el = document.getElementById("filterResultsContent");
-    if (el) el.innerHTML = "";
     var ctx1 = (document.getElementById("filterChartMag")||{}).getContext;
     if (ctx1) { var c = document.getElementById("filterChartMag"); var x = c.getContext("2d"); x.clearRect(0,0,c.width,c.height); }
     var ctx2 = (document.getElementById("filterChartPhase")||{}).getContext;
@@ -163,6 +168,7 @@
     var schematic = document.getElementById("filterSchematic");
     if (schematic) schematic.innerHTML = "";
     global._filterResult = null;
+    global._filterPrevResult = null;
   }
 
   /* ── Render KPI results grid ─── */
@@ -184,23 +190,6 @@
 
     if (r.type === "mfb2") {
       html += '<div class="ri"><div class="rl">' + t("filter.q") + '</div><div class="rv">' + FM.fv(r.Q_actual, 3) + '</div></div>';
-      if (r.poles && r.poles.length >= 2) {
-        var fp = Math.sqrt(r.poles[0].real * r.poles[0].real + r.poles[0].imag * r.poles[0].imag) / (2 * Math.PI);
-        html += '<div class="ri"><div class="rl">' + t("filter.poleFreq") + '</div><div class="rv">' + FM.fv(fp, 1) + ' Hz</div></div>';
-      }
-    } else {
-      html += '<div class="ri"><div class="rl">' + t("filter.q") + '</div><div class="rv">0.5 (1st-order)</div></div>';
-      if (r.poles && r.poles.length) {
-        var fp1 = Math.sqrt(r.poles[0].real * r.poles[0].real + r.poles[0].imag * r.poles[0].imag) / (2 * Math.PI);
-        html += '<div class="ri"><div class="rl">' + t("filter.poleFreq") + '</div><div class="rv">' + FM.fv(fp1, 1) + ' Hz</div></div>';
-      }
-    }
-
-    if (r.gain_target !== undefined) {
-      html += '<div class="ri"><div class="rl">' + t("filter.errFc") + '</div><div class="rv">' + FM.fv((r.fc_actual / r.fc_target - 1) * 100, 2) + '%</div></div>';
-    }
-    if (r.gain_target !== undefined) {
-      html += '<div class="ri"><div class="rl">' + t("filter.errGain") + '</div><div class="rv">' + FM.fv((r.gain_actual / r.gain_target - 1) * 100, 2) + '%</div></div>';
     }
 
     html += '</div>';
@@ -359,9 +348,7 @@
     ctx.textAlign = "center"; ctx.font = "12px " + getComputedStyle(canvas).fontFamily;
     ctx.fillText("Magnitude (dB)", 0, 0);
     ctx.restore();
-    ctx.fillStyle = C.mag; ctx.fillRect(ml + pw - 110, mt + 8, 12, 12);
     ctx.fillStyle = C.text; ctx.textAlign = "left"; ctx.font = "11px " + getComputedStyle(canvas).fontFamily;
-    ctx.fillText("|H(f)|", ml + pw - 94, mt + 18);
   }
 
   /* Render phase (Bode phase) chart */
@@ -441,9 +428,6 @@
     ctx.textAlign = "center"; ctx.font = "12px " + getComputedStyle(canvas).fontFamily;
     ctx.fillText("Phase (deg)", 0, 0);
     ctx.restore();
-    ctx.fillStyle = C.phase; ctx.fillRect(ml + pw - 70, mt + 8, 12, 12);
-    ctx.fillStyle = C.text; ctx.textAlign = "left"; ctx.font = "11px " + getComputedStyle(canvas).fontFamily;
-    ctx.fillText("phase", ml + pw - 54, mt + 18);
   }
   /* ── Render both charts ─── */
   function renderFilterChart(r) {
@@ -559,9 +543,9 @@
     var fbBusX   = opX - 10;     // feedback vertical bus X = 230
 
     var parts = [];
-    parts.push('<svg viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:640px;color:var(--color-text)">');
-    parts.push('<style>.flbl{fill:currentColor;font:13px -apple-system,sans-serif;}.fref{fill:var(--color-text-soft);font:11px -apple-system,sans-serif;}.fnode{fill:currentColor;font:12px -apple-system,sans-serif;font-weight:600}.fdes{fill:currentColor;font:14px -apple-system,sans-serif;font-weight:600}</style>');
-    parts.push('<text x="320" y="18" class="fdes" text-anchor="middle">1st-Order Differential Low-Pass Filter</text>');
+    parts.push('<svg viewBox="0 0 450 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:380px;color:var(--color-text)">');
+    parts.push('<style>.flbl{fill:currentColor;font:12px -apple-system,sans-serif;}.fref{fill:var(--color-text-soft);font:10px -apple-system,sans-serif;}.fnode{fill:currentColor;font:11px -apple-system,sans-serif;font-weight:600}.fdes{fill:currentColor;font:12px -apple-system,sans-serif;font-weight:600}</style>');
+    parts.push('<text x="190" y="16" class="fdes" text-anchor="middle">1st-Order Differential Low-Pass Filter</text>');
 
     // ── Vin- → R1 → negJ ──
     parts.push('<text x="5" y="' + (vinMinusY+4) + '" class="fnode">Vin\u2212</text>');
@@ -621,13 +605,15 @@
     parts.push('</svg>');
     return parts.join('');
   }
-
   /* ================================================================
      RENDER: 2nd-Order MFB Low-Pass Filter
 
-     Standard MFB: Vin → R1 → N1 → R3 → N2 → (-) → Vout
-     C1 from N1 to GND.  R2 ∥ C2 in feedback from output to N2.
-     (+) to GND.
+     Standard multiple-feedback topology (single summing node):
+       Vin -> R1 -> Node1 -> R3 -> op-amp(-) -> Vout
+       Node1 -> C2 -> GND
+       Node1 -> R2 -> op-amp output       (feedback resistor)
+       op-amp(-) -> C1 -> op-amp output   (feedback capacitor)
+       op-amp(+) -> GND
   ================================================================ */
   function renderMfb2Svg(c) {
     var r1V = FM.valLabel(c.R1) + "\u03A9";
@@ -638,92 +624,81 @@
     var RW = 44, RH = 14;
 
     // === Coordinate system ===
-    var opX   = 235;    // op-amp left edge
-    var opCY  = 125;    // op-amp vertical centre
+    var opX   = 260;    // op-amp left edge
+    var opCY  = 120;    // op-amp vertical centre
     var opHH  = 32;     // half-height
-    var nTY   = opCY - 18;   // (-) terminal Y = 107
-    var pTY   = opCY + 18;   // (+) terminal Y = 143
-    var opR   = opX + 40;    // output tip = 275
+    var opR   = opX + 40;    // output tip = 300
 
-    var sigY  = opCY;        // main signal Y = 125
+    // Summing node (all components connect here)
+    var n1X   = 105;
+    var n1Y   = opCY;        // y = 120
+    var nTY   = opCY - 18;   // (-) terminal Y = 102
+    var pTY   = opCY + 18;   // (+) terminal Y = 138
 
-    // signal nodes (left to right along sigY)
-    var n1X   = opX - 130;   // N1: after R1, C1 to GND = 105
-    var n2X   = opX - 42;    // N2: after R3, feedback join = 193
-
-    // feedback routing (above op-amp)
-    var fbTakeX = opR + 22;  // output takeoff = 297
-    var fbBusX  = n2X + 44;  // feedback vertical bus = 237
-    var fbTopY  = 28;        // R2 bus
-    var fbMidY  = 50;        // C2 bus
+    // Feedback bus above op-amp
+    var fbY   = 45;          // R2 horizontal bus
+    var c1Y   = 72;          // C1 horizontal bus
+    var outX  = opR + 10;    // output junction = 310
 
     var parts = [];
-    parts.push('<svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:640px;color:var(--color-text)">');
-    parts.push('<style>.flbl{fill:currentColor;font:13px -apple-system,sans-serif;}.fref{fill:var(--color-text-soft);font:11px -apple-system,sans-serif;}.fnode{fill:currentColor;font:12px -apple-system,sans-serif;font-weight:600}.fdes{fill:currentColor;font:14px -apple-system,sans-serif;font-weight:600}</style>');
-    parts.push('<text x="320" y="18" class="fdes" text-anchor="middle">2nd-Order MFB Low-Pass Filter</text>');
+    parts.push('<svg viewBox="0 0 450 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:380px;color:var(--color-text)">');
+    parts.push('<style>.flbl{fill:currentColor;font:12px -apple-system,sans-serif;}.fref{fill:var(--color-text-soft);font:10px -apple-system,sans-serif;}.fnode{fill:currentColor;font:11px -apple-system,sans-serif;font-weight:600}.fdes{fill:currentColor;font:12px -apple-system,sans-serif;font-weight:600}</style>');
+    parts.push('<text x="190" y="16" class="fdes" text-anchor="middle">2nd-Order MFB Low-Pass Filter</text>');
 
-    // ── Vin → R1 → N1 ──
-    parts.push('<text x="5" y="' + (sigY+4) + '" class="fnode">Vin</text>');
-    parts.push(L(32, sigY, 32, sigY));
-    parts.push(resDraw(32, n1X-18, sigY, RW, RH, 'R1', r1V));
-    parts.push(L(n1X-18, sigY, n1X, sigY));
-    parts.push(dot(n1X, sigY));
+    // --- Vin -> R1 -> Node1 ---
+    parts.push('<text x="5" y="' + (n1Y+4) + '" class="fnode">Vin</text>');
+    parts.push(L(28, n1Y, 28, n1Y));
+    parts.push(resDraw(28, 78, n1Y, RW, RH, 'R1', r1V));
+    parts.push(L(78, n1Y, n1X, n1Y));
+    parts.push(dot(n1X, n1Y));
 
-    // ── C1: N1 → GND (vertical) ──
-    var c1Bot = sigY + 85;
-    parts.push(L(n1X, sigY, n1X, c1Bot-22));
-    parts.push(capV(n1X, c1Bot-22, c1Bot));
-    parts.push(GND(n1X, c1Bot));
-    parts.push('<text x="' + (n1X+14) + '" y="' + (c1Bot-10) + '" class="flbl">C1</text>');
-    parts.push('<text x="' + (n1X+14) + '" y="' + (c1Bot+2) + '" class="fref">' + c1V + '</text>');
+    // --- C2: Node1 -> GND (vertical) ---
+    var c2Bot = 192;
+    parts.push(L(n1X, n1Y, n1X, 165));
+    parts.push(capV(n1X, 165, c2Bot));
+    parts.push(GND(n1X, c2Bot));
+    parts.push('<text x="' + (n1X+14) + '" y="' + (c2Bot-10) + '" class="flbl">C2</text>');
+    parts.push('<text x="' + (n1X+14) + '" y="' + (c2Bot+2) + '" class="fref">' + c2V + '</text>');
 
-    // ── R3: N1 → N2 ──
-    var r3s = n1X + 18;
-    parts.push(L(n1X, sigY, r3s, sigY));
-    parts.push(resDraw(r3s, n2X-18, sigY, RW, RH, 'R3', r3V));
-    parts.push(L(n2X-18, sigY, n2X, sigY));
-    parts.push(dot(n2X, sigY));
+    // --- R3: Node1 -> op-amp(-) ---
+    parts.push(L(n1X, n1Y, 140, n1Y));
+    parts.push(resDraw(140, 210, n1Y, RW, RH, 'R3', r3V));
+    parts.push(L(210, n1Y, 210, nTY));
+    parts.push(L(210, nTY, opX-12, nTY));
 
-    // ── N2 → op-amp (-) ──
-    parts.push(L(n2X, sigY, n2X, nTY));
-    parts.push(L(n2X, nTY, opX-12, nTY));
+    // --- R2: Node1 -> output (feedback resistor) ---
+    // Up from Node1 -> R2 body at fbY -> right to outX -> down to output
+    parts.push(L(n1X, n1Y, n1X, fbY));
+    parts.push(resDraw(n1X, 270, fbY, RW, RH, 'R2', r2V));
+    parts.push(L(270, fbY, outX, fbY));
+    parts.push(L(outX, fbY, outX, n1Y));
 
-    // ── Op-amp ──
+    // --- C1: op-amp(-) -> output (feedback capacitor) ---
+    // Up from (-) -> C1 at c1Y -> right to outX -> down to output
+    parts.push(L(opX-12, nTY, opX-12, c1Y));
+    parts.push(capH(opX-12, outX, c1Y));
+    parts.push('<text x="' + ((opX-12+outX)/2).toFixed(0) + '" y="' + (c1Y-9) + '" class="flbl" text-anchor="middle">C1</text>');
+    parts.push('<text x="' + ((opX-12+outX)/2).toFixed(0) + '" y="' + (c1Y+19) + '" class="fref" text-anchor="middle">' + c1V + '</text>');
+    parts.push(L(outX, c1Y, outX, n1Y));
+
+    // --- Op-amp ---
     parts.push(opAmpTri(opX, opCY, opHH));
 
-    // ── (+) terminal → GND ──
-    parts.push(L(opX-12, pTY, n2X, pTY));
-    parts.push(L(n2X, pTY, n2X, pTY+40));
-    parts.push(GND(n2X, pTY+40));
+    // --- (+) terminal -> GND ---
+    parts.push(L(opX-12, pTY, opX-12, 170));
+    parts.push(GND(opX-12, 170));
 
-    // ── Output ──
-    var voutX = opR + 60;
+    // --- Output wire ---
+    var voutX = opR + 70;
     parts.push(L(opR, opCY, voutX, opCY));
     parts.push('<text x="' + (voutX+3) + '" y="' + (opCY+4) + '" class="fnode">Vout</text>');
 
-    // ── Feedback R2 ∥ C2: output → top → back to N2 ──
-    // takeoff from output up to feedback bus
-    parts.push(L(fbTakeX, opCY, fbTakeX, fbTopY));
-    // R2 on upper horizontal
-    parts.push(resDraw(fbBusX, fbTakeX, fbTopY, RW, RH, 'R2', r2V));
-    // C2 on lower horizontal (parallel with R2)
-    parts.push(L(fbTakeX, opCY, fbTakeX, fbMidY));
-    parts.push(capH(fbBusX, fbTakeX, fbMidY));
-    parts.push('<text x="' + ((fbBusX+fbTakeX)/2).toFixed(0) + '" y="' + (fbMidY-9) + '" class="flbl" text-anchor="middle">C2</text>');
-    parts.push('<text x="' + ((fbBusX+fbTakeX)/2).toFixed(0) + '" y="' + (fbMidY+19) + '" class="fref" text-anchor="middle">' + c2V + '</text>');
-    // vertical drop bus: connects both R2 and C2 to N2 level
-    parts.push(L(fbBusX, fbTopY, fbBusX, nTY));
-    // horizontal from feedback bus to N2
-    parts.push(L(fbBusX, nTY, n2X, nTY));
-
-    // ── Junction dots ──
-    parts.push(dot(n2X, nTY));     // (-) input / feedback join
-    parts.push(dot(fbBusX, nTY));   // feedback bus
+    // --- Junction dot for output (R2 + C1 + output meet) ---
+    parts.push(dot(outX, n1Y));
 
     parts.push('</svg>');
     return parts.join('');
   }
-
   /* ── Report generation ─── */
   function filterGenRep() {
     var r = global._filterResult;

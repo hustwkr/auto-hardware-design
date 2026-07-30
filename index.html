@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>自动硬件设计工具</title>
 <link rel="icon" type="image/png" href="/hwlogo.png">
-<link rel="stylesheet" href="css/app.css?v=34">
+<link rel="stylesheet" href="css/app.css?v=41">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>
 </head>
@@ -309,20 +309,18 @@
 <p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35" data-i18n="filter.subtitle">基于运放的有源低通滤波器 · 一阶差分 / 二阶 MFB · 幅频相频特性 · E24/E48 标准值</p>
 
 <div class="card"><h2 data-i18n="filter.spec">设计指标</h2><div class="param-grid">
-  <div class="fgi"><label data-i18n="filter.type">滤波器类型</label><select id="filterType" >
+  <div class="fgi"><label data-i18n="filter.type">滤波器类型</label><select id="filterType" onchange="filterTypeChange()">
     <option value="diff1" data-i18n="filter.type.diff1">一阶差分 (Differential LPF)</option>
     <option value="mfb2" selected data-i18n="filter.type.mfb2">二阶MFB (Multiple Feedback LPF)</option>
   </select></div>
-  <div class="fgi"><label data-i18n="filter.series">电阻精度系列</label><select id="filterSeries" >
+  <div class="fgi" style="position:relative"><label><span data-i18n="filter.series">电阻精度系列</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="filterSeries" >
     <option value="e24" selected data-i18n="filter.series.e24">E24 (5%)</option>
     <option value="e48" data-i18n="filter.series.e48">E48 (2%)</option>
-  </select></div>
+  </select><div class="info-popup" data-i18n-html="filter.series.hint" style="width:400px"></div></div>
   <div class="fgi"><label data-i18n="filter.fc">截止频率 (Hz)</label><input type="number" id="filterFc" value="1000" min="0.1" step="any" ></div>
   <div class="fgi"><label data-i18n="filter.gain">直流增益 (V/V)</label><input type="number" id="filterGain" value="1" min="0.01" step="0.1" ></div>
-  <div class="fgi" id="filterQGroup"><label data-i18n="filter.q">Q值</label><input type="number" id="filterQ" value="0.707" min="0.1" step="0.001" ><span class="unit">(Butterworth: 0.707)</span></div>
-  <div class="fgi"><label data-i18n="filter.c1">C1 预设电容</label><select id="filterC1" ></select></div>
-  <div class="fgi" id="filterC2Group"><label data-i18n="filter.c2">C2 预设电容</label><select id="filterC2" ></select></div>
-</div><div style="margin-top:12px"><button class="btn" onclick="filterCalc()" style="width:100%">开始计算</button></div></div>
+  <div class="fgi" id="filterQGroup" style="position:relative"><label><span data-i18n="filter.q">Q值</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><input type="number" id="filterQ" value="0.707" min="0.1" step="0.001" ><div class="info-popup" data-i18n="filter.q.hint" style="width:360px">MFB 拓扑的 AM-GM 不等式约束 Q ≤ 0.5，设置值超过 0.5 会被自动钳位到 0.5。若需 Q > 0.5，请使用 Sallen-Key 或其他拓扑。</div></div>
+</div><div style="margin-top:12px"><button id="filterCalcBtn" class="btn btn-p" onclick="filterCalc()" style="width:100%">开始计算</button></div></div>
 
 <div class="card"><h2 data-i18n="filter.results">计算结果</h2>
   <div id="filterResultsContent"></div>
@@ -331,9 +329,9 @@
 
 <div class="card" style="margin-top:16px">
   <h2>器件参数 · 滤波器电路</h2>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div style="display:grid;grid-template-columns:200px 1fr;gap:16px">
     <div id="filterComponentsTable"></div>
-    <div id="filterSchematic" style="min-height:230px;display:flex;align-items:center;justify-content:center;">
+    <div id="filterSchematic" style="min-height:108px;display:flex;align-items:center;justify-content:center;">
       <p style="color:var(--color-text-soft);font-size:.85rem">请设置设计指标后查看电路。</p>
     </div>
   </div>
@@ -362,7 +360,7 @@
 </div><!-- /container -->
 
 <!-- ── Scripts (order: i18n → models → ui modules → app) ── -->
-<script src="js/i18n.js?v=20"></script>
+<script src="js/i18n.js?v=23"></script>
 <script src="js/models/capacitor-model.js?v=15"></script>
 <script src="js/models/safety-model.js?v=17"></script>
 <script src="js/models/pcb-model.js?v=2"></script>
@@ -370,7 +368,7 @@
 <script src="js/safety.js?v=40"></script>
 <script src="js/pcb.js?v=3"></script>
 <script src="js/models/filter-model.js?v=6"></script>
-<script src="js/filter.js?v=46"></script>
+<script src="js/filter.js?v=74"></script>
 <script src="js/feedback.js?v=1"></script>
 <script src="js/app.js?v=25"></script>
 </body>

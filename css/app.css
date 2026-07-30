@@ -658,6 +658,7 @@ table.data-tbl tbody tr:hover {
 
 .ri .rl { font-size: var(--fs-xs); color: var(--color-text-soft); margin-bottom: 1px; }
 .ri .rv { font-size: 1.1rem; font-weight: 700; color: var(--color-text); }
+.ri .rv.rv-placeholder { font-size: .85rem; font-weight: 400; color: var(--color-text-soft); }
 
 /* ============================================================
    Badges (warranty status)
@@ -845,6 +846,16 @@ table.data-tbl tbody tr:hover {
 
   /* Ensure links show URLs */
   a[href]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #666; }
+}
+
+/* ── Filter result value highlight (text color only) ─── */
+@keyframes filter-highlight {
+  0%    { color: #2563eb; }
+  40%   { color: #2563eb; }
+  100%  { color: inherit; }
+}
+.filter-rv-highlight {
+  animation: filter-highlight 2.5s ease-out forwards;
 }
 
 /* ============================================================
