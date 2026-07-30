@@ -548,7 +548,8 @@
     "filter.refDes":     { zh: "参考编号", en: "Ref Des" },
     "filter.value":      { zh: "参数值", en: "Value" },
     "filter.results":    { zh: "计算结果", en: "Results" },
-    "filter.chart":      { zh: "幅频 / 相频特性", en: "Magnitude / Phase Response" },
+    "filter.chartMag":   { zh: "幅频特性", en: "Magnitude Response" },
+    "filter.chartPhase": { zh: "相频特性", en: "Phase Response" },
     "filter.circuit":    { zh: "滤波器电路", en: "Filter Circuit" },
     "filter.noResult":   { zh: "请设置设计指标后查看电路。", en: "Set design targets to view the circuit." },
 

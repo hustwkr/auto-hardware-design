@@ -334,8 +334,11 @@
 </div>
 
 <div>
-  <div class="card"><h2 data-i18n="filter.chart">幅频 / 相频特性</h2>
-    <canvas id="filterChart" style="width:100%;height:280px;border-radius:var(--radius-sm)"></canvas>
+  <div class="card"><h2 data-i18n="filter.chartMag">幅频特性 (Magnitude)</h2>
+    <canvas id="filterChartMag" style="width:100%;height:240px;border-radius:var(--radius-sm)"></canvas>
+  </div>
+  <div class="card"><h2 data-i18n="filter.chartPhase">相频特性 (Phase)</h2>
+    <canvas id="filterChartPhase" style="width:100%;height:200px;border-radius:var(--radius-sm)"></canvas>
   </div>
 </div>
 </div><!-- /layout -->
@@ -363,7 +366,7 @@
 </div><!-- /container -->
 
 <!-- ── Scripts (order: i18n → models → ui modules → app) ── -->
-<script src="js/i18n.js?v=19"></script>
+<script src="js/i18n.js?v=20"></script>
 <script src="js/models/capacitor-model.js?v=15"></script>
 <script src="js/models/safety-model.js?v=17"></script>
 <script src="js/models/pcb-model.js?v=2"></script>
@@ -371,7 +374,7 @@
 <script src="js/safety.js?v=40"></script>
 <script src="js/pcb.js?v=3"></script>
 <script src="js/models/filter-model.js?v=2"></script>
-<script src="js/filter.js?v=10"></script>
+<script src="js/filter.js?v=11"></script>
 <script src="js/feedback.js?v=1"></script>
 <script src="js/app.js?v=25"></script>
 </body>
