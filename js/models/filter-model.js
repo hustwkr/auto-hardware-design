@@ -172,43 +172,52 @@
     if (!fc || fc <= 0) return null;
     if (!gain || gain <= 0) gain = 1;
     if (!Q || Q <= 0) Q = 0.707;
-    if (Q < 0.5) Q = 0.5;
+    // MFB fundamental limit: Q <= 0.5 (AM-GM bound).
+    // Clamp target Q to 0.5 so the search converges quickly.
+    var Q_target = Math.min(Q, 0.5);
     var w0 = 2 * Math.PI * fc;
-    var Rmin = 1e3, Rmax = 470e3;
     var seriesArr = series === "e48" ? E48 : E24;
 
-    function allCaps() {
-      var caps = [];
-      for (var decade = -12; decade <= -3; decade++) {
-        for (var j = 0; j < seriesArr.length; j++) caps.push(seriesArr[j] * Math.pow(10, decade));
-      }
-      return caps;
-    }
-    var CAPS = allCaps();
+    // Generate standard capacitor values (1pF .. 10uF)
+    var CAPS = [];
+    for (var dec = -12; dec <= -3; dec++)
+      for (var j = 0; j < seriesArr.length; j++) CAPS.push(seriesArr[j] * Math.pow(10, dec));
 
-    function actualQ(R1,R2,C1,C2){var d1=R2*C2+C1*R1/2,d2=C1*C2*R1*R2/2;return d1>0&&d2>0?Math.sqrt(d2)/d1:0;}
-    function actualFc(R1,R2,C1,C2){var d2=C1*C2*R1*R2/2;return d2>0?1/(2*Math.PI*Math.sqrt(d2)):0;}
-    function score(R1,R2,C1,C2){
-      var qA=actualQ(R1,R2,C1,C2), fcA=actualFc(R1,R2,C1,C2), gA=R2/(2*R1);
-      return 10*Math.abs(qA-Q)/Q + Math.abs(fcA-fc)/fc + Math.abs(gA-gain)/gain;
+    // d1 = R2*C2 + C1*Rp, d2 = C1*C2*R2*Rp. Q = sqrt(d2)/d1
+    function qAct(R1,R2,R3,C1,C2){
+      var Rp=R1*R3/(R1+R3),d1=R2*C2+C1*Rp,d2=C1*C2*R2*Rp;
+      return d1>0&&d2>0?Math.sqrt(d2)/d1:0;
+    }
+    function fAct(R1,R2,R3,C1,C2){
+      var d2=C1*C2*R2*R1*R3/(R1+R3);
+      return d2>0?1/(2*Math.PI*Math.sqrt(d2)):0;
     }
 
-    var best=null, bestS=Infinity;
+    var best=null,bestScore=Infinity;
     for(var ci=0;ci<CAPS.length;ci++){
       var c1t=CAPS[ci];
-      var r1t=1/(w0*Math.sqrt(c1t*c1t*gain));
-      if(r1t<Rmin||r1t>Rmax) continue;
-      for(var cj=ci;cj<CAPS.length;cj++){
+      for(var cj=0;cj<CAPS.length;cj++){
         var c2t=CAPS[cj];
-        var r2t=2*gain*r1t;
-        if(r2t<Rmin||r2t>Rmax) continue;
-        var R1=nearestStd(r1t,series),R2=nearestStd(r2t,series),C1s=nearestStdCap(c1t,series),C2s=nearestStdCap(c2t,series);
-        if(R1<Rmin||R2<Rmin) continue;
-        var sc=score(R1,R2,C1s,C2s);
-        if(sc<bestS){bestS=sc;best={R1:R1,R2:R2,R3:R1,C1:C1s,C2:C2s};}
+        if(c2t<c1t*0.05||c2t>c1t*20) continue;
+        for(var logR1=2;logR1<=6.5;logR1+=0.015){
+          var R1=Math.pow(10,logR1);
+          // R3 from w0 equation: R1·R3 = 1/(gain·C1·C2·w0²)
+          var R3=1/(gain*c1t*c2t*w0*w0*R1);
+          if(R3<0.5||R3>2e7) continue;
+          var R2=gain*(R1+R3);
+          if(R2<0.5||R2>2e7) continue;
+          var R1s=nearestStd(R1,series),R2s=nearestStd(R2,series),R3s=nearestStd(R3,series);
+          var C1s=nearestStdCap(c1t,series),C2s=nearestStdCap(c2t,series);
+          if(R1s<=0||R2s<=0||R3s<=0) continue;
+          var qA=qAct(R1s,R2s,R3s,C1s,C2s),fA=fAct(R1s,R2s,R3s,C1s,C2s);
+          if(qA<=0||fA<=0) continue;
+          var gA=R2s/(R1s+R3s);
+          var sc=10*Math.abs(qA-Q_target)/Q_target+Math.abs(fA-fc)/fc+Math.abs(gA-gain)/gain;
+          if(sc<bestScore){bestScore=sc;best={R1:R1s,R2:R2s,R3:R3s,C1:C1s,C2:C2s};}
+        }
       }
     }
-    if(!best)return null;
+    if(!best) return null;
     var R1=best.R1,R2=best.R2,R3=best.R3,C1=best.C1,C2=best.C2;
 
     var n0=-R2/(R1+R3),d1=R2*C2+C1*R1*R3/(R1+R3),d2=C1*C2*R1*R2*R3/(R1+R3);
@@ -217,17 +226,15 @@
 
     var freqs=genFreqPoints(actual_fc*0.01,actual_fc*100,300),freqResp=[];
     for(var i=0;i<freqs.length;i++){
-      var w=2*Math.PI*freqs[i];
-      var re=n0*(1-w*w*d2)/((1-w*w*d2)*(1-w*w*d2)+(w*d1)*(w*d1));
+      var w=2*Math.PI*freqs[i],re=n0*(1-w*w*d2)/((1-w*w*d2)*(1-w*w*d2)+(w*d1)*(w*d1));
       var im=-n0*w*d1/((1-w*w*d2)*(1-w*w*d2)+(w*d1)*(w*d1));
-      var mag=Math.sqrt(re*re+im*im),p=Math.atan2(im,re)*180/Math.PI;
-      freqResp.push({f:freqs[i],mag:mag,phase:p,magDb:20*Math.log10(mag||1e-30),phaseDeg:p});
+      freqResp.push({f:freqs[i],mag:Math.sqrt(re*re+im*im),phase:Math.atan2(im,re)*180/Math.PI,magDb:20*Math.log10(Math.sqrt(re*re+im*im)||1e-30),phaseDeg:Math.atan2(im,re)*180/Math.PI});
     }
-    var a=d2,b=d1,disc=b*b-4*a,poles=[];
-    if(disc>=0){poles.push({real:-b/(2*a)+Math.sqrt(disc)/(2*a),imag:0});poles.push({real:-b/(2*a)-Math.sqrt(disc)/(2*a),imag:0});}
-    else{poles.push({real:-b/(2*a),imag:Math.sqrt(-disc)/(2*a)});poles.push({real:-b/(2*a),imag:-Math.sqrt(-disc)/(2*a)});}
+    var disc=d1*d1-4*d2,poles=[];
+    if(disc>=0){poles.push({real:-d1/(2*d2)+Math.sqrt(disc)/(2*d2),imag:0});poles.push({real:-d1/(2*d2)-Math.sqrt(disc)/(2*d2),imag:0});}
+    else{poles.push({real:-d1/(2*d2),imag:Math.sqrt(-disc)/(2*d2)});poles.push({real:-d1/(2*d2),imag:-Math.sqrt(-disc)/(2*d2)});}
 
-    return{type:"mfb2",fc_target:fc,gain_target:gain,Q_target:Q,fc_actual:actual_fc,gain_actual:actual_gain,Q_actual:actual_Q,
+    return{type:"mfb2",fc_target:fc,gain_target:gain,Q_target:Q_target,fc_actual:actual_fc,gain_actual:actual_gain,Q_actual:actual_Q,
       components:{R1:R1,R2:R2,R3:R3,C1:C1,C2:C2,R1_label:valLabel(R1)+"Ω",R2_label:valLabel(R2)+"Ω",R3_label:valLabel(R3)+"Ω",C1_label:capLabel(C1),C2_label:capLabel(C2)},
       freqResp:freqResp,poles:poles};
   }
