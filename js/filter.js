@@ -428,75 +428,8 @@
     el.innerHTML = svg;
   }
 
-  function renderDiff1Svg(w, h, c) {
-    var cx = 80, cy = h/2 + 10;
-    var lines = [];
-
-    function addLine(pts, cls) { lines.push('<polyline points="' + pts.map(function(p){return p.x+','+p.y}).join(' ') + '" fill="none" stroke="currentColor" stroke-width="1.2"/>'); }
-    function addRes(x1,y1,x2,y2,label,ref) {
-      var mx = (x1+x2)/2, my = (y1+y2)/2;
-      var dx = x2-x1, dy = y2-y1;
-      var nx = -dy, ny = dx;
-      var nl = Math.sqrt(nx*nx+ny*ny);
-      if (nl<0.1) { nl=1; nx=1; }
-      nx/=nl; ny/=nl;
-      var zig = function(cx,cy,count){
-        var d=6,pts=[{x:cx-d*nx-dx*0.06, y:cy-d*ny-dy*0.06}];
-        for(var i=0;i<count;i++){var p=i/(count-1)-0.5;
-          pts.push({x:cx+p*dx+d*nx*(i%2?1:-1), y:cy+p*dy+d*ny*(i%2?1:-1)});}
-        pts.push({x:cx+dx*0.5-d*nx+dx*0.06, y:cy+dy*0.5-d*ny+dy*0.06});
-        return pts;
-      };
-      var pts = zig(mx,my,6);
-      addLine(pts,1);
-      addLine([{x:x1,y:y1},{x:pts[0].x,y:pts[0].y}]);
-      addLine([{x:pts[pts.length-1].x,y:pts[pts.length-1].y},{x:x2,y:y2}]);
-    }
-    // Draw lines + R1
-    return '<svg viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:' + w + 'px;color:var(--color-text)">' +
-      '<style>.ftxt{fill:currentColor;font-size:13px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}.fref{fill:var(--color-text-soft);font-size:11px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}.fnode{fill:currentColor;font-size:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:600}</style>' +
-      // Ground
-      '<line x1="' + cx + '" y1="' + (cy-40) + '" x2="' + cx + '" y2="' + (cy+50) + '" stroke="currentColor" stroke-width="1.2"/>' +
-      '<line x1="' + (cx-10) + '" y1="' + (cy+50) + '" x2="' + (cx+10) + '" y2="' + (cy+50) + '" stroke="currentColor" stroke-width="1.2"/>' +
-      '<line x1="' + (cx-6) + '" y1="' + (cy+56) + '" x2="' + (cx+6) + '" y2="' + (cy+56) + '" stroke="currentColor" stroke-width="1.2"/>' +
-      '<line x1="' + (cx-3) + '" y1="' + (cy+62) + '" x2="' + (cx+3) + '" y2="' + (cy+62) + '" stroke="currentColor" stroke-width="1.2"/>' +
-      // Op-amp
-      '<polygon points="' + (cx+60) + ',' + (cy-30) + ' ' + (cx+60) + ',' + (cy+30) + ' ' + (cx+100) + ',' + cy + '" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
-      '<line x1="' + (cx+100) + '" y1="' + cy + '" x2="' + (cx+130) + '" y2="' + cy + '" stroke="currentColor" stroke-width="1.2"/>' +
-      // (-) input
-      '<line x1="' + (cx+50) + '" y1="' + (cy-10) + '" x2="' + (cx+60) + '" y2="' + (cy-10) + '" stroke="currentColor" stroke-width="1.2"/>' +
-      '<text x="' + (cx+54) + '" y="' + (cy-14) + '" class="ftxt">-</text>' +
-      // (+) input
-      '<line x1="' + (cx+50) + '" y1="' + (cy+10) + '" x2="' + (cx+60) + '" y2="' + (cy+10) + '" stroke="currentColor" stroke-width="1.2"/>' +
-      '<text x="' + (cx+54) + '" y="' + (cy+18) + '" class="ftxt">+</text>' +
-      // (+) to GND
-      '<line x1="' + (cx+55) + '" y1="' + (cy+10) + '" x2="' + (cx+55) + '" y2="' + (cy+50) + '" stroke="currentColor" stroke-width="1.2"/>' +
-      // Vin → R1
-      '<text x="20" y="' + (cy+4) + '" class="fnode">Vin</text>' +
-      '<line x1="40" y1="' + cy + '" x2="' + (cx-50) + '" y2="' + cy + '" stroke="currentColor" stroke-width="1.2"/>' +
-      // R1
-      resistorPath(6, cx-50, cy, cx+10, cy, 'R1', c.R1_label, c) + '" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
-      // C1 (from node after R1 to GND)
-      capPath(cx, cy-40, cx, cy-10, 'C1', c.C1_label) +
-      // R2 (feedback: output to (-) input)
-      // from output at cx+130,cy to cx+60,cy-10 via cx+130,cy-60
-      '<line x1="' + (cx+130) + '" y1="' + cy + '" x2="' + (cx+130) + '" y2="' + (cy-60) + '" stroke="currentColor" stroke-width="1.2"/>' +
-      resistorPath(3, cx+130, cy-60, cx+60, cy-60, 'R2', c.R2_label, c) + '" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
-      '<line x1="' + nodeC(cx+60,y-60) + '" y1="' + (cy-60) + '" x2="' + (cx+60) + '" y2="' + (cy-20) + '" stroke="currentColor" stroke-width="1.2"/>' +
-      // Vout label
-      '<text x="' + (cx+132) + '" y="' + (cy+4) + '" class="fnode">Vout</text>' +
-      // Node dots
-      '<circle cx="' + (cx-50) + '" cy="' + cy + '" r="2" fill="currentColor"/>' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="2" fill="currentColor"/>' +
-      // Labels
-      '<text x="' + (cx+10) + '" y="' + (cy-55) + '" class="fnode">1st-Order Differential LPF</text>' +
-      '</svg>';
-  }
-
-  // I need a simpler approach for schematics - let me use simpler SVG rendering
-
   /* ── Simplified SVG rendering ─── */
-  // Helper: draw a resistor zigzag path
+  // Helper: draw a resistor zigzag path (returns points string for <polyline>)
   function resistorPath(zigCount, x1, y1, x2, y2) {
     var pts = [];
     var dx = x2 - x1, dy = y2 - y1;
@@ -504,20 +437,74 @@
     if (len < 1) return '';
     var ux = dx/len, uy = dy/len;
     var nx = -uy, ny = ux;
-    var segLen = len / (zigCount + 1);
+    var zigAmp = Math.min(8, len * 0.12);
     pts.push([x1, y1]);
     for (var i = 1; i <= zigCount; i++) {
-      var mid = i / (zigCount + 1);
-      var mx = x1 + dx * mid, my = y1 + dy * mid;
-      var zig = (i % 2 === 1) ? 6 : -6;
+      var t = i / (zigCount + 1);
+      var mx = x1 + dx * t, my = y1 + dy * t;
+      var zig = (i % 2 === 1) ? zigAmp : -zigAmp;
       pts.push([mx + nx * zig, my + ny * zig]);
     }
     pts.push([x2, y2]);
     return pts.map(function(p){return p[0]+','+p[1]}).join(' ');
   }
 
-  // Since the above SVG approach is getting complex, let me use a simpler pre-calculated SVG
+  function Rpath(z, x1, y1, x2, y2) {
+    var pts = resistorPath(z, x1, y1, x2, y2);
+    return '<polyline points="' + pts + '" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+  }
 
+  function L(x1,y1,x2,y2) {
+    return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="currentColor" stroke-width="1.2"/>';
+  }
+
+  function GND(x, y) {
+    return L(x-8, y, x+8, y) + L(x-5, y+6, x+5, y+6) + L(x-2, y+12, x+2, y+12);
+  }
+
+  // Vertical capacitor: two parallel plates
+  function capV(x, y1, y2) {
+    var mid = (y1+y2)/2;
+    return L(x, y1, x, mid-5) + L(x-5, mid-5, x+5, mid-5) +
+           L(x-5, mid+5, x+5, mid+5) + L(x, mid+5, x, y2);
+  }
+
+  // Horizontal capacitor: two parallel plates
+  function capH(x1, x2, y) {
+    var mid = (x1+x2)/2;
+    return L(x1, y, mid-5, y) + L(mid-5, y-5, mid-5, y+5) +
+           L(mid+5, y-5, mid+5, y+5) + L(mid+5, y, x2, y);
+  }
+
+  function nodeDot(x, y) {
+    return '<circle cx="' + x + '" cy="' + y + '" r="2.5" fill="currentColor"/>';
+  }
+
+  function opAmp(opX, cy, h, label) {
+    // Triangle: left edge (opX, cy-h) to (opX, cy+h), right tip at (opX+36, cy)
+    var tri = '<polygon points="' + opX + ',' + (cy-h) + ' ' + opX + ',' + (cy+h) + ' ' + (opX+36) + ',' + cy + '" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+    // (-) terminal — short line from left edge, 1/4 from top
+    var termN = '<line x1="' + (opX-10) + '" y1="' + (cy-h*0.55) + '" x2="' + opX + '" y2="' + (cy-h*0.55) + '" stroke="currentColor" stroke-width="1.2"/>';
+    // (+) terminal — short line from left edge, 1/4 from bottom
+    var termP = '<line x1="' + (opX-10) + '" y1="' + (cy+h*0.55) + '" x2="' + opX + '" y2="' + (cy+h*0.55) + '" stroke="currentColor" stroke-width="1.2"/>';
+    // (-) and (+) signs
+    var signN = '<text x="' + (opX-14) + '" y="' + (cy-h*0.55+4) + '" class="flbl" text-anchor="end">-</text>';
+    var signP = '<text x="' + (opX-14) + '" y="' + (cy+h*0.55+4) + '" class="flbl" text-anchor="end">+</text>';
+    var lbl = label ? '<text x="' + (opX+14) + '" y="' + (cy+4) + '" class="flbl">A</text>' : '';
+    return termN + termP + tri + signN + signP + lbl;
+  }
+
+  /* ================================================================
+     1st-Order Inverting LPF Schematic
+
+     Topology: Vin --R1--+---> (-) op-amp ---+--- Vout
+                          |     |      |      |
+                    (virtual  (+)    C1||R2   |
+                     ground)  |      |        |
+                             GND    GND   ----+
+
+     R2 and C1 are in parallel in the feedback path (output to - input)
+     ================================================================ */
   function renderDiff1Svg(w, h, c) {
     var t = global._t || function(k){return k;};
     var lang = global._getLang ? global._getLang() : "zh";
@@ -525,105 +512,90 @@
     var r2Val = FM.valLabel(c.R2) + "Ω";
     var c1Val = FM.capLabel(c.C1);
 
-    // Pre-calculated positions
-    var midX = w/2 - 30, midY = h/2;
+    var cy = Math.round(h * 0.48);
+    var opH = 28;
+    var svg = '';
+    svg += '<svg viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:' + w + 'px;color:var(--color-text)">';
+    svg += '<style>.flbl{fill:var(--color-text);font-size:13px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}.fref{fill:var(--color-text-soft);font-size:11px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}.fnode{fill:var(--color-text);font-size:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:600}.fdes{fill:var(--color-text);font-size:14px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:600}</style>';
+    svg += '<text x="' + (w/2) + '" y="18" class="fdes" text-anchor="middle">1st-Order Inverting Low-Pass Filter</text>';
 
-    // Build SVG with simple resistor zigzags and capacitor plates
-    var paths = [];
+    // ---- Signal path positions ----
+    var r1s = 100, r1e = 170; // R1: 70px
+    var opX = 230, opW = 36, opR = opX + opW;
+    var outX = opR + 18;
+    var nTermY = cy - opH*0.55; // (-) terminal y at op-amp
 
-    function L(x1,y1,x2,y2) {
-      return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="currentColor" stroke-width="1.2"/>';
-    }
+    // Vin
+    svg += '<text x="20" y="' + (cy+4) + '" class="fnode">Vin</text>';
+    svg += L(48, cy, r1s, cy);
 
-    function Rpath(z, x1, y1, x2, y2) {
-      var pts = resistorPath(z, x1, y1, x2, y2);
-      return '<polyline points="' + pts + '" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-    }
+    // R1
+    svg += Rpath(5, r1s, cy, r1e, cy);
+    svg += '<text x="' + ((r1s+r1e)/2) + '" y="' + (cy-14) + '" class="flbl" text-anchor="middle">R1</text>';
+    svg += '<text x="' + ((r1s+r1e)/2) + '" y="' + (cy-2) + '" class="fref" text-anchor="middle">' + r1Val + '</text>';
 
-    function cap(x1,y1,x2,y2,lab) {
-      return L(x1,y1,x1,(y1+y2)/2-6) + L(x1,(y1+y2)/2+6,x1,y2) + L(x1-6,(y1+y2)/2-6,x1+6,(y1+y2)/2-6) + L(x1-6,(y1+y2)/2+6,x1+6,(y1+y2)/2+6);
-    }
+    // Wire from R1 end to op-amp (-) terminal
+    var nTermX = opX - 10;
+    svg += L(r1e, cy, r1e, nTermY);
+    svg += L(r1e, nTermY, nTermX, nTermY);
 
-    var cx = 100, cy = midY;
+    // Op-amp
+    svg += opAmp(opX, cy, opH, true);
 
-    var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:' + w + 'px;color:var(--color-text)">' +
-      '<style>.flbl{fill:var(--color-text);font-size:13px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}.fref{fill:var(--color-text-soft);font-size:11px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}.fnode{fill:var(--color-text);font-size:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:600}.fdes{fill:var(--color-text);font-size:14px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:600}</style>';
+    // (+) label (opAmp already drew the sign)
+    // (+) terminal to GND
+    var pTermY = cy + opH*0.55;
+    svg += L(opX-10, pTermY, opX-10, pTermY+22);
+    svg += L(opX-10, pTermY+22, opX-20, pTermY+22);
+    svg += L(opX-20, pTermY+22, opX-20, cy+45);
+    svg += GND(opX-20, cy+45);
 
-    // Title
-    svg += '<text x="' + (w/2) + '" y="18" class="fdes" text-anchor="middle">1st-Order Differential Low-Pass Filter</text>';
+    // Output
+    svg += L(opR, cy, outX, cy);
+    svg += '<text x="' + (outX+2) + '" y="' + (cy+4) + '" class="fnode">Vout</text>';
 
-    // Vin label
-    svg += '<text x="18" y="' + (cy+4) + '" class="fnode">Vin</text>';
+    // ---- Feedback: R2 || C1 from output back to (-) input ----
+    // Output takeoff point (where feedback branches from output wire)
+    var fbOffX = opR + 2;
+    // R2 above (horizontal, use 3 zigzags for tight space)
+    var fbY = cy - 50;
+    svg += L(fbOffX, cy, fbOffX, fbY);
+    svg += Rpath(3, fbOffX, fbY, nTermX, fbY);
+    svg += L(nTermX, fbY, nTermX, nTermY);
+    var r2mx = (fbOffX + nTermX)/2;
+    svg += '<text x="' + r2mx + '" y="' + (fbY-5) + '" class="flbl" text-anchor="middle">R2</text>';
+    svg += '<text x="' + r2mx + '" y="' + (fbY+7) + '" class="fref" text-anchor="middle">' + r2Val + '</text>';
 
-    // Vin wire to R1
-    svg += L(48, cy, cx, cy);
+    // C1 below (parallel with R2), use different vertical offset
+    var fbOff2X = opR + 4;
+    var fbY2 = cy + 48;
+    svg += L(fbOff2X, cy, fbOff2X, fbY2-22);
+    svg += capV(fbOff2X, fbY2-22, fbY2);
+    svg += L(fbOff2X, fbY2, nTermX, fbY2);
+    svg += L(nTermX, fbY2, nTermX, nTermY);
+    svg += '<text x="' + (fbOff2X+10) + '" y="' + (fbY2-6) + '" class="flbl">C1</text>';
+    svg += '<text x="' + (fbOff2X+10) + '" y="' + (fbY2+6) + '" class="fref">' + c1Val + '</text>';
 
-    // Node dot at R1 junction
-    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="2.5" fill="currentColor"/>';
-
-    // R1 (Vin to C1 top): zigzag going right
-    svg += Rpath(5, cx, cy, cx+80, cy);
-    svg += '<text x="' + (cx+40) + '" y="' + (cy-14) + '" class="flbl" text-anchor="middle">R1</text>';
-    svg += '<text x="' + (cx+40) + '" y="' + (cy-2) + '" class="fref" text-anchor="middle">' + r1Val + '</text>';
-
-    var r1end = cx+80;
-
-    // C1 to GND
-    svg += L(r1end, cy, r1end, cy+40);
-    svg += cap(r1end, cy+40, r1end, cy+80, c1Val);
-    svg += '<text x="' + (r1end+16) + '" y="' + (cy+60) + '" class="flbl">C1</text>';
-    svg += '<text x="' + (r1end+16) + '" y="' + (cy+72) + '" class="fref">' + c1Val + '</text>';
-    // GND symbol
-    svg += L(r1end-10, cy+80, r1end+10, cy+80);
-    svg += L(r1end-6, cy+86, r1end+6, cy+86);
-    svg += L(r1end-3, cy+92, r1end+3, cy+92);
-
-    // Wire from R1 end to (-) op-amp input
-    var opX = r1end + 40;
-    svg += L(r1end, cy, opX-20, cy);
-    svg += L(opX-20, cy, opX-20, cy-12);
-    svg += L(opX-20, cy-12, opX, cy-12);
-
-    // Op-amp triangle
-    svg += '<polygon points="' + opX + ',' + (cy-30) + ' ' + opX + ',' + (cy+10) + ' ' + (opX+36) + ',' + (cy-10) + '" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-    svg += '<text x="' + (opX+10) + '" y="' + (cy-5) + '" class="flbl">A</text>';
-
-    // (-) label
-    svg += '<text x="' + (opX-4) + '" y="' + (cy-15) + '" class="flbl">-</text>';
-    // (+) label
-    svg += '<text x="' + (opX-4) + '" y="' + (cy+8) + '" class="flbl">+</text>';
-
-    // (+) to GND
-    svg += L(opX+8, cy-8, opX+8, cy+46);
-    svg += L(opX-6, cy+46, opX+22, cy+46);
-    svg += L(opX-6, cy+52, opX+22, cy+52);
-    svg += L(opX-3, cy+58, opX+19, cy+58);
-
-    // Op-amp output
-    var opOut = opX + 36;
-    svg += L(opOut, cy-10, opOut+20, cy-10);
-
-    // Vout label
-    svg += '<text x="' + (opOut+22) + '" y="' + (cy-6) + '" class="fnode">Vout</text>';
-
-    // R2 (feedback from output to (-) input)
-    svg += L(opOut+10, cy-10, opOut+10, cy-50);
-    svg += Rpath(5, opOut+10, cy-50, opX, cy-50);
-    svg += L(opX, cy-50, opX, cy-30);
-    // R2 label
-    var r2CX = (opX + opOut+10)/2;
-    svg += '<text x="' + (r2CX) + '" y="' + (cy-54) + '" class="flbl" text-anchor="middle">R2</text>';
-    svg += '<text x="' + (r2CX) + '" y="' + (cy-42) + '" class="fref" text-anchor="middle">' + r2Val + '</text>';
-
-    // Node dots
-    svg += '<circle cx="' + r1end + '" cy="' + cy + '" r="2.5" fill="currentColor"/>';
-    svg += '<circle cx="' + opX + '" cy="' + (cy-12) + '" r="2.5" fill="currentColor"/>';
+    // Junction dot at (-) input node
+    svg += nodeDot(nTermX, nTermY);
 
     svg += '</svg>';
-
     return svg;
   }
 
+  /* ================================================================
+     2nd-Order MFB LPF Schematic
+
+     Topology:
+
+     Vin --R1--+--R3--+---> (-) op-amp ---+--- Vout
+               |      |      |     |       |
+              C1    C2||R2   (+)   GND     |
+               |      |      |             |
+              GND    GND    GND           -+
+
+     R2 and C2 are in parallel in the feedback path
+     ================================================================ */
   function renderMfb2Svg(w, h, c) {
     var lang = global._getLang ? global._getLang() : "zh";
     var r1Val = FM.valLabel(c.R1) + "Ω";
@@ -632,107 +604,90 @@
     var c1Val = FM.capLabel(c.C1);
     var c2Val = FM.capLabel(c.C2);
 
-    function L(x1,y1,x2,y2) {
-      return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="currentColor" stroke-width="1.2"/>';
-    }
-
-    function Rpath(z, x1, y1, x2, y2) {
-      var pts = resistorPath(z, x1, y1, x2, y2);
-      return '<polyline points="' + pts + '" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-    }
-
-    function cap(x1,y1,x2,y2) {
-      return L(x1,y1,x1,(y1+y2)/2-6) + L(x1,(y1+y2)/2+6,x1,y2) +
-             L(x1-6,(y1+y2)/2-6,x1+6,(y1+y2)/2-6) +
-             L(x1-6,(y1+y2)/2+6,x1+6,(y1+y2)/2+6);
-    }
-
-    var cy = h/2 - 10;
-
-    var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:' + w + 'px;color:var(--color-text)">' +
-      '<style>.flbl{fill:var(--color-text);font-size:13px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}.fref{fill:var(--color-text-soft);font-size:11px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}.fnode{fill:var(--color-text);font-size:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:600}.fdes{fill:var(--color-text);font-size:14px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:600}</style>';
+    var cy = Math.round(h * 0.43);
+    var opH = 28;
+    var svg = '';
+    svg += '<svg viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:' + w + 'px;color:var(--color-text)">';
+    svg += '<style>.flbl{fill:var(--color-text);font-size:13px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}.fref{fill:var(--color-text-soft);font-size:11px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}.fnode{fill:var(--color-text);font-size:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:600}.fdes{fill:var(--color-text);font-size:14px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:600}</style>';
 
     svg += '<text x="' + (w/2) + '" y="18" class="fdes" text-anchor="middle">2nd-Order MFB Low-Pass Filter</text>';
 
+    // Positions
+    var r1s = 75, r1e = 150;  // R1: 75px
+    var r3s = r1e, r3e = 235; // R3: 85px
+    var opX = 265, opR = opX + 36, outX = opR + 18;
+    var nTermX = opX - 10;
+    var nTermY = cy - opH*0.55;
+
     // Vin
-    svg += '<text x="18" y="' + (cy+4) + '" class="fnode">Vin</text>';
+    svg += '<text x="20" y="' + (cy+4) + '" class="fnode">Vin</text>';
+    svg += L(48, cy, r1s, cy);
 
-    // Vin wire to R1
-    var x = 80, vx = 48;
-    svg += L(vx, cy, x, cy);
+    // R1
+    svg += Rpath(5, r1s, cy, r1e, cy);
+    svg += '<text x="' + ((r1s+r1e)/2) + '" y="' + (cy-14) + '" class="flbl" text-anchor="middle">R1</text>';
+    svg += '<text x="' + ((r1s+r1e)/2) + '" y="' + (cy-2) + '" class="fref" text-anchor="middle">' + r1Val + '</text>';
+    svg += nodeDot(r1e, cy);
 
-    // R1 (horizontal)
-    svg += Rpath(5, x, cy, x+70, cy);
-    svg += '<text x="' + (x+35) + '" y="' + (cy-14) + '" class="flbl" text-anchor="middle">R1</text>';
-    svg += '<text x="' + (x+35) + '" y="' + (cy-2) + '" class="fref" text-anchor="middle">' + r1Val + '</text>';
+    // C1 from node 1 to GND
+    svg += L(r1e, cy, r1e, cy+28);
+    svg += capV(r1e, cy+28, cy+60);
+    svg += GND(r1e, cy+60);
+    svg += '<text x="' + (r1e+14) + '" y="' + (cy+44) + '" class="flbl">C1</text>';
+    svg += '<text x="' + (r1e+14) + '" y="' + (cy+56) + '" class="fref">' + c1Val + '</text>';
 
-    var r1End = x + 70;
-    svg += '<circle cx="' + r1End + '" cy="' + cy + '" r="2.5" fill="currentColor"/>';
+    // R3
+    svg += Rpath(5, r3s, cy, r3e, cy);
+    svg += '<text x="' + ((r3s+r3e)/2) + '" y="' + (cy-14) + '" class="flbl" text-anchor="middle">R3</text>';
+    svg += '<text x="' + ((r3s+r3e)/2) + '" y="' + (cy-2) + '" class="fref" text-anchor="middle">' + r3Val + '</text>';
+    svg += nodeDot(r3e, cy);
 
-    // R3 from junction
-    svg += Rpath(5, r1End, cy, r1End+80, cy);
-    svg += '<text x="' + (r1End+40) + '" y="' + (cy-14) + '" class="flbl" text-anchor="middle">R3</text>';
-    svg += '<text x="' + (r1End+40) + '" y="' + (cy-2) + '" class="fref" text-anchor="middle">' + r3Val + '</text>';
+    // Wire from R3 end to op-amp (-) terminal
+    svg += L(r3e, cy, r3e, nTermY);
+    svg += L(r3e, nTermY, nTermX, nTermY);
 
-    var r3End = r1End + 80;
-    svg += '<circle cx="' + r3End + '" cy="' + cy + '" r="2.5" fill="currentColor"/>';
+    // Op-amp
+    svg += opAmp(opX, cy, opH, true);
 
-    // C1 from R1/R3 junction to GND
-    svg += L(r1End, cy, r1End, cy+30);
-    svg += cap(r1End, cy+30, r1End, cy+70);
-    svg += '<text x="' + (r1End+16) + '" y="' + (cy+48) + '" class="flbl">C1</text>';
-    svg += '<text x="' + (r1End+16) + '" y="' + (cy+60) + '" class="fref">' + c1Val + '</text>';
-    svg += L(r1End-10, cy+70, r1End+10, cy+70);
-    svg += L(r1End-6, cy+76, r1End+6, cy+76);
-    svg += L(r1End-3, cy+82, r1End+3, cy+82);
+    // (+) terminal to GND
+    var pTermY = cy + opH*0.55;
+    svg += L(opX-10, pTermY, opX-10, pTermY+22);
+    svg += L(opX-10, pTermY+22, opX-20, pTermY+22);
+    svg += L(opX-20, pTermY+22, opX-20, cy+45);
+    svg += GND(opX-20, cy+45);
 
-    // Wire from R3 end to (-) op-amp input
-    var opX = r3End + 30;
-    svg += L(r3End, cy, opX-20, cy);
-    svg += L(opX-20, cy, opX-20, cy-12);
-    svg += L(opX-20, cy-12, opX, cy-12);
+    // Output
+    svg += L(opR, cy, outX, cy);
+    svg += '<text x="' + (outX+2) + '" y="' + (cy+4) + '" class="fnode">Vout</text>';
 
-    // Op-amp triangle
-    svg += '<polygon points="' + opX + ',' + (cy-36) + ' ' + opX + ',' + (cy+12) + ' ' + (opX+36) + ',' + (cy-12) + '" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-    svg += '<text x="' + (opX+10) + '" y="' + (cy-6) + '" class="flbl">A</text>';
-    svg += '<text x="' + (opX-4) + '" y="' + (cy-18) + '" class="flbl">-</text>';
-    svg += '<text x="' + (opX-4) + '" y="' + (cy+10) + '" class="flbl">+</text>';
+    // ---- Feedback: R2 || C2 from output to (-) input ----
+    // Output takeoff point
+    var fbOffX = opR + 2;
+    // R2 above
+    var fbY = cy - 50;
+    svg += L(fbOffX, cy, fbOffX, fbY);
+    svg += Rpath(3, fbOffX, fbY, nTermX, fbY);
+    svg += L(nTermX, fbY, nTermX, nTermY);
+    var r2mx = (fbOffX + nTermX)/2;
+    svg += '<text x="' + r2mx + '" y="' + (fbY-5) + '" class="flbl" text-anchor="middle">R2</text>';
+    svg += '<text x="' + r2mx + '" y="' + (fbY+7) + '" class="fref" text-anchor="middle">' + r2Val + '</text>';
 
-    // (+) to GND
-    svg += L(opX+10, cy-6, opX+10, cy+40);
-    svg += L(opX-4, cy+40, opX+24, cy+40);
-    svg += L(opX-4, cy+46, opX+24, cy+46);
-    svg += L(opX-1, cy+52, opX+21, cy+52);
+    // C2 below (parallel with R2)
+    var fbOff2X = opR + 4;
+    var fbY2 = cy + 48;
+    svg += L(fbOff2X, cy, fbOff2X, fbY2-22);
+    svg += capV(fbOff2X, fbY2-22, fbY2);
+    svg += L(fbOff2X, fbY2, nTermX, fbY2);
+    svg += L(nTermX, fbY2, nTermX, nTermY);
+    svg += '<text x="' + (fbOff2X+10) + '" y="' + (fbY2-6) + '" class="flbl">C2</text>';
+    svg += '<text x="' + (fbOff2X+10) + '" y="' + (fbY2+6) + '" class="fref">' + c2Val + '</text>';
 
-    // Op-amp output
-    var opOut = opX + 36;
-    svg += L(opOut, cy-12, opOut+20, cy-12);
-    svg += '<text x="' + (opOut+22) + '" y="' + (cy-8) + '" class="fnode">Vout</text>';
-
-    // R2 (feedback: output to (-) input, via top)
-    svg += L(opOut+10, cy-12, opOut+10, cy-55);
-    svg += Rpath(5, opOut+10, cy-55, opX, cy-55);
-    svg += L(opX, cy-55, opX, cy-36);
-    var r2MX = (opX + opOut+10)/2;
-    svg += '<text x="' + r2MX + '" y="' + (cy-60) + '" class="flbl" text-anchor="middle">R2</text>';
-    svg += '<text x="' + r2MX + '" y="' + (cy-48) + '" class="fref" text-anchor="middle">' + r2Val + '</text>';
-
-    // C2 (feedback capacitor: from output to (-) input)
-    svg += L(opOut+5, cy-12, opOut+5, cy+15);
-    svg += cap(opX-10, cy+15, opX-10, cy-12);
-    svg += '<text x="' + (opX-28) + '" y="' + (cy+4) + '" class="flbl">C2</text>';
-    svg += '<text x="' + (opX-28) + '" y="' + (cy+16) + '" class="fref">' + c2Val + '</text>';
-
-    // Node dots
-    svg += '<circle cx="' + opX + '" cy="' + (cy-12) + '" r="2.5" fill="currentColor"/>';
+    // Junction dot at (-) input node
+    svg += nodeDot(nTermX, nTermY);
 
     svg += '</svg>';
-
     return svg;
   }
-
-  // stub placeholders for above references
-  // Actually the functions above are self-contained, except nodeC which isn't used
 
   /* ── Report generation ─── */
   function filterGenRep() {
