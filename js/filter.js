@@ -187,7 +187,6 @@
 
     if (r.type === "mfb2") {
       html += '<div class="ri"><div class="rl">' + t("filter.q") + '</div><div class="rv">' + FM.fv(r.Q_actual, 3) + '</div></div>';
-      // Pole frequency
       if (r.poles && r.poles.length >= 2) {
         var fp = Math.sqrt(r.poles[0].real * r.poles[0].real + r.poles[0].imag * r.poles[0].imag) / (2 * Math.PI);
         html += '<div class="ri"><div class="rl">' + t("filter.poleFreq") + '</div><div class="rv">' + FM.fv(fp, 1) + ' Hz</div></div>';
@@ -208,26 +207,27 @@
     }
 
     html += '</div>';
-
-    // Component table
-    html += '<h3 class="section-h3" style="margin-top:12px">' + t("filter.components") + '</h3>';
-    html += '<table class="sg-tbl"><thead><tr><th>' + t("filter.ref") + '</th><th>' + t("filter.value") + '</th></tr></thead><tbody>';
-
-    var comps = r.components;
-    if (r.type === "diff1") {
-      html += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + 'Ω</td></tr>';
-      html += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + 'Ω</td></tr>';
-      html += '<tr><td>C1</td><td>' + FM.capLabel(comps.C1) + '</td></tr>';
-    } else {
-      html += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + 'Ω</td></tr>';
-      html += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + 'Ω</td></tr>';
-      html += '<tr><td>R3</td><td>' + FM.valLabel(comps.R3) + 'Ω</td></tr>';
-      html += '<tr><td>C1</td><td>' + FM.capLabel(comps.C1) + '</td></tr>';
-      html += '<tr><td>C2</td><td>' + FM.capLabel(comps.C2) + '</td></tr>';
-    }
-
-    html += '</tbody></table>';
     el.innerHTML = html;
+
+    // Component table → separate div
+    var cel = document.getElementById("filterComponentsTable");
+    if (cel) {
+      var comps = r.components;
+      var ch = '<table class="sg-tbl"><thead><tr><th>' + t("filter.ref") + '</th><th>' + t("filter.value") + '</th></tr></thead><tbody>';
+      if (r.type === "diff1") {
+        ch += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + 'Ω</td></tr>';
+        ch += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + 'Ω</td></tr>';
+        ch += '<tr><td>C1</td><td>' + FM.capLabel(comps.C1) + '</td></tr>';
+      } else {
+        ch += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + 'Ω</td></tr>';
+        ch += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + 'Ω</td></tr>';
+        ch += '<tr><td>R3</td><td>' + FM.valLabel(comps.R3) + 'Ω</td></tr>';
+        ch += '<tr><td>C1</td><td>' + FM.capLabel(comps.C1) + '</td></tr>';
+        ch += '<tr><td>C2</td><td>' + FM.capLabel(comps.C2) + '</td></tr>';
+      }
+      ch += '</tbody></table>';
+      cel.innerHTML = ch;
+    }
   }
 
   /* ── Shared helpers for chart rendering ─── */

@@ -324,13 +324,16 @@
   <div class="fgi" id="filterC2Group"><label data-i18n="filter.c2">C2 预设电容</label><select id="filterC2" onchange="filterCalc()"></select></div>
 </div></div>
 
-<div class="layout" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-<div>
-  <div class="card"><h2 data-i18n="filter.results">计算结果</h2>
-    <div id="filterResultsContent"></div>
-  </div>
-
+<div class="card"><h2 data-i18n="filter.results">计算结果</h2>
+  <div id="filterResultsContent"></div>
   <div id="filterWarn" class="input-warn" style="display:none"></div>
+</div>
+
+<div class="layout" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+<div>
+  <div class="card"><h2 data-i18n="filter.components">器件参数</h2>
+    <div id="filterComponentsTable"></div>
+  </div>
 </div>
 
 <div>
@@ -373,7 +376,7 @@
 <script src="js/safety.js?v=40"></script>
 <script src="js/pcb.js?v=3"></script>
 <script src="js/models/filter-model.js?v=6"></script>
-<script src="js/filter.js?v=44"></script>
+<script src="js/filter.js?v=45"></script>
 <script src="js/feedback.js?v=1"></script>
 <script src="js/app.js?v=25"></script>
 </body>
