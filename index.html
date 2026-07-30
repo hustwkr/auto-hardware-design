@@ -324,7 +324,7 @@
   <div class="fgi" id="filterC2Group"><label data-i18n="filter.c2">C2 预设电容</label><select id="filterC2" onchange="filterCalc()"></select></div>
 </div></div>
 
-<div class="layout">
+<div class="layout" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
 <div>
   <div class="card"><h2 data-i18n="filter.results">计算结果</h2>
     <div id="filterResultsContent"></div>
@@ -334,18 +334,18 @@
 </div>
 
 <div>
-  <div class="card"><h2 data-i18n="filter.chartMag">幅频特性</h2>
-    <canvas id="filterChartMag" style="width:100%;height:260px;border-radius:var(--radius-sm)"></canvas>
-    <h2 data-i18n="filter.chartPhase" style="margin-top:12px">相频特性</h2>
-    <canvas id="filterChartPhase" style="width:100%;height:220px;border-radius:var(--radius-sm)"></canvas>
+  <div class="card"><h2 data-i18n="filter.circuit">滤波器电路</h2>
+    <div id="filterSchematic" style="min-height:230px;display:flex;align-items:center;justify-content:center;">
+      <p style="color:var(--color-text-soft);font-size:.85rem" data-i18n="filter.noResult">请设置设计指标后查看电路。</p>
+    </div>
   </div>
 </div>
-</div><!-- /layout -->
+</div>
 
-<div class="card"><h2 data-i18n="filter.circuit">滤波器电路</h2>
-  <div id="filterSchematic" style="min-height:220px;display:flex;align-items:center;justify-content:center;">
-    <p style="color:var(--color-text-soft);font-size:.85rem" data-i18n="filter.noResult">请设置设计指标后查看电路。</p>
-  </div>
+<div class="card" style="margin-top:16px"><h2 data-i18n="filter.chartMag">幅频特性</h2>
+  <canvas id="filterChartMag" style="width:100%;height:260px;border-radius:var(--radius-sm)"></canvas>
+  <h2 data-i18n="filter.chartPhase" style="margin-top:12px">相频特性</h2>
+  <canvas id="filterChartPhase" style="width:100%;height:220px;border-radius:var(--radius-sm)"></canvas>
 </div>
 
 <!-- Report section -->
@@ -373,7 +373,7 @@
 <script src="js/safety.js?v=40"></script>
 <script src="js/pcb.js?v=3"></script>
 <script src="js/models/filter-model.js?v=6"></script>
-<script src="js/filter.js?v=40"></script>
+<script src="js/filter.js?v=41"></script>
 <script src="js/feedback.js?v=1"></script>
 <script src="js/app.js?v=25"></script>
 </body>
