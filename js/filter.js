@@ -442,141 +442,150 @@
     return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5" fill="currentColor"/>';
   };
 
-  // IEC rectangular resistor, horizontal.  w=length  h=height
-  var resH = function(x, y, w, h) {
-    var hw = h/2, hh = h/2;
-    return '<rect x="' + x.toFixed(1) + '" y="' + (y-hh).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+  // IEC rectangular resistor, horizontal
+  var resRect = function(x, y, w, h) {
+    return '<rect x="' + x.toFixed(1) + '" y="' + (y-h/2).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="none" stroke="currentColor" stroke-width="1.2"/>';
   };
 
-  // resistor with leads: x1,y1 → [rect at x+w/2, y] → x2,y2
-  // rect extends from cx-w/2 to cx+w/2, cy-h/2 to cy+h/2
-  var resDraw = function(x1, y1, x2, y2, w, h, label, value) {
-    w = w || 40; h = h || 14;
-    var cx = (x1+x2)/2, cy = (y1+y2)/2;
-    var cols = [];
-    cols.push(L(x1, y1, cx-w/2, y1));
-    cols.push(resH(cx-w/2, y1, w, h));
-    cols.push(L(cx+w/2, y1, x2, y2));
-    // label above, value below
-    if (label) cols.push('<text x="' + cx.toFixed(1) + '" y="' + (cy-h/2-4).toFixed(1) + '" class="flbl" text-anchor="middle">' + label + '</text>');
-    if (value) cols.push('<text x="' + cx.toFixed(1) + '" y="' + (cy+h/2+1+11).toFixed(1) + '" class="fref" text-anchor="middle">' + value + '</text>');
-    return cols.join('');
+  // resistor body + leads: x1─[rect]─x2 at y
+  var resDraw = function(x1, x2, y, w, h, label, value) {
+    w = w || 44; h = h || 14;
+    var cx = (x1+x2)/2;
+    var a = [];
+    a.push(L(x1, y, cx-w/2, y));
+    a.push(resRect(cx-w/2, y, w, h));
+    a.push(L(cx+w/2, y, x2, y));
+    if (label) a.push('<text x="' + cx.toFixed(1) + '" y="' + (y-h/2-4).toFixed(1) + '" class="flbl" text-anchor="middle">' + label + '</text>');
+    if (value) a.push('<text x="' + cx.toFixed(1) + '" y="' + (y+h/2+13).toFixed(1) + '" class="fref" text-anchor="middle">' + value + '</text>');
+    return a.join('');
   };
 
-  // vertical capacitor plates centered at (x, y1) to (x, y2)
+  // vertical capacitor at x, from y1 to y2
   var capV = function(x, y1, y2) {
-    var gap = 8, hw = 6; // 8px gap between plates, 6px half-width per plate
+    var gap = 8, hw = 6;
     var mid = (y1+y2)/2;
-    var cols = [];
-    cols.push(L(x, y1, x, mid-gap/2));
-    cols.push('<line x1="' + (x-hw).toFixed(1) + '" y1="' + (mid-gap/2).toFixed(1) + '" x2="' + (x+hw).toFixed(1) + '" y2="' + (mid-gap/2).toFixed(1) + '" stroke="currentColor" stroke-width="1.2"/>');
-    cols.push('<line x1="' + (x-hw).toFixed(1) + '" y1="' + (mid+gap/2).toFixed(1) + '" x2="' + (x+hw).toFixed(1) + '" y2="' + (mid+gap/2).toFixed(1) + '" stroke="currentColor" stroke-width="1.2"/>');
-    cols.push(L(x, mid+gap/2, x, y2));
-    return cols.join('');
+    return L(x, y1, x, mid-gap/2) +
+      '<line x1="' + (x-hw).toFixed(1) + '" y1="' + (mid-gap/2).toFixed(1) + '" x2="' + (x+hw).toFixed(1) + '" y2="' + (mid-gap/2).toFixed(1) + '" stroke="currentColor" stroke-width="1.2"/>' +
+      '<line x1="' + (x-hw).toFixed(1) + '" y1="' + (mid+gap/2).toFixed(1) + '" x2="' + (x+hw).toFixed(1) + '" y2="' + (mid+gap/2).toFixed(1) + '" stroke="currentColor" stroke-width="1.2"/>' +
+      L(x, mid+gap/2, x, y2);
   };
 
   var opAmpTri = function(x, cy, hh) {
-    // triangle: left (x, cy-hh) → (x, cy+hh) → tip (x+40, cy)
     var s = '<polygon points="' + x + ',' + (cy-hh) + ' ' + x + ',' + (cy+hh) + ' ' + (x+40) + ',' + cy + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-    // (-) at y=cy-0.55*hh, (+) at y=cy+0.55*hh, terminal stubs
-    s += L(x-12, cy-0.55*hh, x, cy-0.55*hh) + L(x-12, cy+0.55*hh, x, cy+0.55*hh);
+    s += L(x-12, cy-0.55*hh, x, cy-0.55*hh);
+    s += L(x-12, cy+0.55*hh, x, cy+0.55*hh);
     s += '<text x="' + (x-16).toFixed(1) + '" y="' + (cy-0.55*hh+4).toFixed(1) + '" class="flbl" text-anchor="end">-</text>';
     s += '<text x="' + (x-16).toFixed(1) + '" y="' + (cy+0.55*hh+4).toFixed(1) + '" class="flbl" text-anchor="end">+</text>';
     s += '<text x="' + (x+16).toFixed(1) + '" y="' + (cy+4).toFixed(1) + '" class="flbl" text-anchor="middle">A</text>';
     return s;
   };
 
-  /* 1st-Order Inverting LPF
-     ┌─ [R2] ──────────┐
-     │                  │
-     Vin ── [R1] ── N───(-)──[OP]── Vout
-                       (+)
-                        │
-                   ┌──[C1]──┐
-                   │         │
-                  GND        │
-                             └──output──┘
-     R2||C1 in feedback
-  */
-  function renderDiff1Svg(w, h, c) {
-    var r1Val = FM.valLabel(c.R1) + "Ω";
-    var r2Val = FM.valLabel(c.R2) + "Ω";
-    var c1Val = FM.capLabel(c.C1);
-    var cy = 115; // centre Y
-    var rWid = 44, rHt = 14;
+  /* ================================================================
+     1st-Order Differential LPF
+     Both (+) and (-) receive signal inputs.
+     R3,R4 on (+) side provide impedance matching (R3=R1, R4=R2).
 
+              ┌───── [R2] ────────────────┐
+              │                            │
+     Vin- ───[R1]───N──┬──(-)──[OP]──┬── Vout
+                       │             │
+              ┌──────[C1]────────────┘
+              │
+     Vin+ ───[R3]───(+)──[R4]── GND
+     ================================================================ */
+  function renderDiff1Svg(w, h, c) {
+    var r1V = FM.valLabel(c.R1) + "Ω";
+    var r2V = FM.valLabel(c.R2) + "Ω";
+    var c1V = FM.capLabel(c.C1);
+    var rW = 44, rH = 14;
+    var cy = 118, opH = 32;
     var parts = [];
+
     parts.push('<svg viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:580px;color:var(--color-text)">');
     parts.push('<style>.flbl{fill:currentColor;font:13px -apple-system,sans-serif;}.fref{fill:var(--color-text-soft);font:11px -apple-system,sans-serif;}.fnode{fill:currentColor;font:12px -apple-system,sans-serif;font-weight:600}.fdes{fill:currentColor;font:14px -apple-system,sans-serif;font-weight:600}</style>');
-    parts.push('<text x="290" y="18" class="fdes" text-anchor="middle">1st-Order Inverting Low-Pass Filter</text>');
+    parts.push('<text x="290" y="18" class="fdes" text-anchor="middle">1st-Order Differential Low-Pass Filter</text>');
 
-    // -- layout points --
-    var vinX = 18, r1s = 45, r1e = r1s + rWid, sumN = r1e + 30; // summing node x
-    var opL = sumN + 50, opR = opL + 40, voutX = opR + 30;
-    var nTermY = cy - 0.55*32; // (-) terminal y, op height 32
+    // ── layout coordinates ──
+    var r1s = 55, r1e = r1s + rW;          // R1: Vin- path, horizontal
+    var nX = r1e + 24;                     // summing node (-)
+    var opL = nX + 56, opR = opL + 40;     // op-amp
+    var nTermY = cy - 0.55*opH;            // (-) terminal y
+    var pTermY = cy + 0.55*opH;            // (+) terminal y
 
-    // Vin
-    parts.push('<text x="' + vinX + '" y="' + (cy+4) + '" class="fnode">Vin</text>');
-    parts.push(L(33, cy, r1s, cy));
+    // --- Vin- path (bottom) ---
+    parts.push('<text x="18" y="' + (cy+4) + '" class="fnode">Vin−</text>');
+    parts.push(L(48, cy, r1s, cy));
+    parts.push(resDraw(r1s, r1e, cy, rW, rH, 'R1', r1V));
+    // wire from R1 end to (-) summing node
+    parts.push(L(r1e, cy, nX, cy));
+    // (-) node → op-amp (-) terminal
+    parts.push(L(nX, cy, nX, nTermY));
+    parts.push(L(nX, nTermY, opL-12, nTermY));
+    parts.push(dot(nX, cy));
 
-    // R1
-    parts.push(resDraw(r1s, cy, r1e, cy, rWid, rHt, 'R1', r1Val));
-    // wire from R1 end to summing node
-    parts.push(L(r1e, cy, sumN, cy));
+    // --- Vin+ path (top: y = cy - 42) ---
+    var plusY = cy - 50;
+    var r3s = 55, r3e = r3s + rW;  // R3 = R1 (matching)
+    parts.push('<text x="18" y="' + (plusY+4) + '" class="fnode">Vin+</text>');
+    parts.push(L(48, plusY, r3s, plusY));
+    parts.push(resDraw(r3s, r3e, plusY, rW, rH, 'R3', r1V));
+    // wire from R3 end to (+) terminal
+    var plusJ = r3e + 24;  // junction before (+) terminal
+    parts.push(L(r3e, plusY, plusJ, plusY));
+    parts.push(L(plusJ, plusY, plusJ, pTermY));
+    parts.push(L(plusJ, pTermY, opL-12, pTermY));
 
-    // S-shaped wire from summing node to (-) terminal
-    parts.push(L(sumN, cy, sumN, nTermY));
-    parts.push(L(sumN, nTermY, opL-12, nTermY));
+    // R4 from (+) path to GND (R4 = R2 for matching)
+    var r4X = plusJ + 30;
+    parts.push(L(plusJ, plusY, r4X, plusY));
+    parts.push(resDraw(r4X, r4X+rW, plusY, rW, rH, 'R4', r2V));
+    var r4e = r4X + rW;
+    parts.push(L(r4e, plusY, r4e, plusY+40));
+    parts.push(GND(r4e, plusY+40));
 
     // Op-amp
-    parts.push(opAmpTri(opL, cy, 32));
+    parts.push(opAmpTri(opL, cy, opH));
 
-    // (+) to GND
-    var pTermY = cy + 0.55*32;
-    parts.push(L(opL-12, pTermY, opL-12, pTermY+25));
-    parts.push(L(opL-12, pTermY+25, opL-30, pTermY+25));
-    parts.push(L(opL-30, pTermY+25, opL-30, cy+52));
-    parts.push(GND(opL-30, cy+52));
-
-    // Output wire
+    // Output
+    var voutX = opR + 24;
     parts.push(L(opR, cy, voutX, cy));
-    parts.push('<text x="' + (voutX+2) + '" y="' + (cy+4) + '" class="fnode">Vout</text>');
+    parts.push('<text x="' + (voutX+3) + '" y="' + (cy+4) + '" class="fnode">Vout</text>');
 
-    // ---- R2 feedback (above) ----
-    var fbY = 55;
-    var tko = opR + 8; // takeoff from output
+    // ── Feedback: R2 (above) ──
+    var tko = opR + 10, fbY = 38;
     parts.push(L(tko, cy, tko, fbY));
-    parts.push(resDraw(opL-30, fbY, tko, fbY, rWid, rHt, 'R2', r2Val));
-    parts.push(L(opL-30, fbY, opL-30, nTermY));
+    parts.push(resDraw(nX, tko, fbY, rW, rH, 'R2', r2V));
+    parts.push(L(nX, fbY, nX, nTermY));
 
-    // ---- C1 feedback (below) ----
-    var fbY2 = 178;
-    var tko2 = opR + 16;
-    parts.push(L(tko2, cy, tko2, fbY2-18));
-    parts.push(capV(tko2, fbY2-18, fbY2));
-    parts.push(L(tko2, fbY2, opL-30, fbY2));
-    parts.push(L(opL-30, fbY2, opL-30, nTermY));
-    // C1 label
-    parts.push('<text x="' + (tko2+14).toFixed(1) + '" y="' + ((fbY2-18+fbY2)/2+4).toFixed(1) + '" class="flbl">C1</text>');
-    parts.push('<text x="' + (tko2+14).toFixed(1) + '" y="' + ((fbY2-18+fbY2)/2+16).toFixed(1) + '" class="fref">' + c1Val + '</text>');
+    // ── Feedback: C1 (below) ──
+    var tko2 = opR + 4, fbBot = 188;
+    parts.push(L(tko2, cy, tko2, fbBot-18));
+    parts.push(capV(tko2, fbBot-18, fbBot));
+    parts.push(L(tko2, fbBot, nX, fbBot));
+    parts.push(L(nX, fbBot, nX, nTermY));
+    // C1 label to right
+    var c1MidY = (fbBot-18+fbBot)/2;
+    parts.push('<text x="' + (tko2+14).toFixed(1) + '" y="' + (c1MidY+4).toFixed(1) + '" class="flbl">C1</text>');
+    parts.push('<text x="' + (tko2+14).toFixed(1) + '" y="' + (c1MidY+16).toFixed(1) + '" class="fref">' + c1V + '</text>');
 
-    // Junction dot at (-) input
-    parts.push(dot(opL-12, nTermY));
+    // Junction dots
+    parts.push(dot(nX, nTermY));  // (-) input / feedback junction
+    parts.push(dot(plusJ, pTermY));  // (+) input junction
 
     parts.push('</svg>');
     return parts.join('');
   }
 
   /* 2nd-Order MFB LPF
-       ┌──── [R2] ──────────────────┐
-       │                             │
-       Vin──[R1]──N1──[R3]──N2──(-)─[OP]──Vout
-                  │          │    (+)
-                 [C1]        │      │
-                  │       ┌─[C2]──┐ │
-                 GND      │        │ │
-                          └──output┘ │
-                                     └─output──┘
+            ┌────── [R2] ────────────────────┐
+            │                                 │
+     Vin ───[R1]──N1──[R3]──N2──(-)──[OP]──┬── Vout
+                │                         │
+               [C1]                 ┌────[C2]────┐
+                │                   │             │
+               GND                  └───output────┘
+
+     R2 ∥ C2 in feedback.  N2 → (-).  C1 from N1 to GND.
   */
   function renderMfb2Svg(w, h, c) {
     var r1V = FM.valLabel(c.R1) + "Ω";
@@ -584,75 +593,80 @@
     var r3V = FM.valLabel(c.R3) + "Ω";
     var c1V = FM.capLabel(c.C1);
     var c2V = FM.capLabel(c.C2);
-    var cy = 138;
     var rW = 44, rH = 14;
-
+    var cy = 118, opH = 32;
     var parts = [];
+
     parts.push('<svg viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:580px;color:var(--color-text)">');
     parts.push('<style>.flbl{fill:currentColor;font:13px -apple-system,sans-serif;}.fref{fill:var(--color-text-soft);font:11px -apple-system,sans-serif;}.fnode{fill:currentColor;font:12px -apple-system,sans-serif;font-weight:600}.fdes{fill:currentColor;font:14px -apple-system,sans-serif;font-weight:600}</style>');
     parts.push('<text x="290" y="18" class="fdes" text-anchor="middle">2nd-Order MFB Low-Pass Filter</text>');
 
-    // -- layout --
-    var vinX = 18, r1s = 38, r1e = r1s + rW, N1 = r1e + 24;
-    var r3s = N1, r3e = r3s + rW, N2 = r3e + 26;
-    var opL = N2 + 48, opR = opL + 40, voutX = opR + 30;
-    var nTermY = cy - 0.55*32, pTermY = cy + 0.55*32;
+    // ── layout ──
+    var r1s = 45, r1e = r1s + rW;           // R1
+    var N1 = r1e + 22;                      // node 1 (R1/R3/C1 junction)
+    var r3s = N1, r3e = r3s + rW;           // R3
+    var N2 = r3e + 20;                      // node 2 (R3 → (-) junction)
+    var opL = N2 + 52, opR = opL + 40;      // op-amp
+    var nTermY = cy - 0.55*opH, pTermY = cy + 0.55*opH;
 
-    // Vin
-    parts.push('<text x="' + vinX + '" y="' + (cy+4) + '" class="fnode">Vin</text>');
-    parts.push(L(33, cy, r1s, cy));
-
-    // R1
-    parts.push(resDraw(r1s, cy, r1e, cy, rW, rH, 'R1', r1V));
+    // --- Vin → R1 → N1 ---
+    parts.push('<text x="18" y="' + (cy+4) + '" class="fnode">Vin</text>');
+    parts.push(L(42, cy, r1s, cy));
+    parts.push(resDraw(r1s, r1e, cy, rW, rH, 'R1', r1V));
     parts.push(L(r1e, cy, N1, cy));
     parts.push(dot(N1, cy));
 
-    // C1 from N1 to GND
-    var c1bot = cy + 60;
-    parts.push(L(N1, cy, N1, c1bot-22));
-    parts.push(capV(N1, c1bot-22, c1bot));
-    parts.push(GND(N1, c1bot));
-    parts.push('<text x="' + (N1+12).toFixed(1) + '" y="' + (c1bot-17).toFixed(1) + '" class="flbl">C1</text>');
-    parts.push('<text x="' + (N1+12).toFixed(1) + '" y="' + (c1bot-5).toFixed(1) + '" class="fref">' + c1V + '</text>');
+    // --- C1 from N1 to GND ---
+    var c1Bot = cy + 60;
+    parts.push(L(N1, cy, N1, c1Bot-22));
+    parts.push(capV(N1, c1Bot-22, c1Bot));
+    parts.push(GND(N1, c1Bot));
+    parts.push('<text x="' + (N1+12).toFixed(1) + '" y="' + (c1Bot-17).toFixed(1) + '" class="flbl">C1</text>');
+    parts.push('<text x="' + (N1+12).toFixed(1) + '" y="' + (c1Bot-5).toFixed(1) + '" class="fref">' + c1V + '</text>');
 
-    // R3: N1 → N2
-    parts.push(resDraw(N1, cy, N2, cy, rW, rH, 'R3', r3V));
+    // --- R3: N1 → N2 ---
+    parts.push(resDraw(N1, N2, cy, rW, rH, 'R3', r3V));
+    parts.push(dot(N2, cy));
+
+    // --- N2 → (-) terminal ---
     parts.push(L(N2, cy, N2, nTermY));
     parts.push(L(N2, nTermY, opL-12, nTermY));
-    parts.push(dot(N2, cy));
 
     // Op-amp
-    parts.push(opAmpTri(opL, cy, 32));
+    parts.push(opAmpTri(opL, cy, opH));
 
-    // (+) to GND
-    parts.push(L(opL-12, pTermY, opL-12, pTermY+25));
-    parts.push(L(opL-12, pTermY+25, opL-36, pTermY+25));
-    parts.push(L(opL-36, pTermY+25, opL-36, cy+55));
-    parts.push(GND(opL-36, cy+55));
+    // --- (+) to GND (routed to the left, avoiding feedback verticals) ---
+    var gndX = opL - 44;   // GND horizontal offset, cleared from fb vertical
+    parts.push(L(opL-12, pTermY, opL-12, pTermY+22));
+    parts.push(L(opL-12, pTermY+22, gndX, pTermY+22));
+    parts.push(L(gndX, pTermY+22, gndX, cy+54));
+    parts.push(GND(gndX, cy+54));
 
     // Output
+    var voutX = opR + 24;
     parts.push(L(opR, cy, voutX, cy));
-    parts.push('<text x="' + (voutX+2) + '" y="' + (cy+4) + '" class="fnode">Vout</text>');
+    parts.push('<text x="' + (voutX+3) + '" y="' + (cy+4) + '" class="fnode">Vout</text>');
 
-    // ---- R2 (above) ----
-    var tko = opR + 8, fbY = 60;
-    parts.push(L(tko, cy, tko, fbY));
-    parts.push(resDraw(opL-36, fbY, tko, fbY, rW, rH, 'R2', r2V));
-    parts.push(L(opL-36, fbY, opL-36, nTermY));
+    // ── Feedback: R2 (above) → fb vertical at x = opL - 30 ──
+    var fbx = opL - 30;   // dedicated feedback vertical column
+    var tko = opR + 8, fbTop = 38;
+    parts.push(L(tko, cy, tko, fbTop));
+    parts.push(resDraw(fbx, tko, fbTop, rW, rH, 'R2', r2V));
+    parts.push(L(fbx, fbTop, fbx, nTermY));
 
-    // ---- C2 (below) ----
-    var tko2 = opR + 16, fbY2 = 220;
-    parts.push(L(tko2, cy, tko2, fbY2-18));
-    parts.push(capV(tko2, fbY2-18, fbY2));
-    parts.push(L(tko2, fbY2, opL-36, fbY2));
-    parts.push(L(opL-36, fbY2, opL-36, nTermY));
-    parts.push('<text x="' + (tko2+14).toFixed(1) + '" y="' + ((fbY2-18+fbY2)/2+4).toFixed(1) + '" class="flbl">C2</text>');
-    parts.push('<text x="' + (tko2+14).toFixed(1) + '" y="' + ((fbY2-18+fbY2)/2+16).toFixed(1) + '" class="fref">' + c2V + '</text>');
+    // ── Feedback: C2 (below) ──
+    var tko2 = opR + 4, fbBot = 196;
+    parts.push(L(tko2, cy, tko2, fbBot-18));
+    parts.push(capV(tko2, fbBot-18, fbBot));
+    parts.push(L(tko2, fbBot, fbx, fbBot));
+    parts.push(L(fbx, fbBot, fbx, nTermY));
+    var c2MidY = (fbBot-18+fbBot)/2;
+    parts.push('<text x="' + (tko2+14).toFixed(1) + '" y="' + (c2MidY+4).toFixed(1) + '" class="flbl">C2</text>');
+    parts.push('<text x="' + (tko2+14).toFixed(1) + '" y="' + (c2MidY+16).toFixed(1) + '" class="fref">' + c2V + '</text>');
 
-    // Dots
-    parts.push(dot(N2, cy));
-    parts.push(dot(opL-12, nTermY));
-    parts.push(dot(opL-36, nTermY)); // feedback junction
+    // Junction dots (only at actual connection points, no duplicates)
+    parts.push(dot(opL-12, nTermY));  // (-) input
+    parts.push(dot(fbx, nTermY));     // feedback bus → (-) terminal
 
     parts.push('</svg>');
     return parts.join('');
