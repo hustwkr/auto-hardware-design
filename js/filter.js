@@ -106,6 +106,10 @@
       var c2grp = document.getElementById("filterC2Group");
       if (c2grp) c2grp.style.display = "";
       replaceWithDisplay("filterC2", c2v);
+    } else {
+      // diff1: hide C2 display
+      var c2disp = document.getElementById("filterC2_display");
+      if (c2disp) c2disp.remove();
     }
   }
 
