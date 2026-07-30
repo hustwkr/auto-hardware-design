@@ -112,14 +112,14 @@
     <div class="fgi"><label data-i18n="cap.l0">额定寿命(h)</label><input type="number" id="l0" value="2000" min="100" step="100"></div>
     <div class="fgi"><label data-i18n="cap.tmax">最高温度(°C)</label><input type="number" id="tmax" value="105" min="60" max="150"></div>
     <div class="fgi" style="position:relative"><label><span data-i18n="cap.tau">Arrhenius τ(℃)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="tau" data-i18n-opts='{"8":"cap.tau.8","9":"cap.tau.9","10":"cap.tau.10"}'><option value="8">8 (长寿命型)</option><option value="9">9 (高可靠型)</option><option value="10" selected>10 (标准品)</option></select><div class="info-popup" style="width:260px"><strong>Arrhenius 温度系数 τ</strong><br>寿命公式中每降低 τ°C，寿命翻倍的参数。反映电解液蒸发速率对温度的敏感度。<br><br><strong>如何选取：</strong><br>• <b>τ=10</b>：标准品（大多数常规铝电解电容）<br>• <b>τ=9</b>：高可靠型（如 Nichicon PW/PWJ 系列）<br>• <b>τ=8</b>：超长寿命型（12000h+ 系列，如 Rubycon ZLH/ZSH）<br>• 以制造商 datasheet 为准</div></div>
-    <div class="fgi" style="position:relative"><label><span data-i18n="cap.type">电容类型</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="capType" onchange="onCapTypeChange()"><option value="lv" selected data-i18n="cap.type.lv">低压引线/贴片型(≤100V)</option><option value="hv" data-i18n="cap.type.hv">高压牛角/螺栓型(≥160V)</option><option value="manual" data-i18n="cap.type.manual">手动设置 Kv 参数</option></select><div class="info-popup" style="width:320px" data-i18n-html="cap.type.hint"></div></div>
+    <div class="fgi" style="position:relative"><label><span data-i18n="cap.type">电容类型</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><select id="capType" ><option value="lv" selected data-i18n="cap.type.lv">低压引线/贴片型(≤100V)</option><option value="hv" data-i18n="cap.type.hv">高压牛角/螺栓型(≥160V)</option><option value="manual" data-i18n="cap.type.manual">手动设置 Kv 参数</option></select><div class="info-popup" style="width:320px" data-i18n-html="cap.type.hint"></div></div>
     <div class="fgi"><label data-i18n="cap.vrated">额定电压(V)</label><input type="number" id="vrated" value="50" min="1" step="1"></div>
     <div class="fgi"><label data-i18n="cap.irated">额定纹波电流(mA)</label><input type="number" id="irated" value="500" min="1" step="10"></div>
     <div class="fgi" style="position:relative"><label><span data-i18n="cap.dt0">最大芯温升(°C)</span><span class="info-icon" onclick="toggleInfo(event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:.55rem;font-weight:700;cursor:pointer;margin-left:3px;transition:background .15s;user-select:none">?</span></label><input type="number" id="dt0" value="10" min="1" max="30" step="1"><div class="info-popup" style="width:260px"><strong>最大芯温升 ΔT₀</strong><br>电容在额定纹波电流 Irated 下，芯部相对于外壳的最大允许温升。决定纹波发热计算基准。<br><br><strong>如何选取：</strong><br>• <b>标准型</b>：ΔT₀ = 10°C（大多数常规品）<br>• <b>长寿命型</b>：ΔT₀ = 5~6°C（低ESR设计，芯温更低，寿命更长）<br>• 具体数值以制造商数据手册为准</div></div>
     <div class="fgi"><label data-i18n="cap.capval">电容量(μF)</label><input type="number" id="cap" value="470" min="1" step="1"></div>
     <div id="kvParams" style="display:none;grid-column:1/-1;gap:4px 28px;padding-top:6px;border-top:1px dashed #e2e8f0">
-      <div class="fgi"><label data-i18n="cap.kva">Kv 参数 a</label><input type="number" id="kva" value="0.56" min="0" max="5" step="0.01" oninput="calc()"></div>
-      <div class="fgi"><label data-i18n="cap.kvb">Kv 参数 b</label><input type="number" id="kvb" value="1.0" min="0" max="5" step="0.1" oninput="calc()"></div>
+      <div class="fgi"><label data-i18n="cap.kva">Kv 参数 a</label><input type="number" id="kva" value="0.56" min="0" max="5" step="0.01" ></div>
+      <div class="fgi"><label data-i18n="cap.kvb">Kv 参数 b</label><input type="number" id="kvb" value="1.0" min="0" max="5" step="0.1" ></div>
     </div>
   </div></div>
 
@@ -309,20 +309,20 @@
 <p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35" data-i18n="filter.subtitle">基于运放的有源低通滤波器 · 一阶差分 / 二阶 MFB · 幅频相频特性 · E24/E48 标准值</p>
 
 <div class="card"><h2 data-i18n="filter.spec">设计指标</h2><div class="param-grid">
-  <div class="fgi"><label data-i18n="filter.type">滤波器类型</label><select id="filterType" onchange="filterTypeChange()">
+  <div class="fgi"><label data-i18n="filter.type">滤波器类型</label><select id="filterType" >
     <option value="diff1" data-i18n="filter.type.diff1">一阶差分 (Differential LPF)</option>
     <option value="mfb2" selected data-i18n="filter.type.mfb2">二阶MFB (Multiple Feedback LPF)</option>
   </select></div>
-  <div class="fgi"><label data-i18n="filter.series">电阻精度系列</label><select id="filterSeries" onchange="filterCalc()">
+  <div class="fgi"><label data-i18n="filter.series">电阻精度系列</label><select id="filterSeries" >
     <option value="e24" selected data-i18n="filter.series.e24">E24 (5%)</option>
     <option value="e48" data-i18n="filter.series.e48">E48 (2%)</option>
   </select></div>
-  <div class="fgi"><label data-i18n="filter.fc">截止频率 (Hz)</label><input type="number" id="filterFc" value="1000" min="0.1" step="any" oninput="filterCalc()"></div>
-  <div class="fgi"><label data-i18n="filter.gain">直流增益 (V/V)</label><input type="number" id="filterGain" value="1" min="0.01" step="0.1" oninput="filterCalc()"></div>
-  <div class="fgi" id="filterQGroup"><label data-i18n="filter.q">Q值</label><input type="number" id="filterQ" value="0.707" min="0.1" step="0.001" oninput="filterCalc()"><span class="unit">(Butterworth: 0.707)</span></div>
-  <div class="fgi"><label data-i18n="filter.c1">C1 预设电容</label><select id="filterC1" onchange="filterCalc()"></select></div>
-  <div class="fgi" id="filterC2Group"><label data-i18n="filter.c2">C2 预设电容</label><select id="filterC2" onchange="filterCalc()"></select></div>
-</div></div>
+  <div class="fgi"><label data-i18n="filter.fc">截止频率 (Hz)</label><input type="number" id="filterFc" value="1000" min="0.1" step="any" ></div>
+  <div class="fgi"><label data-i18n="filter.gain">直流增益 (V/V)</label><input type="number" id="filterGain" value="1" min="0.01" step="0.1" ></div>
+  <div class="fgi" id="filterQGroup"><label data-i18n="filter.q">Q值</label><input type="number" id="filterQ" value="0.707" min="0.1" step="0.001" ><span class="unit">(Butterworth: 0.707)</span></div>
+  <div class="fgi"><label data-i18n="filter.c1">C1 预设电容</label><select id="filterC1" ></select></div>
+  <div class="fgi" id="filterC2Group"><label data-i18n="filter.c2">C2 预设电容</label><select id="filterC2" ></select></div>
+</div><div style="margin-top:12px"><button class="btn" onclick="filterCalc()" style="width:100%">开始计算</button></div></div>
 
 <div class="card"><h2 data-i18n="filter.results">计算结果</h2>
   <div id="filterResultsContent"></div>
@@ -370,7 +370,7 @@
 <script src="js/safety.js?v=40"></script>
 <script src="js/pcb.js?v=3"></script>
 <script src="js/models/filter-model.js?v=6"></script>
-<script src="js/filter.js?v=45"></script>
+<script src="js/filter.js?v=46"></script>
 <script src="js/feedback.js?v=1"></script>
 <script src="js/app.js?v=25"></script>
 </body>

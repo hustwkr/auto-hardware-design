@@ -30,8 +30,6 @@
   /* ── Initialize tab —─*/
   function initFilter() {
     populateCapSelect();
-    filterTypeChange();
-    filterCalc();
   }
 
   function populateCapSelect() {
@@ -66,7 +64,6 @@
     var type = gvs("filterType");
     document.getElementById("filterQGroup").style.display = (type === "mfb2") ? "" : "none";
     document.getElementById("filterC2Group").style.display = (type === "mfb2") ? "" : "none";
-    filterCalc();
   }
 
   /* refresh cap dropdown from auto-calculated result */
