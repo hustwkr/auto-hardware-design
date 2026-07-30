@@ -9,6 +9,15 @@
   }
   window.saveBlobWithDialog = saveBlobWithDialog;
 
+  /* ── Shared LaTeX renderer (called after innerHTML with .latex spans) ─ */
+  window._renderLatex = function(){
+    try{document.querySelectorAll('.latex').forEach(function(e){
+      try{var w=window;if(!w.katex){e.textContent=e.getAttribute('data-l');return}
+        w.katex.render(e.getAttribute('data-l'),e,{throwOnError:false})}
+      catch(er){}})
+    }catch(er){}
+  };
+
   /* ── Export dropdown toggle ────────────── */
   function toggleExportDropdown(e,tab){e.stopPropagation();var d=document.getElementById('export'+tab.charAt(0).toUpperCase()+tab.slice(1)+'Dropdown');d.classList.toggle('show')}
   document.addEventListener('click',function(){document.querySelectorAll('.export-dropdown,.info-popup').forEach(function(d){d.classList.remove('show')})});

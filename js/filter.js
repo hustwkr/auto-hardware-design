@@ -740,18 +740,19 @@
     html += '<h3>3. ' + t("filter.report.formulas", null, "Calculation Formulas") + '</h3>';
     html += '<div class="rep-model-box">';
     if (r.type === "diff1") {
-      html += '<p><b>Transfer Function:</b> H(s) = -(R₂/R₁) / (1 + s·R₂·C₁)</p>';
-      html += '<p><b>DC Gain:</b> G = R₂ / R₁ = ' + FM.valLabel(comps.R2) + '/' + FM.valLabel(comps.R1) + ' = ' + FM.fv(r.gain_actual, 2) + '</p>';
-      html += '<p><b>Cutoff Frequency:</b> f_c = 1 / (2π·R₂·C₁) = 1/(2π·' + FM.valLabel(comps.R2) + '·' + FM.capLabel(comps.C1) + ') = ' + FM.fv(r.fc_actual, 1) + ' Hz</p>';
+      html += '<p><span class="latex" data-l="H(s) = -\\frac{R_2/R_1}{1 + s\\,R_2 C_1}"></span></p>';
+      html += '<p><span class="latex" data-l="G = \\frac{R_2}{R_1} = \\frac{' + FM.valLabel(comps.R2) + '}{' + FM.valLabel(comps.R1) + '} = ' + FM.fv(r.gain_actual, 2) + '"></span></p>';
+      html += '<p><span class="latex" data-l="f_c = \\frac{1}{2\\pi\\,R_2 C_1} = \\frac{1}{2\\pi\\cdot' + FM.valLabel(comps.R2) + '\\cdot' + FM.capLabel(comps.C1) + '} = ' + FM.fv(r.fc_actual, 1) + '\\text{ Hz}"></span></p>';
     } else {
-      html += '<p><b>Transfer Function:</b> H(s) = -(R₂/(R₁+R₃)) / [1 + s·(R₂·C₂ + C₁·R₁·R₃/(R₁+R₃)) + s²·C₁·C₂·R₁·R₂·R₃/(R₁+R₃)]</p>';
-      html += '<p><b>DC Gain:</b> G = R₂ / (R₁+R₃) = ' + FM.valLabel(comps.R2) + '/(' + FM.valLabel(comps.R1) + '+' + FM.valLabel(comps.R3) + ') = ' + FM.fv(r.gain_actual, 2) + '</p>';
-      html += '<p><b>Cutoff Frequency:</b> f_c = ' + FM.fv(r.fc_actual, 1) + ' Hz</p>';
-      html += '<p><b>Quality Factor:</b> Q = ' + FM.fv(r.Q_actual, 3) + '</p>';
+      html += '<p><span class="latex" data-l="H(s) = -\\frac{R_2/(R_1+R_3)}{1 + s\\left(R_2C_2 + \\frac{C_1 R_1 R_3}{R_1+R_3}\\right) + s^2\\frac{C_1 C_2 R_1 R_2 R_3}{R_1+R_3}}"></span></p>';
+      html += '<p><span class="latex" data-l="G = \\frac{R_2}{R_1+R_3} = \\frac{' + FM.valLabel(comps.R2) + '}{' + FM.valLabel(comps.R1) + '+' + FM.valLabel(comps.R3) + '} = ' + FM.fv(r.gain_actual, 2) + '"></span></p>';
+      html += '<p><span class="latex" data-l="f_c = ' + FM.fv(r.fc_actual, 1) + '\\text{ Hz}"></span></p>';
+      html += '<p><span class="latex" data-l="Q = ' + FM.fv(r.Q_actual, 3) + '"></span></p>';
     }
     html += '</div>';
 
     document.getElementById("filterRc").innerHTML = html;
+    if (typeof window._renderLatex === 'function') window._renderLatex();
   }
 
   /* ── Word export ─── */

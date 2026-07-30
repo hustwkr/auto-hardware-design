@@ -153,29 +153,29 @@
 
     // Section 2: Calculation
     html += "<h3>2. " + _t("pcb.repCalc") + "</h3>";
-    html += "<p><b>" + _t("pcb.repFormula") + ":</b> I = K × ΔT^b × A^c</p>";
+    html += "<p><span class=\"latex\" data-l=\"I = K\\,\\Delta T^{0.44} A^{0.725}\"></span></p>";
     html += "<p>" + posLabel + ": " + posConst + ", b=0.44, c=0.725</p>";
-    html += "<p>A = " + p.widthMil + " × " + PM.fv(p.copperOz * PM.OZ_TO_MIL, 3) + " = " + PM.fv(r.area, 2) + " mil²</p>";
-    html += "<p>I = " + posConst.split("=")[1] + " × " + PM.fv(p.deltaT, 1) + "^0.44 × " + PM.fv(r.area, 2) + "^0.725 = <b>" + PM.fv(r.maxI, 3) + " A</b></p>";
+    html += "<p><span class=\"latex\" data-l=\"A = " + p.widthMil + "\\times " + PM.fv(p.copperOz * PM.OZ_TO_MIL, 3) + " = " + PM.fv(r.area, 2) + "\\text{ mil}^2\"></span></p>";
+    html += "<p><span class=\"latex\" data-l=\"I = " + posConst.split("=")[1] + "\\times " + PM.fv(p.deltaT, 1) + "^{0.44}\\times " + PM.fv(r.area, 2) + "^{0.725} = " + PM.fv(r.maxI, 3) + "\\text{ A}\"></span></p>";
 
     if (r.minWidthMil) {
       html += "<p><b>" + _t("pcb.repReverse") + ":</b></p>";
-      html += "<p>W = (" + p.targetI + " / (" + posConst.split("=")[1] + " × " + PM.fv(p.deltaT, 1) + "^0.44))^(1/0.725) / " + PM.fv(p.copperOz * PM.OZ_TO_MIL, 3) + " = <b>" + PM.fv(r.minWidthMil, 1) + " mil (" + PM.fv(r.minWidthMm, 2) + " mm)</b></p>";
+      html += "<p><span class=\"latex\" data-l=\"W = \\left(\\frac{" + p.targetI + "}{" + posConst.split("=")[1] + "\\times " + PM.fv(p.deltaT, 1) + "^{0.44}}\\right)^{1/0.725} / " + PM.fv(p.copperOz * PM.OZ_TO_MIL, 3) + " = " + PM.fv(r.minWidthMil, 1) + "\\text{ mil}\"></span></p>";
     }
 
     if (r.vdrop !== null) {
       html += "<p><b>" + _t("pcb.repVdrop") + ":</b></p>";
-      html += "<p>R = ρ × L / (W × T) = " + PM.fv(r.resistance * 1e8, 2) + "×10⁻⁸ × " + p.lengthMm + " / (" + p.widthMil + " × " + PM.fv(p.copperOz * PM.OZ_TO_MIL, 3) + ") = " + PM.fv(r.resistance, 8) + " Ω</p>";
-      html += "<p>ΔV = " + PM.fv(r.maxI, 3) + " × " + PM.fv(r.resistance, 8) + " = <b>" + PM.fv(r.vdrop, 2) + " mV</b></p>";
-      html += "<p>P = I²R = <b>" + PM.fv(r.powerLoss, 2) + " mW</b></p>";
+      html += "<p><span class=\"latex\" data-l=\"R = \\rho\\,\\frac{L}{W\\times T} = " + PM.fv(r.resistance, 8) + "\\,\\Omega\"></span></p>";
+      html += "<p><span class=\"latex\" data-l=\"\\Delta V = I R = " + PM.fv(r.maxI, 3) + "\\times " + PM.fv(r.resistance, 8) + " = " + PM.fv(r.vdrop, 2) + "\\text{ mV}\"></span></p>";
+      html += "<p><span class=\"latex\" data-l=\"P = I^2 R = " + PM.fv(r.powerLoss, 2) + "\\text{ mW}\"></span></p>";
     }
 
     // Section 2b: Via calculation (if available)
     if (vr && vr.current !== null) {
       html += "<h3>2b. " + _t("pcb.via.title") + "</h3>";
       html += "<p><b>" + _t("pcb.via.drill") + ":</b> " + (vr.drillMm || "") + " mm  |  <b>" + _t("pcb.via.wall") + ":</b> " + (vr.wallUm || "") + "μm</p>";
-      html += "<p>" + _t("pcb.via.area") + " = π × " + (vr.wallUm||"") + "μm × (" + (vr.drillMm||"") + "mm + " + (vr.wallUm||"") + "μm) = <b>" + PM.fv(vr.areaMm2, 4) + " mm²</b></p>";
-      html += "<p>" + _t("pcb.via.maxI") + " = " + posConst.split("=")[1] + " × " + PM.fv(p.deltaT, 1) + "^0.44 × " + PM.fv(vr.areaMil2, 2) + "^0.725 = <b>" + PM.fv(vr.current, 3) + " A</b></p>";
+      html += "<p><span class=\"latex\" data-l=\"A = \\pi\\,t_w(d + t_w) = \\pi\\times " + (vr.wallUm||"") + "\\times(" + (vr.drillMm||"") + "+" + (vr.wallUm||"") + ") = " + PM.fv(vr.areaMm2, 4) + "\\text{ mm}^2\"></span></p>";
+      html += "<p><span class=\"latex\" data-l=\"I = " + posConst.split("=")[1] + "\\times " + PM.fv(p.deltaT, 1) + "^{0.44}\\times " + PM.fv(vr.areaMil2, 2) + "^{0.725} = " + PM.fv(vr.current, 3) + "\\text{ A}\"></span></p>";
       if (vr.viasNeeded) {
         html += "<p><b>" + _t("pcb.via.viasRec") + ":</b> " + _t("pcb.via.targetI") + " = " + PM.fv(vr.targetI, 1) + " A → " + _t("pcb.via.minDrill") + " = " + vr.drillRev + " mm, " + _t("pcb.via.singleI") + " = " + PM.fv(vr.singleRev, 2) + " A → ≥ <b>" + vr.viasNeeded + "</b> 个</p>";
       }
@@ -189,6 +189,7 @@
     html += "<div class=rep-footer><span>" + _t("pcb.repFooter") + " v1.1</span><span>" + _t("cap.report.date") + ": " + ds + " " + ts + "</span></div>";
 
     rep.innerHTML = html;
+    if (typeof window._renderLatex === 'function') window._renderLatex();
     var eg = document.getElementById("exportPcbGroup");
     if (eg) eg.style.display = "";
   }

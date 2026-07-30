@@ -59,11 +59,15 @@
 
 /* ── Report containers (#rc, #sRc) dark overrides ─── */
 [data-theme="dark"] #rc,
-[data-theme="dark"] #sRc {
+[data-theme="dark"] #sRc,
+[data-theme="dark"] #filterRc,
+[data-theme="dark"] #pcbRc {
   color: var(--color-text) !important;
 }
 [data-theme="dark"] #rc h3,
-[data-theme="dark"] #sRc h3 {
+[data-theme="dark"] #sRc h3,
+[data-theme="dark"] #filterRc h3,
+[data-theme="dark"] #pcbRc h3 {
   color: var(--color-text) !important;
 }
 
@@ -149,11 +153,15 @@
 [data-theme="dark"] .sg-tbl thead th,
 [data-theme="dark"] .node-tbl thead th { background: #162032; }
 [data-theme="dark"] .rt thead th { background: #162032; }
-/* Higher specificity for report containers (#rc, #sRc) */
+/* Higher specificity for report containers (#rc, #sRc, #filterRc, #pcbRc) */
 [data-theme="dark"] #rc thead th,
-[data-theme="dark"] #sRc thead th { background: #162032 !important; color: var(--color-text-mid) !important; }
+[data-theme="dark"] #sRc thead th,
+[data-theme="dark"] #filterRc thead th,
+[data-theme="dark"] #pcbRc thead th { background: #162032 !important; color: var(--color-text-mid) !important; }
 [data-theme="dark"] #rc tbody tr:hover,
-[data-theme="dark"] #sRc tbody tr:hover { background: #1e293b !important; }
+[data-theme="dark"] #sRc tbody tr:hover,
+[data-theme="dark"] #filterRc tbody tr:hover,
+[data-theme="dark"] #pcbRc tbody tr:hover { background: #1e293b !important; }
 [data-theme="dark"] table.data-tbl tbody tr:hover,
 [data-theme="dark"] .sg-tbl tbody tr:hover { background: #1e293b; }
 [data-theme="dark"] .tab-btn:hover { background: #334155; }
@@ -669,9 +677,9 @@ table.data-tbl tbody tr:hover {
 .wml { position: absolute; top: 16px; font-size: .65rem; color: #64748b; white-space: nowrap; transform: translateX(-50%); z-index: 3; }
 
 /* ============================================================
-   Report Container (#rc, #sRc) — the "gold standard" styling
+   Report Containers (#rc, #sRc, #filterRc, #pcbRc)
    ============================================================ */
-#rc, #sRc {
+#rc, #sRc, #filterRc, #pcbRc {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -680,36 +688,36 @@ table.data-tbl tbody tr:hover {
   line-height: 1.55;
 }
 
-#rc h3, #sRc h3 {
+#rc h3, #sRc h3, #filterRc h3, #pcbRc h3 {
   font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--color-text);
   margin: 14px 0 6px;
 }
 
-#rc h3:first-child, #sRc h3:first-child { margin-top: 0; }
+#rc h3:first-child, #sRc h3:first-child, #filterRc h3:first-child, #pcbRc h3:first-child { margin-top: 0; }
 
-#rc table, #sRc table {
+#rc table, #sRc table, #filterRc table, #pcbRc table {
   width: 100%;
   border-collapse: collapse;
   margin: 6px 0;
 }
 
-#rc th, #sRc th,
-#rc td, #sRc td {
+#rc th, #sRc th, #filterRc th, #pcbRc th,
+#rc td, #sRc td, #filterRc td, #pcbRc td {
   text-align: left;
   padding: 5px 8px;
   border: 1px solid var(--color-border);
   font-size: var(--fs-sm);
 }
 
-#rc thead th, #sRc thead th {
+#rc thead th, #sRc thead th, #filterRc thead th, #pcbRc thead th {
   background: #f8fafc;
   font-weight: 600;
   color: var(--color-text-mid);
 }
 
-#rc tbody tr:hover, #sRc tbody tr:hover {
+#rc tbody tr:hover, #sRc tbody tr:hover, #filterRc tbody tr:hover, #pcbRc tbody tr:hover {
   background: #fafbfd;
 }
 
@@ -825,12 +833,12 @@ table.data-tbl tbody tr:hover {
   }
 
   /* Tables print-friendly */
-  table.data-tbl, .sg-tbl, .node-tbl, #rc table, #sRc table {
+  table.data-tbl, .sg-tbl, .node-tbl, #rc table, #sRc table, #filterRc table, #pcbRc table {
     font-size: 10pt;
     border-color: #999 !important;
   }
   table.data-tbl thead th, .sg-tbl thead th, .node-tbl thead th,
-  #rc thead th, #sRc thead th { background: #f0f0f0 !important; color: #333 !important; }
+  #rc thead th, #sRc thead th, #filterRc thead th, #pcbRc thead th { background: #f0f0f0 !important; color: #333 !important; }
 
   /* Hide interactive elements */
   button, .btn-sm, .btn, .btn-p, .nav-dropdown, .info-icon, .export-dropdown { display: none !important; }
