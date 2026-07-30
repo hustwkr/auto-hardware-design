@@ -239,7 +239,7 @@
   function chartColors() {
     var d = document.documentElement.getAttribute("data-theme") === "dark";
     return {
-      grid: d ? "#334155" : "#e2e8f0", text: d ? "#94a3b8" : "#64748b",
+      grid: d ? "#334155" : "#e2e8f0", text: d ? "#a0aec0" : "#475569",
       axis: d ? "#475569" : "#cbd5e1", bg: d ? "#0f172a" : "#ffffff",
       mag: d ? "#60a5fa" : "#2563eb", phase: d ? "#34d399" : "#059669",
       ref: d ? "#fb923c" : "#f59e0b"
