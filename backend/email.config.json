@@ -1,13 +1,14 @@
 {
+  "_comment": "SMTP credentials are set via environment variables. This file is a template.",
   "smtp": {
-    "host": "smtp.qiye.163.com",
-    "port": 465,
-    "secure": true,
+    "host": "smtp.example.com",
+    "port": 587,
+    "secure": false,
     "auth": {
-      "user": "wangkerou@solaxpower.com",
-      "pass": "eDN7qKpBhYc%#4$C"
+      "user": "",
+      "pass": ""
     }
   },
-  "from": "wangkerou@solaxpower.com",
-  "to": "wangkerou@solaxpower.com"
+  "from": "",
+  "to": ""
 }

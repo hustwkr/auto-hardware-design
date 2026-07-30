@@ -23,8 +23,9 @@ if (!ADMIN_PW) {
   process.exit(1);
 }
 
-if (ADMIN_PW === "admin123" || ADMIN_PW.length < 8) {
-  console.error("[SECURITY] Refusing to start: admin password is too weak (<8 chars or 'admin123').");
+const WEAK_PASSWORDS = ["admin123", "password", "12345678", "admin", "letmein", "qwerty123", "changeme"];
+if (WEAK_PASSWORDS.includes(ADMIN_PW.toLowerCase()) || ADMIN_PW.length < 12) {
+  console.error("[SECURITY] Refusing to start: admin password is too weak (<12 chars or common password).");
   process.exit(1);
 }
 
@@ -62,7 +63,16 @@ function checkPassword(input) {
 }
 
 // ── Signed tokens (zero-dep JWT-like: payload.sig) ──────
-const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString("hex");
+const TOKEN_SECRET_FILE = path.join(__dirname, ".token_secret");
+let TOKEN_SECRET = process.env.TOKEN_SECRET;
+if (!TOKEN_SECRET) {
+  try { TOKEN_SECRET = fs.readFileSync(TOKEN_SECRET_FILE, "utf-8").trim(); }
+  catch (_) {
+    TOKEN_SECRET = crypto.randomBytes(32).toString("hex");
+    fs.writeFileSync(TOKEN_SECRET_FILE, TOKEN_SECRET, "utf-8");
+    console.log("[AUTH] Generated new token secret -> " + TOKEN_SECRET_FILE);
+  }
+}
 
 function signToken(expMs) {
   const payload = JSON.stringify({ exp: expMs, iat: Date.now() });
@@ -120,6 +130,14 @@ function checkRateLimit(ip) {
   return false;
 }
 
+// ── Periodic cleanup of expired rate-limit entries (prevent memory leak) ──
+setInterval(() => {
+  const cutoff = Date.now() - 300_000;
+  for (const [ip, entry] of loginAttempts) {
+    if (entry.time < cutoff) loginAttempts.delete(ip);
+  }
+}, 600_000).unref(); // every 10 min, don't keep process alive
+
 // ── Defaults helpers ────────────────────────────────────
 function loadDefaults() {
   try { return JSON.parse(fs.readFileSync(DEF_FILE, "utf-8")); }
@@ -132,8 +150,20 @@ function saveDefaults(d) {
 
 // ── Email config helpers ─────────────────────────────────
 function loadEmailConfig() {
-  try { return JSON.parse(fs.readFileSync(EMAIL_CONFIG_FILE, "utf-8")); }
-  catch (_) { return { smtp: { host: "", port: 587, secure: false, auth: { user: "", pass: "" } }, from: "", to: "" }; }
+  const fileCfg = (() => { try { return JSON.parse(fs.readFileSync(EMAIL_CONFIG_FILE, "utf-8")); } catch (_) { return {}; } })();
+  return {
+    smtp: {
+      host: process.env.SMTP_HOST || fileCfg.smtp?.host || "",
+      port: parseInt(process.env.SMTP_PORT || fileCfg.smtp?.port || "587", 10),
+      secure: (process.env.SMTP_SECURE || String(fileCfg.smtp?.secure || false)) === "true",
+      auth: {
+        user: process.env.SMTP_USER || fileCfg.smtp?.auth?.user || "",
+        pass: process.env.SMTP_PASS || fileCfg.smtp?.auth?.pass || ""
+      }
+    },
+    from: process.env.SMTP_FROM || fileCfg.from || "",
+    to: process.env.SMTP_TO || fileCfg.to || ""
+  };
 }
 
 function saveEmailConfig(d) {
@@ -223,13 +253,13 @@ async function sendFeedbackEmail(feedback) {
   const body = `
 New feedback received:
 
-From: ${feedback.name}
-Title: ${feedback.title}
-Time: ${feedback.timestamp}
-ID: ${feedback.id}
+From: ${htmlEscape(feedback.name)}
+Title: ${htmlEscape(feedback.title)}
+Time: ${htmlEscape(feedback.timestamp)}
+ID: ${htmlEscape(feedback.id)}
 
 Content:
-${feedback.content}
+${htmlEscape(feedback.content)}
 `;
 
   // If no email config, log to console
@@ -322,8 +352,7 @@ function sendSmtpEmail(smtpConfig, from, to, subject, body, feedback) {
 
             // Upgrade to TLS
             const tlsSocket = tls.connect({
-              socket,
-              rejectUnauthorized: false
+              socket
             }, () => {
               // Continue with TLS connection
             });
@@ -446,8 +475,7 @@ function sendSmtpEmail(smtpConfig, from, to, subject, body, feedback) {
       if (useTLS) {
         // For port 465, wrap in TLS immediately
         const tlsSocket = tls.connect({
-          socket,
-          rejectUnauthorized: false
+          socket
         }, () => {
           onConnect(tlsSocket);
         });
@@ -502,7 +530,7 @@ function validateDefaults(d) {
 
   for (const k of Object.keys(d)) {
     if (!topAllowed.includes(k)) {
-      warnings.push("Unknown top-level key: " + k);
+      return { ok: false, error: "Unknown top-level key: " + k };
     }
   }
 
@@ -697,7 +725,9 @@ http.createServer(async function (req, res) {
   // ── Feedback submission (public) ────────────────────
   if (p === "/api/feedback" && req.method === "POST") {
     const body = await parseBody(req);
-    const { name, title, content } = body;
+    const name = (body.name || "").replace(/[\r\n]/g, "").trim();
+    const title = (body.title || "").replace(/[\r\n]/g, "").trim();
+    const content = body.content || "";
     if (!name || !title || !content) {
       json(res, 400, { error: "Missing required fields (name, title, content)" }, true);
       return;
@@ -765,8 +795,13 @@ http.createServer(async function (req, res) {
   // ── Main page (static) ───────────────────
   if (p === "/" || p === "/index.html") { serveFile(res, path.join(ROOT, "index.html")); return; }
 
-  // ── Fallback: static file ────────────────────────────
+  // ── Fallback: static file (whitelist only safe paths) ─
   const sp = p === "/" ? "index.html" : p;
+  const safeSp = sp.replace(/\\/g, "/").replace(/^\/+/, "");
+  const ALLOWED_PREFIXES = ["css/", "js/"];
+  const ALLOWED_FILES = ["index.html", "hwlogo.png", "sw.js"];
+  const isAllowed = ALLOWED_FILES.includes(safeSp) || ALLOWED_PREFIXES.some(prefix => safeSp.startsWith(prefix));
+  if (!isAllowed) { res.writeHead(403, {"Content-Type":"text/plain"}); res.end("Forbidden"); return; }
   serveFile(res, path.join(ROOT, sp));
 }).listen(PORT, () => {
   console.log(`Server: http://localhost:${PORT}/`);

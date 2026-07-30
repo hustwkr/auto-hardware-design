@@ -530,8 +530,8 @@
       sN.insertAdjacentHTML('beforeend',mNode(snid++,idx,n.name||'',n.vrms||0,n.ins||'basic',
         n.pcb||0,n.coat||0,n.interp||false,n.circ||'ac',n.toGnd));
     });
-    // FIX Bug #4: after loading nodes from defaults, ensure DC OVC is derived
-    if(typeof autoDeriveDC==='function')autoDeriveDC();
+    // FIX Bug #4: after loading nodes from defaults, derive DC OVC only if not manually overridden
+    if(typeof autoDeriveDC==='function' && !dcManualOverride)autoDeriveDC();
     var btn=document.getElementById("addNodeBtn");if(btn)btn.onclick=sAddNode;
     sCalc();
   }

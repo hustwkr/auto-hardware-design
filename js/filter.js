@@ -415,16 +415,8 @@
     var el = document.getElementById("filterSchematic");
     if (!el) return;
 
-    var svgW = 580, svgH = r.type === "mfb2" ? 320 : 240;
     var comps = r.components;
-    var svg = '';
-
-    if (r.type === "diff1") {
-      svg = renderDiff1Svg(svgW, svgH, comps);
-    } else {
-      svg = renderMfb2Svg(svgW, svgH, comps);
-    }
-
+    var svg = r.type === "diff1" ? renderDiff1Svg(comps) : renderMfb2Svg(comps);
     el.innerHTML = svg;
   }
 
@@ -470,6 +462,16 @@
       L(x, mid+gap/2, x, y2);
   };
 
+  // horizontal capacitor from x1 to x2 at y
+  var capH = function(x1, x2, y) {
+    var gap = 8, hw = 6;
+    var mid = (x1+x2)/2;
+    return L(x1, y, mid-gap/2, y) +
+      '<line x1="' + (mid-gap/2).toFixed(1) + '" y1="' + (y-hw).toFixed(1) + '" x2="' + (mid-gap/2).toFixed(1) + '" y2="' + (y+hw).toFixed(1) + '" stroke="currentColor" stroke-width="1.2"/>' +
+      '<line x1="' + (mid+gap/2).toFixed(1) + '" y1="' + (y-hw).toFixed(1) + '" x2="' + (mid+gap/2).toFixed(1) + '" y2="' + (y+hw).toFixed(1) + '" stroke="currentColor" stroke-width="1.2"/>' +
+      L(mid+gap/2, y, x2, y);
+  };
+
   var opAmpTri = function(x, cy, hh) {
     var s = '<polygon points="' + x + ',' + (cy-hh) + ' ' + x + ',' + (cy+hh) + ' ' + (x+40) + ',' + cy + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
     s += L(x-12, cy-0.55*hh, x, cy-0.55*hh);
@@ -481,142 +483,99 @@
   };
 
   /* ================================================================
-     1st-Order Differential LPF
+     RENDER: 1st-Order Differential Low-Pass Filter
 
-     Standard differential amplifier with feedback capacitor C1
-     across R2 (parallel).  Both Vin+,Vin- are signal inputs.
-     R3 = R1, R4 = R2 for gain matching on both legs.
-
-     Schematic (op-amp drawn vertically, symbol as triangle):
-
-            ┌─────────── C1 ───────────┐
-            │                          │
-     Vin- ──R1───┬─────── R2 ──────┬───┴──┐
-                 │                  │      │
-                 │    ┌───(-)───┐   │      │
-                 └────┤   OP    ├───┘      Vout
-                 ┌────┤         ├──────────┘
-                 │    └───(+)───┘
-     Vin+ ──R3───┤
-                 │
-                R4
-                 │
-                GND
-
-     ================================================================ */
-
-  /* ================================================================
-     RENDER: 1st-Order Differential LPF
-
-     Textbook diff-amp with feedback capacitor C1 || R2:
-     Both Vin+ and Vin- are signal inputs.
-     R3=R1, R4=R2 for balanced impedance on both legs.
-
-     PIXEL COORDINATES (hand-computed, no overlap):
-        viewBox 580×260
-        op-amp: left edge x=180, centre y=130, half-height=32
-        (-) terminal at y=112, (+) at y=148
+     Topology: Vin- → R1 → (-) junction   |   Vin+ → R3 → (+) junction
+               R2 ∥ C1 as feedback from output to (-) junction
+               R4 from (+) junction to GND (matched impedance)
   ================================================================ */
-  function renderDiff1Svg(w, h, c) {
-    var r1V = FM.valLabel(c.R1) + "Ω";
-    var r2V = FM.valLabel(c.R2) + "Ω";
+  function renderDiff1Svg(c) {
+    var r1V = FM.valLabel(c.R1) + "\u03A9";
+    var r2V = FM.valLabel(c.R2) + "\u03A9";
     var c1V = FM.capLabel(c.C1);
     var RW = 44, RH = 14;
 
-    // fixed layout (px)
-    var opX  = 190;      // op-amp left edge
-    var opW  = 40;       // op-amp width
-    var opCY = 130;      // op-amp centre Y
-    var opHH = 32;       // op-amp half-height
-    var nTY  = opCY - 18; // (-) terminal Y  = 112
-    var pTY  = opCY + 18; // (+) terminal Y  = 148
-    var opR  = opX + opW; // op-amp right tip = 230
+    // === Coordinate system ===
+    var opX   = 240;   // op-amp left edge
+    var opCY  = 125;   // op-amp vertical centre
+    var opHH  = 32;    // half-height
+    var nTY   = opCY - 18;  // (-) terminal Y = 107
+    var pTY   = opCY + 18;  // (+) terminal Y = 143
+    var opR   = opX + 40;   // op-amp output tip = 280
 
-    var voutX = opR + 36;  // Vout label X = 266
+    // (-) summing junction (where R1, R2∥C1 feedback all meet)
+    var negJ  = opX - 90;        // x = 150
+    // (+) bias junction (where R3, R4, op-amp(+) meet)
+    var posJ  = negJ;            // same X for clean layout
 
-    // (-) side: Vin- → R1 → (-) summing node → (-) terminal
-    var sumX    = opX - 52;          // summing node X = 138
-    var r1Start = sumX - 80;         // R1 left edge wire X = 58 (44px R1 + 8px lead each side)
-    var r1End   = sumX - 8;          // R1 right edge wire X = 130
-    var vinMinusY = opCY - 42;       // Vin- line Y = 88
+    var vinMinusY = 70;          // upper input path
+    var vinPlusY  = 177;         // lower input path
 
-    // (+) side: Vin+ → R3 → (+) node → (+) terminal; also R4 to GND
-    var plusX   = sumX;              // (+) junction at same X as sumX (clean layout) = 138
-    var r3Start = r1Start;           // R3 same left edge as R1  = 58
-    var r3End   = r1End;             // R3 same right edge as R1  = 130
-    var vinPlusY = opCY + 32;        // Vin+ line Y = 162
-    var r4Start = plusX + 24;        // R4 start X = 162
-    var r4End   = r4Start + RW;      // R4 end X = 206
-
-    // feedback: C1||R2 from output back to (-) summing node
-    var fbVertX  = sumX + 20;        // feedback vertical channel X = 158 (avoids sumX=138 wire)
-    var fbTopY   = 30;               // top arm Y
-    var fbBotY   = 220;              // bottom arm Y
-    var outTake  = opR + 14;         // output takeoff X = 244
+    // feedback routing
+    var fbTakeX  = opR + 18;     // output takeoff X = 298
+    var fbTopY   = 30;           // upper feedback bus Y
+    var fbMidY   = 50;           // C1 bus Y
+    var fbBusX   = opX - 10;     // feedback vertical bus X = 230
 
     var parts = [];
-    parts.push('<svg viewBox="0 0 580 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:580px;color:var(--color-text)">');
+    parts.push('<svg viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:640px;color:var(--color-text)">');
     parts.push('<style>.flbl{fill:currentColor;font:13px -apple-system,sans-serif;}.fref{fill:var(--color-text-soft);font:11px -apple-system,sans-serif;}.fnode{fill:currentColor;font:12px -apple-system,sans-serif;font-weight:600}.fdes{fill:currentColor;font:14px -apple-system,sans-serif;font-weight:600}</style>');
-    parts.push('<text x="290" y="18" class="fdes" text-anchor="middle">1st-Order Differential Low-Pass Filter</text>');
+    parts.push('<text x="320" y="18" class="fdes" text-anchor="middle">1st-Order Differential Low-Pass Filter</text>');
 
-    // ─── Vin- path ───
-    parts.push('<text x="14" y="' + (vinMinusY+4) + '" class="fnode">Vin−</text>');
-    parts.push(L(44, vinMinusY, r1Start, vinMinusY));
-    parts.push(resDraw(r1Start, r1End, vinMinusY, RW, RH, 'R1', r1V));
-    // wire from R1 end down to op-amp level, then right to sumX
-    parts.push(L(r1End, vinMinusY, r1End, opCY));
-    parts.push(L(r1End, opCY, sumX, opCY));
-    // (-) summing node dot
-    parts.push(dot(sumX, opCY));
-    // sumX vertical up to (-) terminal level, then horizontal
-    parts.push(L(sumX, opCY, sumX, nTY));
-    parts.push(L(sumX, nTY, opX-12, nTY));
+    // ── Vin- → R1 → negJ ──
+    parts.push('<text x="5" y="' + (vinMinusY+4) + '" class="fnode">Vin\u2212</text>');
+    parts.push(L(34, vinMinusY, 34, vinMinusY));  // short lead
+    parts.push(resDraw(34, 86, vinMinusY, RW, RH, 'R1', r1V));
+    parts.push(L(86, vinMinusY, 86, opCY));
+    parts.push(L(86, opCY, negJ, opCY));
+    // wire from negJ up to (-) terminal level, then into op-amp
+    parts.push(L(negJ, opCY, negJ, nTY));
+    parts.push(L(negJ, nTY, opX-12, nTY));
+    parts.push(dot(negJ, opCY));
 
-    // ─── Vin+ path ───
-    parts.push('<text x="14" y="' + (vinPlusY+4) + '" class="fnode">Vin+</text>');
-    parts.push(L(44, vinPlusY, r3Start, vinPlusY));
-    parts.push(resDraw(r3Start, r3End, vinPlusY, RW, RH, 'R3', r1V));
-    parts.push(L(r3End, vinPlusY, plusX, vinPlusY));
-    parts.push(dot(plusX, vinPlusY));
-    // (+) junction: vertical down to (+) terminal level, then horizontal right
-    parts.push(L(plusX, vinPlusY, plusX, pTY));
-    parts.push(L(plusX, pTY, opX-12, pTY));
+    // ── Vin+ → R3 → posJ ──
+    parts.push('<text x="5" y="' + (vinPlusY+4) + '" class="fnode">Vin+</text>');
+    parts.push(resDraw(34, 86, vinPlusY, RW, RH, 'R3', FM.valLabel(c.R1)+'\u03A9')); // R3=R1 label
+    parts.push(L(86, vinPlusY, 86, pTY));
+    parts.push(L(86, pTY, posJ, pTY));
+    parts.push(dot(posJ, pTY));
+    // posJ to (+) terminal
+    parts.push(L(posJ, pTY, opX-12, pTY));
 
-    // R4 from (+) junction to GND
-    parts.push(L(plusX, vinPlusY, r4Start, vinPlusY));
-    parts.push(resDraw(r4Start, r4End, vinPlusY, RW, RH, 'R4', r2V));
-    var gndR4Y = vinPlusY + 50;
-    parts.push(L(r4End, vinPlusY, r4End, gndR4Y));
-    parts.push(GND(r4End, gndR4Y));
+    // ── R4 from posJ to GND ──
+    var r4s = posJ + 14;  // small gap from junction
+    parts.push(L(posJ, pTY, r4s, pTY));
+    parts.push(resDraw(r4s, r4s + RW, pTY, RW, RH, 'R4', r2V));
+    var r4e = r4s + RW;
+    parts.push(L(r4e, pTY, r4e, pTY + 54));
+    parts.push(GND(r4e, pTY + 54));
 
-    // ─── Op-amp ───
+    // ── Op-amp ──
     parts.push(opAmpTri(opX, opCY, opHH));
 
-    // ─── Output wire ───
+    // ── Output wire ──
+    var voutX = opR + 60;
     parts.push(L(opR, opCY, voutX, opCY));
     parts.push('<text x="' + (voutX+3) + '" y="' + (opCY+4) + '" class="fnode">Vout</text>');
 
-    // ─── Feedback: R2 (above) ∥ C1 (below) from output to (-) summing node ───
-    // R2: outTake ↑ → fbTopY → left (resistor) → fbVertX → down → sumX level → left → sumX/nTY junction
-    parts.push(L(outTake, opCY, outTake, fbTopY));
-    parts.push(resDraw(fbVertX, outTake, fbTopY, RW, RH, 'R2', r2V));
-    parts.push(L(fbVertX, fbTopY, fbVertX, nTY));
-    parts.push(L(fbVertX, nTY, sumX-8, nTY));      // horizontal left to just beyond sumX
-    // C1: output ↓ → fbBotY → left → fbVertX-12 → up → same junction
-    var fbVert2 = fbVertX - 16;   // separate vertical for C1 = 142
-    var capTop = fbBotY - 22;
-    parts.push(L(outTake-8, opCY, outTake-8, capTop));
-    parts.push(capV(outTake-8, capTop, fbBotY));
-    parts.push(L(outTake-8, fbBotY, fbVert2, fbBotY));
-    parts.push(L(fbVert2, fbBotY, fbVert2, nTY));
-    // C1 label
-    var c1Mid = (capTop + fbBotY) / 2;
-    parts.push('<text x="' + (outTake-8+14).toFixed(1) + '" y="' + (c1Mid+4).toFixed(1) + '" class="flbl">C1</text>');
-    parts.push('<text x="' + (outTake-8+14).toFixed(1) + '" y="' + (c1Mid+16).toFixed(1) + '" class="fref">' + c1V + '</text>');
+    // ── Feedback R2 ∥ C1: output → top → back to negJ ──
+    // Takeoff from output up to feedback bus
+    parts.push(L(fbTakeX, opCY, fbTakeX, fbTopY));
+    // R2 on upper horizontal
+    parts.push(resDraw(fbBusX, fbTakeX, fbTopY, RW, RH, 'R2', r2V));
+    // C1 on lower horizontal (parallel with R2)
+    parts.push(L(fbTakeX, opCY, fbTakeX, fbMidY));  // second takeoff for C1
+    parts.push(capH(fbBusX, fbTakeX, fbMidY));
+    parts.push('<text x="' + ((fbBusX+fbTakeX)/2).toFixed(0) + '" y="' + (fbMidY-9) + '" class="flbl" text-anchor="middle">C1</text>');
+    parts.push('<text x="' + ((fbBusX+fbTakeX)/2).toFixed(0) + '" y="' + (fbMidY+19) + '" class="fref" text-anchor="middle">' + c1V + '</text>');
+    // vertical drop bus at fbBusX: connects both R2 and C1 down to (-) level
+    parts.push(L(fbBusX, fbTopY, fbBusX, nTY));
+    // horizontal from feedback bus to negJ (-) terminal node
+    parts.push(L(fbBusX, nTY, negJ, nTY));
 
-    // ─── Junction dots ───
-    parts.push(dot(sumX, nTY));    // (-) terminal input
-    parts.push(dot(plusX, pTY));   // (+) terminal input
+    // ── Junction dots ──
+    parts.push(dot(negJ, nTY));     // (-) input node
+    parts.push(dot(fbBusX, nTY));   // feedback bus join
 
     parts.push('</svg>');
     return parts.join('');
@@ -625,113 +584,100 @@
   /* ================================================================
      RENDER: 2nd-Order MFB Low-Pass Filter
 
-     Standard MFB: Vin → R1 → N1 → R3 → N2 → (-) OP → Vout
-     C1 from N1 to GND.  R2∥C2 in feedback from output to N2/(-).
+     Standard MFB: Vin → R1 → N1 → R3 → N2 → (-) → Vout
+     C1 from N1 to GND.  R2 ∥ C2 in feedback from output to N2.
      (+) to GND.
-
-     PIXEL COORDINATES (hand-computed):
-        viewBox 580×260
-        op-amp: left x=210, centre y=130, hh=32
-        (-) terminal y=112, (+) terminal y=148
-        N2 at x=158, N1 at x=58
   ================================================================ */
-  function renderMfb2Svg(w, h, c) {
-    var r1V = FM.valLabel(c.R1) + "Ω";
-    var r2V = FM.valLabel(c.R2) + "Ω";
-    var r3V = FM.valLabel(c.R3) + "Ω";
+  function renderMfb2Svg(c) {
+    var r1V = FM.valLabel(c.R1) + "\u03A9";
+    var r2V = FM.valLabel(c.R2) + "\u03A9";
+    var r3V = FM.valLabel(c.R3) + "\u03A9";
     var c1V = FM.capLabel(c.C1);
     var c2V = FM.capLabel(c.C2);
     var RW = 44, RH = 14;
 
-    // fixed layout (px)
-    var opX   = 210;     // op-amp left edge
-    var opW   = 40;      // op-amp width
-    var opCY  = 130;     // op-amp centre Y
-    var opHH  = 32;      // op-amp half-height
-    var nTY   = opCY - 18; // (-) terminal Y = 112
-    var pTY   = opCY + 18; // (+) terminal Y = 148
-    var opR   = opX + opW; // op-amp right tip = 250
-    var voutX = opR + 40;  // Vout label X = 290
+    // === Coordinate system ===
+    var opX   = 235;    // op-amp left edge
+    var opCY  = 125;    // op-amp vertical centre
+    var opHH  = 32;     // half-height
+    var nTY   = opCY - 18;   // (-) terminal Y = 107
+    var pTY   = opCY + 18;   // (+) terminal Y = 143
+    var opR   = opX + 40;    // output tip = 275
 
-    // signal nodes (all at Y=opCY=130)
-    var N2  = opX - 52;                 // N2: between R3 and (-) input = 158
-    var N1  = N2 - 100;                 // N1: between R1/R3/C1 = 58
-    var r1s = N1 - 52;                  // R1 start = 6
-    var r1e = N1 - 8;                   // R1 end (wire gap) = 50
-    var r3s = N1 + 8;                   // R3 start = 66
-    var r3e = N2 - 8;                   // R3 end = 150
+    var sigY  = opCY;        // main signal Y = 125
 
-    // feedback vertical column (left of op-amp but right of N2)
-    var fbV  = opX - 18;                // feedback vertical X = 192
+    // signal nodes (left to right along sigY)
+    var n1X   = opX - 130;   // N1: after R1, C1 to GND = 105
+    var n2X   = opX - 42;    // N2: after R3, feedback join = 193
 
-    // GND routing for (+) terminal
-    var gndBend = opX - 38;             // turn point X = 172
+    // feedback routing (above op-amp)
+    var fbTakeX = opR + 22;  // output takeoff = 297
+    var fbBusX  = n2X + 44;  // feedback vertical bus = 237
+    var fbTopY  = 28;        // R2 bus
+    var fbMidY  = 50;        // C2 bus
 
     var parts = [];
-    parts.push('<svg viewBox="0 0 580 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:580px;color:var(--color-text)">');
+    parts.push('<svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:640px;color:var(--color-text)">');
     parts.push('<style>.flbl{fill:currentColor;font:13px -apple-system,sans-serif;}.fref{fill:var(--color-text-soft);font:11px -apple-system,sans-serif;}.fnode{fill:currentColor;font:12px -apple-system,sans-serif;font-weight:600}.fdes{fill:currentColor;font:14px -apple-system,sans-serif;font-weight:600}</style>');
-    parts.push('<text x="290" y="18" class="fdes" text-anchor="middle">2nd-Order MFB Low-Pass Filter</text>');
+    parts.push('<text x="320" y="18" class="fdes" text-anchor="middle">2nd-Order MFB Low-Pass Filter</text>');
 
-    // ─── Vin → R1 → N1 ───
-    parts.push('<text x="14" y="' + (opCY+4) + '" class="fnode">Vin</text>');
-    parts.push(L(44, opCY, r1s, opCY));
-    parts.push(resDraw(r1s, r1e, opCY, RW, RH, 'R1', r1V));
-    parts.push(L(r1e, opCY, N1, opCY));
-    parts.push(dot(N1, opCY));
+    // ── Vin → R1 → N1 ──
+    parts.push('<text x="5" y="' + (sigY+4) + '" class="fnode">Vin</text>');
+    parts.push(L(32, sigY, 32, sigY));
+    parts.push(resDraw(32, n1X-18, sigY, RW, RH, 'R1', r1V));
+    parts.push(L(n1X-18, sigY, n1X, sigY));
+    parts.push(dot(n1X, sigY));
 
-    // ─── C1 from N1 to GND ───
-    var c1Bot = opCY + 68;
-    parts.push(L(N1, opCY, N1, c1Bot-20));
-    parts.push(capV(N1, c1Bot-20, c1Bot));
-    parts.push(GND(N1, c1Bot));
-    parts.push('<text x="' + (N1+12).toFixed(1) + '" y="' + (c1Bot-15).toFixed(1) + '" class="flbl">C1</text>');
-    parts.push('<text x="' + (N1+12).toFixed(1) + '" y="' + (c1Bot-3).toFixed(1) + '" class="fref">' + c1V + '</text>');
+    // ── C1: N1 → GND (vertical) ──
+    var c1Bot = sigY + 85;
+    parts.push(L(n1X, sigY, n1X, c1Bot-22));
+    parts.push(capV(n1X, c1Bot-22, c1Bot));
+    parts.push(GND(n1X, c1Bot));
+    parts.push('<text x="' + (n1X+14) + '" y="' + (c1Bot-10) + '" class="flbl">C1</text>');
+    parts.push('<text x="' + (n1X+14) + '" y="' + (c1Bot+2) + '" class="fref">' + c1V + '</text>');
 
-    // ─── R3: N1 → N2 ───
-    parts.push(resDraw(r3s, r3e, opCY, RW, RH, 'R3', r3V));
-    parts.push(L(r3e, opCY, N2, opCY));
-    parts.push(dot(N2, opCY));
+    // ── R3: N1 → N2 ──
+    var r3s = n1X + 18;
+    parts.push(L(n1X, sigY, r3s, sigY));
+    parts.push(resDraw(r3s, n2X-18, sigY, RW, RH, 'R3', r3V));
+    parts.push(L(n2X-18, sigY, n2X, sigY));
+    parts.push(dot(n2X, sigY));
 
-    // ─── N2 → (-) terminal: horizontal right to fbV, up to nTY, right to opX-12 ───
-    parts.push(L(N2, opCY, fbV, opCY));
-    parts.push(L(fbV, opCY, fbV, nTY));
-    parts.push(L(fbV, nTY, opX-12, nTY));
+    // ── N2 → op-amp (-) ──
+    parts.push(L(n2X, sigY, n2X, nTY));
+    parts.push(L(n2X, nTY, opX-12, nTY));
 
-    // ─── Op-amp ───
+    // ── Op-amp ──
     parts.push(opAmpTri(opX, opCY, opHH));
 
-    // ─── (+) terminal to GND ───
-    parts.push(L(opX-12, pTY, opX-12, pTY+18));
-    parts.push(L(opX-12, pTY+18, gndBend, pTY+18));
-    parts.push(L(gndBend, pTY+18, gndBend, opCY+54));
-    parts.push(GND(gndBend, opCY+54));
+    // ── (+) terminal → GND ──
+    parts.push(L(opX-12, pTY, n2X, pTY));
+    parts.push(L(n2X, pTY, n2X, pTY+40));
+    parts.push(GND(n2X, pTY+40));
 
-    // ─── Output ───
+    // ── Output ──
+    var voutX = opR + 60;
     parts.push(L(opR, opCY, voutX, opCY));
     parts.push('<text x="' + (voutX+3) + '" y="' + (opCY+4) + '" class="fnode">Vout</text>');
 
-    // ─── R2 feedback (above) from output to fbV corridor ───
-    var fbTopY = 34;
-    var outT = opR + 14;
-    parts.push(L(outT, opCY, outT, fbTopY));
-    parts.push(resDraw(fbV, outT, fbTopY, RW, RH, 'R2', r2V));
-    parts.push(L(fbV, fbTopY, fbV, nTY));
+    // ── Feedback R2 ∥ C2: output → top → back to N2 ──
+    // takeoff from output up to feedback bus
+    parts.push(L(fbTakeX, opCY, fbTakeX, fbTopY));
+    // R2 on upper horizontal
+    parts.push(resDraw(fbBusX, fbTakeX, fbTopY, RW, RH, 'R2', r2V));
+    // C2 on lower horizontal (parallel with R2)
+    parts.push(L(fbTakeX, opCY, fbTakeX, fbMidY));
+    parts.push(capH(fbBusX, fbTakeX, fbMidY));
+    parts.push('<text x="' + ((fbBusX+fbTakeX)/2).toFixed(0) + '" y="' + (fbMidY-9) + '" class="flbl" text-anchor="middle">C2</text>');
+    parts.push('<text x="' + ((fbBusX+fbTakeX)/2).toFixed(0) + '" y="' + (fbMidY+19) + '" class="fref" text-anchor="middle">' + c2V + '</text>');
+    // vertical drop bus: connects both R2 and C2 to N2 level
+    parts.push(L(fbBusX, fbTopY, fbBusX, nTY));
+    // horizontal from feedback bus to N2
+    parts.push(L(fbBusX, nTY, n2X, nTY));
 
-    // ─── C2 feedback (below) from output to fbV corridor ───
-    var fbBotY = 214;
-    var outC = opR + 6;
-    parts.push(L(outC, opCY, outC, fbBotY-18));
-    parts.push(capV(outC, fbBotY-18, fbBotY));
-    parts.push(L(outC, fbBotY, fbV-14, fbBotY));
-    parts.push(L(fbV-14, fbBotY, fbV-14, nTY));
-    // C2 label
-    var c2Mid = (fbBotY-18+fbBotY)/2;
-    parts.push('<text x="' + (outC+14).toFixed(1) + '" y="' + (c2Mid+4).toFixed(1) + '" class="flbl">C2</text>');
-    parts.push('<text x="' + (outC+14).toFixed(1) + '" y="' + (c2Mid+16).toFixed(1) + '" class="fref">' + c2V + '</text>');
-
-    // ─── Junction dots ───
-    parts.push(dot(fbV, nTY));       // feedback join at (-) level
-    parts.push(dot(opX-12, nTY));    // (-) terminal input
+    // ── Junction dots ──
+    parts.push(dot(n2X, nTY));     // (-) input / feedback join
+    parts.push(dot(fbBusX, nTY));   // feedback bus
 
     parts.push('</svg>');
     return parts.join('');

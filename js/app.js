@@ -131,10 +131,7 @@
       setValSelect('sStd',s.sStd);setValSelect('sPd',s.sPd+'');setValSelect('sMg',s.sMg);
       setValSelect('sAlt',s.sAlt+'');setValSelect('sIsolation',s.sIsolation||'isolated');
       setValSelect('sOvc_AC',s.sOvc_AC||'ii');
-      if(s.sOvc_DC){if(typeof setDcManualOverride==='function')setDcManualOverride(true);setValSelect('sOvc_DC',s.sOvc_DC);
-        /* Re-apply after initSafety may have overridden it */
-        setTimeout(function(){if(typeof setDcManualOverride==='function')setDcManualOverride(true);setValSelect('sOvc_DC',s.sOvc_DC);},500);
-      }
+      if(s.sOvc_DC){if(typeof setDcManualOverride==='function')setDcManualOverride(true);setValSelect('sOvc_DC',s.sOvc_DC);}
       setVal('sSysV_AC',s.sSysV_AC+'');setVal('sSysV_DC',s.sSysV_DC+'');
 
       /* Filter defaults */
