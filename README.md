@@ -1,11 +1,11 @@
 # ⚡ 自动硬件设计工具
 # Auto Hardware Design Tool
 
-一站式自动化硬件设计辅助工具集，覆盖电解电容寿命评估、安规距离计算等核心硬件工程场景。
+一站式自动化硬件设计辅助工具集，覆盖电解电容寿命评估、安规距离计算、信号滤波器设计等核心硬件工程场景。纯前端离线可用，零框架零依赖。
 
 本项目由具备多年一线硬件设计经验的工程师开发，经过多位资深电源/安规工程师实际使用与专业审查，确保计算结果符合工程实践要求。
 
-A one-stop automated hardware design assistant toolset covering electrolytic capacitor lifetime evaluation and safety distance calculations — core scenarios in power electronics hardware engineering. Developed by experienced hardware engineers and reviewed by senior power/safety engineers for accuracy and compliance.
+A one-stop automated hardware design assistant toolset covering electrolytic capacitor lifetime evaluation, safety distance calculations, and signal filter design — core scenarios in power electronics hardware engineering. Pure frontend, offline-capable, zero framework, zero dependencies. Developed by experienced hardware engineers and reviewed by senior power/safety engineers.
 
 所有模块均支持一键生成详细设计报告（在线预览 + Word 导出），完整展示从输入参数到最终结果的每一步计算逻辑。
 
@@ -77,6 +77,33 @@ An IPC-2221 based PCB trace current capacity calculator supporting forward (widt
 
 ---
 
+### 4. 信号滤波器设计
+### Signal Filter Designer
+
+基于运放的有源低通滤波器设计工具，支持一阶差分和二阶 MFB (Multiple Feedback) 拓扑。自动匹配 E24/E48 标准电阻值，渲染伯德图和电路原理图。
+
+An op-amp based active low-pass filter design tool supporting 1st-order differential and 2nd-order MFB topologies. Auto-matches E24/E48 standard resistor values, renders Bode plots and circuit schematics.
+
+#### 功能特性 Features
+
+- **双拓扑** Dual topology — 一阶差分 LPF / 二阶 MFB LPF，输入端切换显示对应参数
+- **E24/E48 标准值** Standard value matching — 自动选取最接近的标准电阻值，计算截止频率/增益/Q 值实际误差
+- **伯德图** Bode plot — Canvas 渲染幅频 + 相频特性曲线，含 -3dB 参考线
+- **电路原理图** Schematic — SVG 内联渲染，标注元件编号与参数值
+- **频率响应点** Pole analysis — 计算并展示极点频率
+
+#### 设计公式 Design Formulas
+
+```
+一阶差分:  H(s) = -(R₂/R₁) / (1 + s·R₂·C₁)
+           f_c = 1/(2π·R₂·C₁),  G = R₂/R₁
+
+二阶 MFB:  H(s) = -(R₂/(R₁+R₃)) / [1 + s·(R₂C₂ + C₁R₁R₃/(R₁+R₃)) + s²·C₁C₂R₁R₂R₃/(R₁+R₃)]
+           R₃ = R₁,  G = R₂/(2R₁),  f_c = 1/(2π·√(C₁C₂R₁R₂/2))
+```
+
+---
+
 ## 使用方式 Usage
 
 ### 离线模式（推荐）Offline Mode (Recommended)
@@ -105,10 +132,15 @@ node server.js
 
 | Method | Endpoint | Auth Required | Description |
 |--------|----------|---------------|-------------|
-| POST | /api/login | No | Login with password |
-| GET  | /api/session | Token | Check authentication status |
-| GET  | /api/defaults | No | Get current default parameters |
-| PUT  | /api/admin/defaults | Token | Update default parameters (validated) |
+| POST | /api/login | No | 登录获取 Token（含速率限制，5分钟内最多10次） |
+| GET  | /api/session | Token | 检查认证状态 |
+| POST | /api/logout | No | 登出 |
+| GET  | /api/defaults | No | 获取当前默认参数 |
+| PUT  | /api/admin/defaults | Token | 更新默认参数（严格校验，拒绝未知键） |
+| GET  | /api/admin/email-config | Token | 获取 SMTP 邮件配置 |
+| PUT  | /api/admin/email-config | Token | 更新 SMTP 邮件配置 |
+| POST | /api/feedback | No | 提交用户反馈（含邮件通知） |
+| GET  | /api/feedback | Token | 查看反馈列表 |
 
 ---
 
@@ -116,26 +148,34 @@ node server.js
 
 ```
 auto-hardware-design/
-├── index.html                     # SPA 入口（所有计算模块）
-├── css/app.css                    # 全局样式 + Design Tokens
+├── index.html                     # SPA 入口（所有计算模块 + tab 导航）
+├── css/app.css                    # 全局样式系统 + Design Tokens + 暗色主题
 ├── js/
-│   ├── app.js                     # App Shell：Tab 切换、Defaults API、导出
+│   ├── app.js                     # App Shell：Tab 切换、Defaults API、主题/语言切换、自动保存
 │   ├── i18n.js                    # 国际化（中/英双语）
-│   ├── capacitor.js               # 电解电容寿命 UI 层
-│   ├── safety.js                  # 安规距离 UI 层
+│   ├── capacitor.js               # 电解电容寿命 UI 层（输入→计算→报告→Word导出）
+│   ├── safety.js                  # 安规距离 UI 层（多节点管理→计算→报告→Word导出）
 │   ├── pcb.js                     # PCB 载流能力 UI 层
+│   ├── filter.js                  # 信号滤波器 UI 层（设计→伯德图→SVG原理图→报告）
+│   ├── feedback.js                # 用户反馈表单
 │   └── models/
-│       ├── capacitor-model.js     # 纯计算模型（Arrhenius + Miner，零 DOM）
-│       ├── safety-model.js        # 纯计算模型（IEC 62109-1 / UL 840）
-│       └── pcb-model.js           # 纯计算模型（IPC-2221）
-├── backend/                       # Node.js 后端服务
-│   ├── server.js                  # HTTP 服务器 + REST API
+│       ├── capacitor-model.js     # 纯计算模型（Arrhenius + Miner，零 DOM 依赖）
+│       ├── safety-model.js        # 纯计算模型（IEC 62109-1 / UL 840 / UL 1741）
+│       ├── pcb-model.js           # 纯计算模型（IPC-2221）
+│       └── filter-model.js        # 纯计算模型（一阶差分/二阶MFB + E24/E48）
+├── backend/                       # Node.js 后端服务（零 npm 依赖）
+│   ├── server.js                  # HTTP 服务器 + REST API + scrypt认证 + HMAC Token
 │   ├── defaults.json              # 默认参数持久化存储
+│   ├── email.config.json          # SMTP 邮件配置模板（凭据通过环境变量注入）
 │   └── admin/                     # 管理面板（Token 认证）
 │       ├── dashboard.html
 │       └── login.html
-├── tests/                         # 单元测试
+├── tests/                         # 单元测试（纯 Node.js，零测试框架依赖）
 │   └── models.test.js
+├── templates/                     # 新模块开发模板
+│   └── new-module/
+├── references/                    # 参考资料（电容数据手册、公式分析）
+├── standards/                     # 参考标准文档（IEC 62109-1, UL 840, UL 1741）
 ├── README.md
 └── CLAUDE.md
 ```
@@ -149,26 +189,37 @@ auto-hardware-design/
 | 模型 | 核心入口 | 算法依据 |
 |------|----------|----------|
 | `CapacitorModel` | `calcLifetime(params)` | Arrhenius + Miner 累积损伤 |
-| `SafetyModel` | `calcSafety(params)` | IEC 62109-1 §7.3.7 / UL 840 |
+| `SafetyModel` | `calcSafety(params)` | IEC 62109-1 §7.3.7 / UL 840 / UL 1741 |
 | `PcbTraceModel` | `calcCurrent(params)` | IPC-2221 标准公式 |
+| `FilterModel` | `designFilter(type, params)` | 一阶差分 / 二阶 MFB 传递函数 + E24/E48 逼近 |
 
-UI 层 (`capacitor.js`, `safety.js`) 仅负责 DOM 操作和事件绑定，通过 `window.CapacitorModel` / `window.SafetyModel` 调用计算。
+UI 层 (`capacitor.js`, `safety.js`, `filter.js`, `pcb.js`) 仅负责 DOM 操作和事件绑定，通过 `window.CapacitorModel` / `window.SafetyModel` / `window.FilterModel` 调用计算。
 
-### 安全特性 Security Features
+### 安全特性 Security
 
-密码保护、Token 认证、登录限频、路径穿越防护、输入校验。
-
-Password-protected admin panel with token auth, rate limiting, path traversal protection, and input validation.
+- **凭据保护**：SMTP 密码和管理员密码通过环境变量注入，不写入仓库文件
+- **Token 认证**：HMAC-SHA256 签名 Token，密钥持久化防重启失效
+- **登录限频**：IP 级别速率限制（5分钟窗口 ≤10次），过期条目定期清理防内存泄漏
+- **路径防护**：静态文件白名单 + `path.resolve` 防目录穿越
+- **密码策略**：最小 12 位 + 常见弱密码黑名单（不区分大小写拒绝）
+- **邮件安全**：SMTP TLS 证书验证已启用，用户输入经 htmlEscape + CRLF 剥离防注入
+- **CSP 头**：Content-Security-Policy 限制脚本/样式来源
+- **输入校验**：默认参数保存前严格结构校验，拒绝未知键
 
 ## 路线图 Roadmap
 
-计划中的后续模块 Planned modules:
+已完成模块 Completed:
+- [x] 电解电容寿命计算 Capacitor Lifetime
+- [x] 安规距离计算 Creepage & Clearance (IEC + UL)
+- [x] PCB 载流能力计算 PCB Trace Current Capacity
+- [x] 信号滤波器设计 Signal Filter Designer
 
-- 变压器/电感设计计算 Transformer & Inductor Design
-- 散热器热阻计算 Heatsink Thermal Resistance
-- PCB 载流能力计算 PCB Trace Current Capacity
-- EMC 滤波器设计 EMC Filter Design
-- 保险丝/断路器选型 Fuse & Breaker Selection
+计划中的后续模块 Planned:
+- [ ] 电源回路滤波器设计 Power Stage Filter Design (LC/CLC/π)
+- [ ] 变压器/电感设计 Transformer & Inductor Design
+- [ ] 散热器热阻计算 Heatsink Thermal Resistance
+- [ ] 保险丝/断路器选型 Fuse & Breaker Selection
+- [ ] 电压分压器 / 采样电路设计 Voltage Divider & Sensing
 
 ## 许可证 License
 
