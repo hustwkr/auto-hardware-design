@@ -225,16 +225,15 @@
   }
 
   function drawFreqAxis(ctx, axis, margin, plotW, plotH) {
+    ctx.save();
     ctx.textAlign = "center";
     axis.steps.forEach(function(s) {
       var x = margin.left + plotW * Math.log(s.f / axis.fMin) / Math.log(axis.fMax / axis.fMin);
-      ctx.save();
-      ctx.strokeStyle = ctx.fillStyle; /* use current grid color from caller */
       ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, margin.top + plotH);
       ctx.stroke();
-      ctx.restore();
       if (s.label) ctx.fillText(s.label, x, margin.top + plotH + 14);
     });
+    ctx.restore();
   }
 
   function chartColors() {
