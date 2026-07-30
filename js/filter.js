@@ -199,12 +199,14 @@
     var ctx = canvas.getContext("2d");
     if (!ctx) return null;
     var dpr = window.devicePixelRatio || 1;
-    var rect = canvas.getBoundingClientRect();
-    var w = rect.width, h = rect.height;
+    var w = canvas.clientWidth, h = canvas.clientHeight;
     if (w <= 0 || h <= 0) return null;
-    canvas.width = w * dpr; canvas.height = h * dpr;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, w, h);
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
     return { ctx: ctx, w: w, h: h };
   }
 
