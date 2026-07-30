@@ -319,8 +319,15 @@
     var pw = W - margin.left - margin.right, ph = H - margin.top - margin.bottom;
     var fToX = function(f) { return margin.left + pw * Math.log(f/axis.fMin) / Math.log(axis.fMax/axis.fMin); };
 
-    var phMin = -185, phMax = 5;
+    // Expand Y range so 0° trace has breathing room, -180° not squashed at bottom
+    var phMin = -190, phMax = 10;
     var phY = function(deg) { return margin.top + ph * (1 - (deg - phMin)/(phMax - phMin)); };
+
+    // Clip all drawing to the plot area so trace doesn't bleed outside
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(margin.left, margin.top, pw, ph);
+    ctx.clip();
 
     // Background
     ctx.fillStyle = C.bg;
@@ -341,7 +348,9 @@
     data.forEach(function(d, i) { var x = fToX(d.f), y = phY(d.phaseDeg); i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); });
     ctx.stroke();
 
-    // Frame & Y label
+    ctx.restore();
+
+    // Frame & Y label (drawn outside clip)
     ctx.strokeStyle = C.axis; ctx.lineWidth = 1;
     ctx.strokeRect(margin.left, margin.top, pw, ph);
     ctx.save(); ctx.translate(10, margin.top+ph/2); ctx.rotate(-Math.PI/2);
