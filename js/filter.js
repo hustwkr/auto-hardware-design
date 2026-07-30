@@ -64,16 +64,48 @@
   /* ── Type change handler ─── */
   function filterTypeChange() {
     var type = gvs("filterType");
-    var c2Group = document.getElementById("filterC2Group");
-    var qGroup = document.getElementById("filterQGroup");
-    if (type === "mfb2") {
-      if (c2Group) c2Group.style.display = "";
-      if (qGroup) qGroup.style.display = "";
-    } else {
-      if (c2Group) c2Group.style.display = "none";
-      if (qGroup) qGroup.style.display = "none";
-    }
+    document.getElementById("filterQGroup").style.display = (type === "mfb2") ? "" : "none";
     filterCalc();
+  }
+
+  /* refresh cap dropdown from auto-calculated result */
+  function updateCapDropdowns(r) {
+    if (!r) return;
+    var lang = global._getLang ? global._getLang() : "zh";
+    var c1sel = document.getElementById("filterC1");
+    var c2sel = document.getElementById("filterC2");
+    if (!c1sel) return;
+    // Replace dropdowns with read‑only <span>s showing the auto‑picked values
+    var c1v = FM.capLabel(r.components.C1);
+    var c2v = r.components.C2 ? FM.capLabel(r.components.C2) : "";
+    // Update labels
+    var c1label = document.querySelector('label[data-i18n="filter.c1"]');
+    var c2label = document.querySelector('label[data-i18n="filter.c2"]');
+    if (c1label) c1label.textContent = (lang === "en" ? "C1 (auto)" : "C1 (自动)");
+    if (c2label && r.type === "mfb2") c2label.textContent = (lang === "en" ? "C2 (auto)" : "C2 (自动)");
+
+    // Replace <select> with inline value display + hidden <input> (keep DOM id for auto-save)
+    function replaceWithDisplay(id, value) {
+      var sel = document.getElementById(id);
+      if (!sel) return;
+      var parent = sel.parentNode;
+      var span = document.createElement("span");
+      span.className = "auto-cap-value";
+      span.textContent = value;
+      span.style.cssText = "font-weight:600;color:var(--color-text);font-size:.9rem;display:inline-block;padding:2px 8px;background:var(--color-surface);border-radius:4px";
+      span.id = id + "_display";
+      // Remove existing display span
+      var existing = document.getElementById(id + "_display");
+      if (existing) existing.remove();
+      sel.style.display = "none";
+      parent.insertBefore(span, sel.nextSibling);
+    }
+    replaceWithDisplay("filterC1", c1v);
+    if (r.type === "mfb2") {
+      var c2grp = document.getElementById("filterC2Group");
+      if (c2grp) c2grp.style.display = "";
+      replaceWithDisplay("filterC2", c2v);
+    }
   }
 
   /* ── Core calculation ─── */
@@ -115,6 +147,7 @@
     renderFilterResults(result);
     renderFilterChart(result);
     renderFilterSchematic(result);
+    updateCapDropdowns(result);
   }
 
   /* ── Clear results ─── */
