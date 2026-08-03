@@ -248,7 +248,7 @@ function htmlEscape(str) {
 
 async function sendFeedbackEmail(feedback) {
   const config = loadEmailConfig();
-  const recipient = config?.to || 'wangkerou@solaxpower.com';
+  const recipient = process.env.FEEDBACK_EMAIL || 'wangkerou@solaxpower.com';
   const subject = encodeMimeHeader(`[Feedback] ${feedback.title}`);
   const body = `
 New feedback received:

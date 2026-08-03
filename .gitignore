@@ -44,3 +44,6 @@ backend/.token_secret
 # Test coverage reports
 coverage/
 .nyc_output/
+
+# Claude Code settings — contains tokens/passwords
+.claude/
