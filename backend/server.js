@@ -525,6 +525,15 @@ function createDefaults() {
       fc: 1000,
       gain: 1,
       Q: 0.707
+    },
+    pcb: {
+      width: 0.25,
+      copper: "1",
+      position: "external",
+      deltaT: 10,
+      ambTemp: 25,
+      length: 50,
+      targetI: 0
     }
   };
 }
@@ -532,7 +541,7 @@ function createDefaults() {
 // ── Defaults structure validator (warn on unknown fields, reject only structural errors) --
 function validateDefaults(d) {
   if (typeof d !== "object" || d === null) return { ok: false, error: "Root must be an object" };
-  const topAllowed = ["capacitor", "safety", "filter"];
+  const topAllowed = ["capacitor", "safety", "filter", "pcb"];
   var warnings = [];
 
   for (const k of Object.keys(d)) {
@@ -578,6 +587,13 @@ function validateDefaults(d) {
     const filterK = ["type","series","fc","gain","Q"];
     for (const k of Object.keys(d.filter)) {
       if (!filterK.includes(k)) warnings.push("Unknown filter key: " + k);
+    }
+  }
+
+  if (d.pcb && typeof d.pcb === "object") {
+    const pcbK = ["width","copper","position","deltaT","ambTemp","length","targetI"];
+    for (const k of Object.keys(d.pcb)) {
+      if (!pcbK.includes(k)) warnings.push("Unknown pcb key: " + k);
     }
   }
 

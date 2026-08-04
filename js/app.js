@@ -141,19 +141,27 @@
       if(s.sOvc_DC){if(typeof setDcManualOverride==='function')setDcManualOverride(true);setValSelect('sOvc_DC',s.sOvc_DC);}
       setVal('sSysV_AC',s.sSysV_AC+'');setVal('sSysV_DC',s.sSysV_DC+'');
 
-      /* Filter defaults */
-      var f=d.filter;if(f&&typeof f==='object'){
-        if(f.type)setValSelect('filterType',f.type);
-        if(f.series)setValSelect('filterSeries',f.series);
-        setVal('filterFc',f.fc);setVal('filterGain',f.gain);setVal('filterQ',f.Q);
-      }
-
     /* Load safety nodes from defaults — replaces initSafety fallback */
       if(Array.isArray(s.nodes)&&s.nodes.length){
         if(typeof loadNodesFromDefaults==='function'){
           loadNodesFromDefaults(s.nodes);
         }
       }
+    }
+
+    /* Filter defaults */
+    var f=d.filter;if(f&&typeof f==='object'){
+      if(f.type)setValSelect('filterType',f.type);
+      if(f.series)setValSelect('filterSeries',f.series);
+      setVal('filterFc',f.fc);setVal('filterGain',f.gain);setVal('filterQ',f.Q);
+    }
+
+    /* PCB defaults */
+    var p=d.pcb;if(p&&typeof p==='object'){
+      setVal('pcbWidth',p.width);setVal('pcbDeltaT',p.deltaT);setVal('pcbAmbTemp',p.ambTemp);
+      setVal('pcbLength',p.length);setVal('pcbTargetI',p.targetI);
+      if(p.copper)setValSelect('pcbCopper',p.copper);
+      if(p.position)setValSelect('pcbPos',p.position);
     }
   }
 

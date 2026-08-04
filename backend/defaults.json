@@ -82,12 +82,10 @@
     ]
   },
   "filter": {
-    "type": "mfb2",
-    "series": "e24",
-    "fc": 1000,
-    "gain": 1,
-    "Q": 0.707,
-    "C1": 1e-7,
-    "C2": 1e-7
+    "filterType": "mfb2",
+    "filterSeries": "e24",
+    "filterFc": "1000",
+    "filterGain": "5",
+    "filterQ": "0.707"
   }
 }

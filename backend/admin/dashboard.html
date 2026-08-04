@@ -37,6 +37,7 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
   <button class="tab-btn active" onclick="switchTab('capacitor')">电解电容寿命计算</button>
   <button class="tab-btn" onclick="switchTab('safety')">安规距离计算</button>
   <button class="tab-btn" onclick="switchTab('filter')">信号滤波器设计</button>
+  <button class="tab-btn" onclick="switchTab('pcb')">PCB走线载流计算</button>
   <button class="tab-btn" onclick="switchTab('email')">邮件配置</button>
 </div>
 
@@ -53,6 +54,19 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 <button class="btn" onclick="loadCurrent()">重新加载</button>
 <span class="status" id="status"></span>
 </div>
+</div>
+
+<div id="tab-pcb" class="tab">
+<div class="card"><h2>PCB走线参数</h2><div class="fg">
+<div class="fgl"><label>走线宽度 (mm)</label><input type="number" id="pcbWidth" value="0.25" step="0.01"></div>
+<div class="fgl"><label>铜厚 (oz)</label><select id="pcbCopper"><option value="0.5">0.5 oz</option><option value="1" selected>1 oz</option><option value="2">2 oz</option><option value="3">3 oz</option></select></div>
+<div class="fgl"><label>走线位置</label><select id="pcbPos"><option value="external" selected>外层</option><option value="internal">内层</option></select></div>
+<div class="fgl"><label>允许温升 (°C)</label><input type="number" id="pcbDeltaT" value="10"></div>
+<div class="fgl"><label>环境温度 (°C)</label><input type="number" id="pcbAmbTemp" value="25"></div>
+<div class="fgl"><label>走线长度 (mm)</label><input type="number" id="pcbLength" value="50"></div>
+<div class="fgl"><label>目标电流 (A)</label><input type="number" id="pcbTargetI" value="0"></div>
+</div></div>
+<div class="btn-bar"><button class="btn btn-p" onclick="saveDefaults()">保存默认值</button><button class="btn" onclick="loadCurrent()">重新加载</button><span class="status" id="status"></span></div>
 </div>
 
 <div id="tab-email" class="tab">
@@ -150,11 +164,15 @@ async function loadCurrent(){
     var f=d.filter;
     ["filterType","filterSeries","filterFc","filterGain","filterQ"].forEach(function(k){var el=document.getElementById(k);if(el)el.value=f[k]||""});
   }
+  if(d.pcb){
+    var p=d.pcb;
+    ["pcbWidth","pcbCopper","pcbPos","pcbDeltaT","pcbAmbTemp","pcbLength","pcbTargetI"].forEach(function(k){var el=document.getElementById(k);if(el)el.value=p[k]||""});
+  }
   showStatus("已加载");
 }
 
 async function saveDefaults(){
-  var d={capacitor:{},safety:{},filter:{}};
+  var d={capacitor:{},safety:{},filter:{},pcb:{}};
   ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget","kva","kvb"].forEach(function(k){d.capacitor[k]=document.getElementById(k).value});
   d.capacitor.cooling=document.getElementById("cooling").value;
   d.capacitor.scenario=document.getElementById("scenario").value;
@@ -165,7 +183,10 @@ async function saveDefaults(){
   try{ d.safety.nodes=JSON.parse(document.getElementById("nodesJson").value); }catch(e){ showStatus("节点定义JSON错误: "+e.message,"#ef4444"); return; }
 
   ["filterType","filterSeries","filterFc","filterGain","filterQ"].forEach(function(k){d.filter[k]=document.getElementById(k).value});
-  
+
+  d.pcb={};
+  ["pcbWidth","pcbCopper","pcbPos","pcbDeltaT","pcbAmbTemp","pcbLength","pcbTargetI"].forEach(function(k){d.pcb[k]=document.getElementById(k).value});
+
   var r=await authFetch("/api/admin/defaults",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});
   if(r.status===401){ alert("登录已过期"); localStorage.removeItem("admin_token"); window.location.href="/admin/login"; return; }
   if(r.ok) showStatus("保存成功");
