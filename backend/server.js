@@ -2,64 +2,40 @@ const http = require("http"), fs = require("fs"), path = require("path"), crypto
 
 // ── Config ──────────────────────────────────────────────
 const PORT          = parseInt(process.env.PORT || "8080", 10);
-
-// Read ADMIN_PASSWORD: env var > .env file > error
-let ADMIN_PW        = process.env.ADMIN_PASSWORD;
-if (!ADMIN_PW) {
-  try {
-    const envPath = path.join(__dirname, ".env");
-    if (fs.existsSync(envPath)) {
-      const envContent = fs.readFileSync(envPath, "utf8");
-      const match = envContent.match(/^ADMIN_PASSWORD\s*=\s*(.+)$/m);
-      if (match) ADMIN_PW = match[1].trim();
-    }
-  } catch (_) {}
-}
-
-if (!ADMIN_PW) {
-  console.error("[SECURITY] No admin password found.");
-  console.error("   Option 1: export ADMIN_PASSWORD=your-strong-password");
-  console.error("   Option 2: create backend/.env with ADMIN_PASSWORD=your-strong-password");
-  process.exit(1);
-}
-
-const WEAK_PASSWORDS = ["admin123", "password", "12345678", "admin", "letmein", "qwerty123", "changeme"];
-if (WEAK_PASSWORDS.includes(ADMIN_PW.toLowerCase()) || ADMIN_PW.length < 12) {
-  console.error("[SECURITY] Refusing to start: admin password is too weak (<12 chars or common password).");
-  process.exit(1);
-}
-
 const ROOT          = path.resolve(__dirname, "..");
 const DEF_FILE      = path.join(__dirname, "defaults.json");
 const TOKEN_TTL_MS  = 86_400_000; // 24 h
+const ADMIN_HASH_FILE = path.join(__dirname, ".admin_hash");
 
-// ── Password hashing (scrypt) ───────────────────────────
-const SALT_FILE     = path.join(__dirname, ".auth_salt");
+// ── Admin hash management (single file: salt:hash) ─────────
+let ADMIN_HASH = null; // in-memory cache
 
-function getSalt() {
-  try { return fs.readFileSync(SALT_FILE, "utf-8").trim(); }
-  catch (_) {
-    const salt = crypto.randomBytes(16).toString("hex");
-    fs.writeFileSync(SALT_FILE, salt, "utf-8");
-    console.log("[AUTH] Generated new scrypt salt -> " + SALT_FILE);
-    return salt;
-  }
+function loadAdminHash() {
+  try {
+    const data = fs.readFileSync(ADMIN_HASH_FILE, "utf-8").trim();
+    const parts = data.split(":");
+    if (parts.length === 2 && parts[0].length === 32 && parts[1].length === 128) {
+      ADMIN_HASH = { salt: parts[0], hash: parts[1] };
+      return true;
+    }
+  } catch (_) {}
+  return false;
 }
 
-function hashPassword(pw) {
-  const salt = getSalt();
-  return crypto.scryptSync(pw, salt, 64).toString("hex");
+function saveAdminHash(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
+  fs.writeFileSync(ADMIN_HASH_FILE, salt + ":" + hash, "utf-8");
+  ADMIN_HASH = { salt, hash };
+  console.log("[AUTH] Admin password set, hash saved to " + ADMIN_HASH_FILE);
 }
-
-// Pre-compute the hash at startup
-const ADMIN_HASH = hashPassword(ADMIN_PW);
 
 function checkPassword(input) {
+  if (!ADMIN_HASH) return false;
   try {
-    const inputHash = hashPassword(input);
-    return crypto.timingSafeEqual(Buffer.from(inputHash, "hex"), Buffer.from(ADMIN_HASH, "hex"));
-  }
-  catch (_) { return false; }
+    const inputHash = crypto.scryptSync(input, ADMIN_HASH.salt, 64).toString("hex");
+    return crypto.timingSafeEqual(Buffer.from(inputHash, "hex"), Buffer.from(ADMIN_HASH.hash, "hex"));
+  } catch (_) { return false; }
 }
 
 // ── Signed tokens (zero-dep JWT-like: payload.sig) ──────
@@ -86,12 +62,10 @@ function verifyToken(tok) {
   if (dot <= 0) return false;
   const payload = tok.substring(0, dot);
   const sig     = tok.substring(dot + 1);
-  // Verify signature (timing-safe)
   const expected = crypto.createHmac("sha256", TOKEN_SECRET).update(payload).digest("base64url");
   try {
     if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return false;
   } catch (_) { return false; }
-  // Check expiry
   try {
     const data = JSON.parse(payload);
     return Date.now() < data.exp;
@@ -120,8 +94,8 @@ const loginAttempts = new Map();
 function checkRateLimit(ip) {
   const now  = Date.now();
   const prev = loginAttempts.get(ip);
-  if (prev && now - prev.time < 300_000) {          // 5-min window
-    if (prev.count >= 10) return true;               // locked after 10 failures
+  if (prev && now - prev.time < 300_000) {
+    if (prev.count >= 10) return true;
     prev.count++;
     loginAttempts.set(ip, prev);
   } else {
@@ -130,13 +104,12 @@ function checkRateLimit(ip) {
   return false;
 }
 
-// ── Periodic cleanup of expired rate-limit entries (prevent memory leak) ──
 setInterval(() => {
   const cutoff = Date.now() - 300_000;
   for (const [ip, entry] of loginAttempts) {
     if (entry.time < cutoff) loginAttempts.delete(ip);
   }
-}, 600_000).unref(); // every 10 min, don't keep process alive
+}, 600_000).unref();
 
 // ── Defaults helpers ────────────────────────────────────
 function loadDefaults() {
@@ -147,6 +120,7 @@ function loadDefaults() {
 function saveDefaults(d) {
   fs.writeFileSync(DEF_FILE, JSON.stringify(d, null, 2), "utf-8");
 }
+
 // ── Feedback helpers ───────────────────────────────────
 const FEEDBACK_FILE = path.join(__dirname, "feedback.json");
 
@@ -187,7 +161,63 @@ function addSecurityHeaders(res) {
   res.setHeader("X-Content-Type-Options", "nosniff");
 }
 
+// ── Response helpers ────────────────────────────────────
+function json(res, code, data, corsAny) {
+  const headers = {
+    "Content-Type": "application/json;charset=utf-8",
+    "Cache-Control": "no-cache,no-store,must-revalidate"
+  };
+  if (corsAny) {
+    headers["Access-Control-Allow-Origin"] = "*";
+    headers["Access-Control-Allow-Headers"] = "Content-Type,x-auth-token";
+    headers["Access-Control-Allow-Methods"] = "GET,PUT,POST,DELETE,OPTIONS";
+  }
+  res.writeHead(code, headers);
+  res.end(typeof data === "string" ? data : JSON.stringify(data));
+}
+
+function serveFile(res, fp) {
+  const resolved = path.resolve(fp);
+  if (!resolved.startsWith(ROOT)) { res.writeHead(403, {"Content-Type":"text/plain"}); res.end("Forbidden"); return; }
+  try {
+    const data = fs.readFileSync(fp);
+    const ext = path.extname(fp).toLowerCase();
+    res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream", "Cache-Control": "no-cache,no-store,must-revalidate" });
+    res.end(data);
+  } catch (_) { res.writeHead(404, {"Content-Type":"text/plain"}); res.end("Not Found"); }
+}
+
+function parseBody(req) {
+  return new Promise(r => {
+    const chunks = [];
+    let sz = 0;
+    req.on("data", c => { sz += c.length; if (sz > MAX_BODY) { req.destroy(); r({}); return; } chunks.push(c); });
+    req.on("end", () => { try { r(JSON.parse(Buffer.concat(chunks).toString('utf-8'))); } catch (_) { r({}); } });
+  });
+}
+
+function parseForm(req) {
+  return new Promise(r => {
+    let b = "", sz = 0;
+    req.on("data", c => { sz += c.length; if (sz > MAX_BODY) { req.destroy(); r({}); return; } b += c; });
+    req.on("end", () => {
+      const d = {};
+      b.split("&").forEach(p => { const kv = p.split("="); if (kv.length === 2) d[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]); });
+      r(d);
+    });
+  });
+}
+
+function getToken(req) {
+  return req.headers["x-auth-token"] ||
+         (req.headers.cookie ? req.headers.cookie.match(/token=([^;]+)/)?.[1] : undefined);
+}
+
 // ── Startup ─────────────────────────────────────────────
+if (!loadAdminHash()) {
+  console.log("[AUTH] No admin password configured. First-run setup required.");
+  console.log("       Go to http://localhost:" + PORT + "/admin/setup to set a password.");
+}
 console.log(`Server starting on port ${PORT}`);
 
 // ── HTTP server ─────────────────────────────────────────
@@ -197,17 +227,32 @@ http.createServer(async function (req, res) {
   const p        = safePath(url.pathname);
   const tok      = getToken(req);
 
-  // ── Security headers on every response ────────────────
   addSecurityHeaders(res);
 
-  // ── OPTIONS / pre-flight (public) ────────────────────
   if (req.method === "OPTIONS") {
-    res.writeHead(200, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type,x-auth-token",
-      "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS"
-    });
-    res.end();
+    res.writeHead(200, { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type,x-auth-token", "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS" });
+    res.end(); return;
+  }
+
+  // ── Admin setup (public, first-run only) ─────────────
+  if (p === "/api/admin/setup" && req.method === "POST") {
+    if (ADMIN_HASH) { json(res, 400, { error: "Password already set" }, false); return; }
+    const body = await parseBody(req);
+    const pw = body.password;
+    if (!pw || pw.length < 8) { json(res, 400, { error: "Password must be at least 8 characters" }, false); return; }
+    saveAdminHash(pw);
+    json(res, 200, { success: true }, false);
+    return;
+  }
+
+  // ── Change password (admin only) ─────────────────────
+  if (p === "/api/admin/change-password" && req.method === "POST") {
+    if (!validateToken(tok)) { json(res, 401, { error: "Unauthorized" }, false); return; }
+    const body = await parseBody(req);
+    if (!checkPassword(body.oldPassword)) { json(res, 403, { error: "Old password is incorrect" }, false); return; }
+    if (!body.newPassword || body.newPassword.length < 8) { json(res, 400, { error: "New password must be at least 8 characters" }, false); return; }
+    saveAdminHash(body.newPassword);
+    json(res, 200, { success: true }, false);
     return;
   }
 
@@ -221,7 +266,7 @@ http.createServer(async function (req, res) {
       if (ct.includes("json")) { json(res, 200, { success: true, token: t }, true); }
       else { res.writeHead(302, { Location: "/admin", "Set-Cookie": `token=${t};Path=/;Max-Age=86400;HttpOnly;SameSite=Lax` }); res.end(); }
     } else {
-      if (ct.includes("json")) json(res, 403, { error: "\u5bc6\u7801\u9519\u8bef" }, true);
+      if (ct.includes("json")) json(res, 403, { error: "密码错误" }, true);
       else { res.writeHead(302, { Location: "/admin/login?e=1" }); res.end(); }
     }
     return;
@@ -229,21 +274,17 @@ http.createServer(async function (req, res) {
 
   // ── LOGOUT (public) ──────────────────────────────────
   if (p === "/api/logout" && req.method === "POST") {
-    // Stateless tokens - client discards token on logout
-    json(res, 200, { success: true }, true);
-    return;
+    json(res, 200, { success: true }, true); return;
   }
 
   // ── SESSION check (public) ───────────────────────────
   if (p === "/api/session") {
-    json(res, 200, { authenticated: validateToken(tok) }, true);
-    return;
+    json(res, 200, { authenticated: validateToken(tok) }, true); return;
   }
 
-  // ── PUBLIC defaults (CORS restricted — local engineering tool) ───
+  // ── PUBLIC defaults ──────────────────────────────────
   if (p === "/api/defaults" && req.method === "GET") {
-    json(res, 200, loadDefaults(), false);
-    return;
+    json(res, 200, loadDefaults(), false); return;
   }
 
   // ── Feedback submission (public) ────────────────────
@@ -252,37 +293,29 @@ http.createServer(async function (req, res) {
     const name = (body.name || "").replace(/[\r\n]/g, "").trim();
     const title = (body.title || "").replace(/[\r\n]/g, "").trim();
     const content = body.content || "";
-    if (!name || !title || !content) {
-      json(res, 400, { error: "Missing required fields (name, title, content)" }, true);
-      return;
-    }
+    if (!name || !title || !content) { json(res, 400, { error: "Missing required fields (name, title, content)" }, true); return; }
     const entry = addFeedback(name, title, content);
     console.log(`[FEEDBACK] New feedback from "${name}": "${title}" (ID: ${entry.id})`);
-
-    json(res, 201, { success: true, id: entry.id }, true);
-    return;
+    json(res, 201, { success: true, id: entry.id }, true); return;
   }
 
-  // ── Feedback list / update (admin only) ────────────────────
+  // ── Feedback list / update (admin only) ──────────────
   if (p === "/api/feedback" && req.method === "GET") {
     if (!validateToken(tok)) { json(res, 401, { error: "Unauthorized" }, false); return; }
-    json(res, 200, loadFeedback(), false);
-    return;
+    json(res, 200, loadFeedback(), false); return;
   }
   if (p === "/api/feedback" && req.method === "PUT") {
     if (!validateToken(tok)) { json(res, 401, { error: "Unauthorized" }, false); return; }
     const body = await parseBody(req);
     var feedback = loadFeedback();
     var found = false;
-    feedback.forEach(function(fb) {
-      if (fb.id === body.id) { fb.read = body.read; found = true; }
-    });
+    feedback.forEach(function(fb) { if (fb.id === body.id) { fb.read = body.read; found = true; } });
     if (found) { saveFeedback(feedback); json(res, 200, { success: true }, false); }
     else json(res, 404, { error: "Feedback not found" }, false);
     return;
   }
 
-  // ── ADMIN defaults (FIX: CORS restricted to same-origin) ──
+  // ── ADMIN defaults ──────────────────────────────────
   if (p === "/api/admin/defaults") {
     if (!validateToken(tok)) { json(res, 401, { error: "Unauthorized" }, false); return; }
     if (req.method === "GET")   { json(res, 200, loadDefaults(), false); return; }
@@ -292,18 +325,23 @@ http.createServer(async function (req, res) {
       if (!result.ok) { json(res, 400, { error: result.error }, false); return; }
       if (result.warnings) console.warn("[DEFAULTS] " + result.warnings.join("; "));
       saveDefaults(body);
-      json(res, 200, { success: true, warnings: result.warnings || [] }, false);
-      return;
+      json(res, 200, { success: true, warnings: result.warnings || [] }, false); return;
     }
-    res.writeHead(405); res.end();
-    return;
+    res.writeHead(405); res.end(); return;
   }
+
   // ── Admin static files (path-traversal protected) ────
-  if (p === "/admin" || p === "/admin/") { serveFile(res, path.join(__dirname, "admin", "dashboard.html")); return; }
-  if (p === "/admin/login")             { serveFile(res, path.join(__dirname, "admin", "login.html")); return; }
+  if (p === "/admin" || p === "/admin/") {
+    if (!ADMIN_HASH) { res.writeHead(302, { Location: "/admin/setup" }); res.end(); return; }
+    serveFile(res, path.join(__dirname, "admin", "dashboard.html")); return;
+  }
+  if (p === "/admin/login") {
+    if (!ADMIN_HASH) { res.writeHead(302, { Location: "/admin/setup" }); res.end(); return; }
+    serveFile(res, path.join(__dirname, "admin", "login.html")); return;
+  }
   if (p.startsWith("/admin/")) {
     const fn = p.replace("/admin/", "");
-    if (!["dashboard.html", "login.html"].includes(fn)) { res.writeHead(403); res.end("Forbidden"); return; }
+    if (!["dashboard.html", "login.html", "setup.html", "change-password.html"].includes(fn)) { res.writeHead(403); res.end("Forbidden"); return; }
     serveFile(res, path.join(__dirname, "admin", fn));
     return;
   }
@@ -324,6 +362,5 @@ http.createServer(async function (req, res) {
   console.log(`Admin:  http://localhost:${PORT}/admin`);
 });
 
-// Graceful shutdown
 process.on("SIGTERM", () => { process.exit(0); });
 process.on("SIGINT",  () => { process.exit(0); });
