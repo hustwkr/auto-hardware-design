@@ -274,8 +274,10 @@
 
     // Initialize capacitor tab (default active)
     if(typeof initCapacitor==='function')initCapacitor();
-    // Load defaults from server
-    loadDefaults().then(function(){if(typeof calc==='function')calc()});
+    // Load defaults from server — defer calc so page renders first
+    setTimeout(function(){
+      loadDefaults().then(function(){if(typeof calc==='function')calc()});
+    }, 100);
   });
 
 })();
