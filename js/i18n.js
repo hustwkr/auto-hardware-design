@@ -536,7 +536,7 @@
     "filter.fc":         { zh: "截止频率 (Hz)", en: "Cutoff Frequency (Hz)" },
     "filter.gain":       { zh: "直流增益 (V/V)", en: "DC Gain (V/V)" },
     "filter.q":          { zh: "Q值", en: "Q Factor" },
-    "filter.q.hint":     { zh: "MFB 拓扑的 AM-GM 不等式约束 Q ≤ 0.5，设置值超过 0.5 会被自动钳位到 0.5。若需 Q > 0.5，请使用 Sallen-Key 或其他拓扑。", en: "MFB topology has an AM-GM bound: Q ≤ 0.5. Values above 0.5 are clamped to 0.5. Use Sallen-Key topology if Q > 0.5 is required." },
+    "filter.q.hint":     { zh: "MFB 拓扑的 Q 值由电容比值 C₁/C₂ 决定，较⼤的 C₁/C₂ ⽐值可实现更⾼的 Q 值。若计算失败，请尝试调整增益或⽬标 Q 值。", en: "MFB topology Q is determined by the C₁/C₂ ratio — larger C₁/C₂ yields higher Q. If calculation fails, try adjusting gain or target Q." },
     "filter.c1":         { zh: "C1 预设电容", en: "C1 Preset Capacitor" },
     "filter.c2":         { zh: "C2 预设电容", en: "C2 Preset Capacitor" },
     "filter.target":     { zh: "目标", en: "Target" },

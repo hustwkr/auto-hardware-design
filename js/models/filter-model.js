@@ -172,9 +172,7 @@
     if (!fc || fc <= 0) return null;
     if (!gain || gain <= 0) gain = 1;
     if (!Q || Q <= 0) Q = 0.707;
-    // MFB fundamental limit: Q <= 0.5 (AM-GM bound).
-    // Clamp target Q to 0.5 so the search converges quickly.
-    var Q_target = Math.min(Q, 0.5);
+    var Q_target = Q;
     var w0 = 2 * Math.PI * fc;
     var seriesArr = series === "e48" ? E48 : E24;
 
@@ -183,13 +181,15 @@
     for (var dec = -12; dec <= -3; dec++)
       for (var j = 0; j < seriesArr.length; j++) CAPS.push(seriesArr[j] * Math.pow(10, dec));
 
-    // d1 = R2*C2 + C1*Rp, d2 = C1*C2*R2*Rp. Q = sqrt(d2)/d1
+    // Correct transfer function:
+    //   H(s) = -(R2/R1) / [1 + s·C1·(R2+R3+R2·R3/R1) + s²·C1·C2·R2·R3]
+    //   d1 = C1·(R2+R3+R2·R3/R1),  d2 = C1·C2·R2·R3,  Q = √d2/d1,  ω₀ = 1/√d2
     function qAct(R1,R2,R3,C1,C2){
-      var Rp=R1*R3/(R1+R3),d1=R2*C2+C1*Rp,d2=C1*C2*R2*Rp;
+      var d1=C1*(R2+R3+R2*R3/R1),d2=C1*C2*R2*R3;
       return d1>0&&d2>0?Math.sqrt(d2)/d1:0;
     }
     function fAct(R1,R2,R3,C1,C2){
-      var d2=C1*C2*R2*R1*R3/(R1+R3);
+      var d2=C1*C2*R2*R3;
       return d2>0?1/(2*Math.PI*Math.sqrt(d2)):0;
     }
 
@@ -201,17 +201,18 @@
         if(c2t<c1t*0.05||c2t>c1t*20) continue;
         for(var logR1=2;logR1<=6.5;logR1+=0.015){
           var R1=Math.pow(10,logR1);
-          // R3 from w0 equation: R1·R3 = 1/(gain·C1·C2·w0²)
-          var R3=1/(gain*c1t*c2t*w0*w0*R1);
-          if(R3<0.5||R3>2e7) continue;
-          var R2=gain*(R1+R3);
+          // R2 = G·R1  (from gain = R2/R1)
+          var R2 = gain * R1;
           if(R2<0.5||R2>2e7) continue;
+          // R3 = 1/(C1·C2·R2·ω₀²)  (from d2 = 1/ω₀²)
+          var R3 = 1/(c1t*c2t*R2*w0*w0);
+          if(R3<0.5||R3>2e7) continue;
           var R1s=nearestStd(R1,series),R2s=nearestStd(R2,series),R3s=nearestStd(R3,series);
           var C1s=nearestStdCap(c1t,series),C2s=nearestStdCap(c2t,series);
           if(R1s<=0||R2s<=0||R3s<=0) continue;
           var qA=qAct(R1s,R2s,R3s,C1s,C2s),fA=fAct(R1s,R2s,R3s,C1s,C2s);
           if(qA<=0||fA<=0) continue;
-          var gA=R2s/(R1s+R3s);
+          var gA=R2s/R1s;
           var sc=10*Math.abs(qA-Q_target)/Q_target+Math.abs(fA-fc)/fc+Math.abs(gA-gain)/gain;
           if(sc<bestScore){bestScore=sc;best={R1:R1s,R2:R2s,R3:R3s,C1:C1s,C2:C2s};}
         }
@@ -220,7 +221,7 @@
     if(!best) return null;
     var R1=best.R1,R2=best.R2,R3=best.R3,C1=best.C1,C2=best.C2;
 
-    var n0=-R2/(R1+R3),d1=R2*C2+C1*R1*R3/(R1+R3),d2=C1*C2*R1*R2*R3/(R1+R3);
+    var n0=-R2/R1,d1=C1*(R2+R3+R2*R3/R1),d2=C1*C2*R2*R3;
     var actual_w0=1/Math.sqrt(d2),actual_Q=(d2>0&&d1>0)?Math.sqrt(d2)/d1:0;
     var actual_fc=actual_w0/(2*Math.PI),actual_gain=Math.abs(n0);
 
@@ -270,9 +271,9 @@
     if (!R1 || !R2 || !R3 || !C1 || !C2) return null;
     if (R1 <= 0 || R2 <= 0 || R3 <= 0 || C1 <= 0 || C2 <= 0) return null;
 
-    var n0 = -R2 / (R1 + R3);
-    var d1 = R2 * C2 + C1 * R1 * R3 / (R1 + R3);
-    var d2 = C1 * C2 * R1 * R2 * R3 / (R1 + R3);
+    var n0 = -R2 / R1;
+    var d1 = C1 * (R2 + R3 + R2 * R3 / R1);
+    var d2 = C1 * C2 * R2 * R3;
 
     if (d2 <= 0) return null;
 
