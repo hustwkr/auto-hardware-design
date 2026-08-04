@@ -639,7 +639,6 @@
     if (typeof calc === "function") { try { calc(); } catch(e) {} }
     if (typeof sCalc === "function") { try { sCalc(); } catch(e) {} }
     if (typeof pcbCalc === "function") { try { pcbCalc(); pcbCompare(); } catch(e) {} }
-    if (typeof filterCalc === "function") { try { filterCalc(); } catch(e) {} }
   }
 
   /* ── Expose ─── */
