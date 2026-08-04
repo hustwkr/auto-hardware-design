@@ -518,6 +518,13 @@ function createDefaults() {
         { name: "L-PE",   vrms: 230, ins: "basic", pcb: 0, coat: 0, circ: "ac",  interp: false },
         { name: "DC+-PE", vrms: 800, ins: "reinf", pcb: 0, coat: 0, circ: "dc",  interp: false }
       ]
+    },
+    filter: {
+      type: "mfb2",
+      series: "e24",
+      fc: 1000,
+      gain: 1,
+      Q: 0.707
     }
   };
 }
@@ -525,7 +532,7 @@ function createDefaults() {
 // ── Defaults structure validator (warn on unknown fields, reject only structural errors) --
 function validateDefaults(d) {
   if (typeof d !== "object" || d === null) return { ok: false, error: "Root must be an object" };
-  const topAllowed = ["capacitor", "safety"];
+  const topAllowed = ["capacitor", "safety", "filter"];
   var warnings = [];
 
   for (const k of Object.keys(d)) {
@@ -564,6 +571,13 @@ function validateDefaults(d) {
           if (!nodeK.includes(k)) warnings.push("Unknown node key: " + k);
         }
       }
+    }
+  }
+
+  if (d.filter && typeof d.filter === "object") {
+    const filterK = ["type","series","fc","gain","Q"];
+    for (const k of Object.keys(d.filter)) {
+      if (!filterK.includes(k)) warnings.push("Unknown filter key: " + k);
     }
   }
 
