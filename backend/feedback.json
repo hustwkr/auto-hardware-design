@@ -5,7 +5,7 @@
     "title": "Test Issue",
     "content": "This is a test feedback message",
     "timestamp": "2026-07-06T00:52:35.469Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783390763429-087ec5f1439d4541",
@@ -13,7 +13,7 @@
     "title": "Test Email Notification",
     "content": "Testing email notification feature",
     "timestamp": "2026-07-07T02:19:23.429Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783391423827-bb451e55cbfd6593",
@@ -21,7 +21,7 @@
     "title": "Email Test",
     "content": "This is a test of the email notification system",
     "timestamp": "2026-07-07T02:30:23.827Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783391525984-5ddeb5eb9b78466e",
@@ -29,7 +29,7 @@
     "title": "SMTP Test",
     "content": "Testing the new SMTP implementation",
     "timestamp": "2026-07-07T02:32:05.984Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783391590104-1dd9f93206ca839d",
@@ -37,7 +37,7 @@
     "title": "�ʼ�����",
     "content": "�����µ�SMTP�����Ƿ���Ч",
     "timestamp": "2026-07-07T02:33:10.104Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783391758450-31ff1bd81854ae88",
@@ -45,7 +45,7 @@
     "title": "�������",
     "content": "����һ���������ĵĲ��Է�����������֤MIME�����Ƿ���������",
     "timestamp": "2026-07-07T02:35:58.450Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783391860060-94ffc761d547a018",
@@ -53,7 +53,7 @@
     "title": "�����ʼ�����",
     "content": "����һ��������Ϣ��������֤�ʼ����ı����Ƿ���ȷ��ʾ��Hello World!",
     "timestamp": "2026-07-07T02:37:40.061Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783391956658-5e197374a58ca5e7",
@@ -61,7 +61,7 @@
     "title": "UTF8����",
     "content": "����һ��������Ϣ����֤UTF-8�����Ƿ�������Hello World!",
     "timestamp": "2026-07-07T02:39:16.658Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783392105371-fee376237ba5567f",
@@ -69,7 +69,7 @@
     "title": "QP�������",
     "content": "����һ��ʹ��Quoted-Printable��������Ĳ�����Ϣ��",
     "timestamp": "2026-07-07T02:41:45.371Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783392167084-02aa02644706bc18",
@@ -77,7 +77,7 @@
     "title": "HTML�ʼ�����",
     "content": "����һ��ʹ��HTML��ʽ���͵����Ĳ�����Ϣ��Ӧ������ȷ��ʾ��",
     "timestamp": "2026-07-07T02:42:47.084Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783392203549-fb943c35ee3e4091",
@@ -85,7 +85,7 @@
     "title": "�ڶ���HTML����",
     "content": "�޸����HTML�ʼ�����",
     "timestamp": "2026-07-07T02:43:23.549Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783392307689-829b4d37828a0c6c",
@@ -93,7 +93,7 @@
     "title": "�����޸�����",
     "content": "����һ���������ĵĲ�����Ϣ��ϣ���������ȷ��ʾ��",
     "timestamp": "2026-07-07T02:45:07.689Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783392393454-792f7f049c8422df",
@@ -101,7 +101,7 @@
     "title": "�򵥲���",
     "content": "�������������Ƿ�����ȷ��ʾ",
     "timestamp": "2026-07-07T02:46:33.454Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783392438044-5db957d076e7785f",
@@ -109,7 +109,7 @@
     "title": "ֱ�ӹ������",
     "content": "ʹ��ֱ���ַ������췽ʽ���͵���������",
     "timestamp": "2026-07-07T02:47:18.044Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783392749938-c9040d420e2486ee",
@@ -117,7 +117,7 @@
     "title": "��������",
     "content": "�������յĸ�����ʽ���ԣ���������Ӧ������ȷ��ʾ��",
     "timestamp": "2026-07-07T02:52:29.938Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783392842590-f4626d7ad2bc6ee2",
@@ -125,7 +125,7 @@
     "title": "�����ļ�����",
     "content": "���Ա��ر����TXT�ļ������Ƿ���ȷ",
     "timestamp": "2026-07-07T02:54:02.590Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783392911248-783ffa63e2a114d7",
@@ -133,7 +133,7 @@
     "title": "UTF-8 BOM����",
     "content": "��������BOM��Ǻ��UTF-8����",
     "timestamp": "2026-07-07T02:55:11.248Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783393004821-ee618e4579a2d87f",
@@ -141,7 +141,7 @@
     "title": "���������޸�",
     "content": "����һ���������ĵĲ�����Ϣ����֤parseBody������UTF-8�����Ƿ���ȷ",
     "timestamp": "2026-07-07T02:56:44.821Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783393092943-61245d8aa0030e09",
@@ -149,7 +149,7 @@
     "title": "UTF-8�������",
     "content": "���Լ򻯺��UTF-8�ļ�����",
     "timestamp": "2026-07-07T02:58:12.943Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783393191659-c995cbfa53f0feae",
@@ -157,7 +157,7 @@
     "title": "��־����",
     "content": "���Ե�����־�Ƿ�����ȷ��ʾ����",
     "timestamp": "2026-07-07T02:59:51.659Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783393220150-6ae70c900e54b557",
@@ -165,7 +165,7 @@
     "title": "Node.js测试",
     "content": "使用Node.js发送的中文测试",
     "timestamp": "2026-07-07T03:00:20.150Z",
-    "read": false
+    "read": true
   },
   {
     "id": "1783393359152-fb0e51aa55e9907a",
@@ -173,6 +173,6 @@
     "title": "UTF-8邮件测试",
     "content": "这是一条包含中文的测试邮件，用于验证附件方式是否能正确显示中文内容。",
     "timestamp": "2026-07-07T03:02:39.152Z",
-    "read": false
+    "read": true
   }
 ]

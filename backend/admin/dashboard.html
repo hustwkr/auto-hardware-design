@@ -165,7 +165,11 @@ async function loadCurrent(){
   }
   if(d.filter){
     var f=d.filter;
-    ["filterType","filterSeries","filterFc","filterGain","filterQ"].forEach(function(k){var el=document.getElementById(k);if(el)el.value=f[k]||""});
+    var elType=document.getElementById("filterType");if(elType&&f.type)elType.value=f.type;
+    var elSeries=document.getElementById("filterSeries");if(elSeries&&f.series)elSeries.value=f.series;
+    var elFc=document.getElementById("filterFc");if(elFc&&f.fc!=null)elFc.value=f.fc;
+    var elGain=document.getElementById("filterGain");if(elGain&&f.gain!=null)elGain.value=f.gain;
+    var elQ=document.getElementById("filterQ");if(elQ&&f.Q!=null)elQ.value=f.Q;
   }
   if(d.pcb){
     var p=d.pcb;
@@ -185,7 +189,7 @@ async function saveDefaults(){
   ["sStd","sPd","sMg","sAlt","sIsolation","sOvc_AC","sOvc_DC","sSysV_AC","sSysV_DC"].forEach(function(k){d.safety[k]=document.getElementById(k).value});
   try{ d.safety.nodes=JSON.parse(document.getElementById("nodesJson").value); }catch(e){ showStatus("节点定义JSON错误: "+e.message,"#ef4444"); return; }
 
-  ["filterType","filterSeries","filterFc","filterGain","filterQ"].forEach(function(k){d.filter[k]=document.getElementById(k).value});
+  d.filter.type=document.getElementById("filterType").value;d.filter.series=document.getElementById("filterSeries").value;d.filter.fc=document.getElementById("filterFc").value;d.filter.gain=document.getElementById("filterGain").value;d.filter.Q=document.getElementById("filterQ").value;
 
   d.pcb={};
   ["pcbWidth","pcbCopper","pcbPos","pcbDeltaT","pcbAmbTemp","pcbLength","pcbTargetI"].forEach(function(k){d.pcb[k]=document.getElementById(k).value});
