@@ -87,5 +87,14 @@
     "filterFc": "1000",
     "filterGain": "5",
     "filterQ": "0.707"
+  },
+  "pcb": {
+    "pcbWidth": "0.25",
+    "pcbCopper": "1",
+    "pcbPos": "external",
+    "pcbDeltaT": "10",
+    "pcbAmbTemp": "25",
+    "pcbLength": "50",
+    "pcbTargetI": "0"
   }
 }

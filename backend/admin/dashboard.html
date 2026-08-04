@@ -17,8 +17,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .fgl label{font-size:.8rem;font-weight:500;color:#64748b;margin-bottom:2px}
 .fgl input,.fgl select{width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:.88rem}
 .fgl input:focus,.fgl select:focus{border-color:#2563eb;outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-.tab-nav{display:flex;border-bottom:2px solid #e2e8f0;margin-bottom:20px}
-.tab-btn{padding:10px 20px;border:none;background:transparent;font-size:.9rem;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab-nav{display:flex;border-bottom:2px solid #e2e8f0;margin-bottom:20px;flex-wrap:wrap}
+.tab-btn{padding:10px 20px;border:none;background:transparent;font-size:.9rem;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap}
 .tab-btn.active{color:#2563eb;border-bottom-color:#2563eb;background:#f0f4ff}
 .tab{display:none}
 .tab.active{display:block}
@@ -29,6 +29,17 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 .btn-p{background:#2563eb;color:#fff;border-color:#2563eb}
 .btn-p:hover{background:#1d4ed8}
 .status{margin-top:10px;font-size:.85rem;color:#10b981}
+.fb-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.fb-table th,.fb-table td{padding:8px 10px;text-align:left;border-bottom:1px solid #e2e8f0;vertical-align:top}
+.fb-table th{background:#f8fafc;font-weight:600;color:#64748b;font-size:.8rem}
+.fb-table tr:hover{background:#f8fafc}
+.fb-table .unread{font-weight:600;background:#eff6ff}
+.fb-content{max-width:400px;white-space:pre-wrap;word-break:break-word;font-size:.82rem;color:#475569;line-height:1.4}
+.fb-time{font-size:.78rem;color:#94a3b8;white-space:nowrap}
+.fb-badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.72rem;font-weight:600}
+.fb-badge.new{background:#dbeafe;color:#1e40af}
+.fb-badge.read{background:#f1f5f9;color:#94a3b8}
+.fb-empty{padding:40px;text-align:center;color:#94a3b8;font-size:.9rem}
 </style></head>
 <body>
 <div class="nav"><h1>默认值管理后台</h1><span><a href="/">返回工具</a><a onclick="logout()">退出登录</a></span></div>
@@ -38,7 +49,7 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
   <button class="tab-btn" onclick="switchTab('safety')">安规距离计算</button>
   <button class="tab-btn" onclick="switchTab('filter')">信号滤波器设计</button>
   <button class="tab-btn" onclick="switchTab('pcb')">PCB走线载流计算</button>
-  <button class="tab-btn" onclick="switchTab('email')">邮件配置</button>
+  <button class="tab-btn" onclick="switchTab('feedback')">意见反馈</button>
 </div>
 
 <div id="tab-filter" class="tab">
@@ -68,21 +79,6 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 </div></div>
 <div class="btn-bar"><button class="btn btn-p" onclick="saveDefaults()">保存默认值</button><button class="btn" onclick="loadCurrent()">重新加载</button><span class="status" id="status"></span></div>
 </div>
-
-<div id="tab-email" class="tab">
-<div class="card"><h2>SMTP 邮件配置</h2><div class="fg">
-<div class="fgl"><label>SMTP 服务器</label><input type="text" id="smtpHost" placeholder="smtp.example.com"></div>
-<div class="fgl"><label>SMTP 端口</label><input type="number" id="smtpPort" value="587"></div>
-<div class="fgl"><label>加密方式</label><select id="smtpSecure"><option value="false">STARTTLS (587)</option><option value="true">SSL/TLS (465)</option></select></div>
-<div class="fgl"><label>用户名</label><input type="text" id="smtpUser" placeholder="your-email@example.com"></div>
-<div class="fgl"><label>密码</label><input type="password" id="smtpPass" placeholder="邮箱密码或客户端专用密码"></div>
-<div class="fgl"><label>发件人邮箱</label><input type="email" id="emailFrom" placeholder="sender@example.com"></div>
-<div class="fgl"><label>收件人邮箱</label><input type="email" id="emailTo" placeholder="wangkerou@solaxpower.com"></div>
-</div></div>
-<div class="btn-bar">
-<button class="btn btn-p" onclick="saveEmailConfig()">保存邮件配置</button>
-<span class="status" id="emailStatus"></span>
-</div></div>
 
 <div id="tab-capacitor" class="tab active">
 <div class="card"><h2>电容器额定参数</h2><div class="fg">
@@ -127,6 +123,12 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 </div>
 </div><!-- /tab-safety -->
 
+<div id="tab-feedback" class="tab">
+<div class="card"><h2 style="display:flex;align-items:center;justify-content:space-between">意见反馈 <span id="fbCount" style="font-size:.8rem;font-weight:400;color:#94a3b8"></span></h2>
+<div id="fbList"></div>
+</div>
+</div><!-- /tab-feedback -->
+
 <script>
 var token = localStorage.getItem("admin_token");
 if(!token){var m=document.cookie.match(/token=([^;]+)/);if(m){localStorage.setItem("admin_token",m[1]);token=m[1]}}
@@ -138,6 +140,7 @@ function switchTab(t){
   document.querySelectorAll(".tab").forEach(function(tb){tb.classList.remove("active")});
   document.querySelector("[onclick*='"+t+"']").classList.add("active");
   document.getElementById("tab-"+t).classList.add("active");
+  if(t==="feedback")loadFeedback();
 }
 function authFetch(url,opt){ opt=opt||{}; opt.headers=opt.headers||{}; opt.headers["x-auth-token"]=token; return fetch(url,opt); }
 function showStatus(msg,color){ var el=document.getElementById("status"); el.textContent=msg; el.style.color=color||"#10b981"; setTimeout(function(){el.textContent=""},3000); }
@@ -193,50 +196,39 @@ async function saveDefaults(){
     else { var msg="保存失败"; try{var j=await r.text();msg+=" ("+r.status+": "+j+")";}catch(e){} showStatus(msg,"#ef4444"); }
 }
 
-async function loadEmailConfig(){
-  var r=await authFetch("/api/admin/email-config");
+async function loadFeedback(){
+  var el=document.getElementById("fbList"); if(!el)return;
+  el.innerHTML='<p style="padding:20px;text-align:center;color:#94a3b8">加载中...</p>';
+  var r=await authFetch("/api/feedback");
   if(r.status===401){ alert("登录已过期"); localStorage.removeItem("admin_token"); window.location.href="/admin/login"; return; }
-  if(!r.ok){ showEmailStatus("加载失败","#ef4444"); return; }
-  var d=await r.json();
-  if(d.smtp){
-    document.getElementById("smtpHost").value=d.smtp.host||"";
-    document.getElementById("smtpPort").value=d.smtp.port||587;
-    document.getElementById("smtpSecure").value=d.smtp.secure?"true":"false";
-    if(d.smtp.auth){
-      document.getElementById("smtpUser").value=d.smtp.auth.user||"";
-      document.getElementById("smtpPass").value=d.smtp.auth.pass||"";
-    }
-  }
-  document.getElementById("emailFrom").value=d.from||"";
-  document.getElementById("emailTo").value=d.to||"";
-  showEmailStatus("已加载");
+  if(!r.ok){ el.innerHTML='<p class="fb-empty">加载失败</p>'; return; }
+  var data=await r.json();
+  document.getElementById("fbCount").textContent='共 '+data.length+' 条';
+  if(!data.length){ el.innerHTML='<p class="fb-empty">暂无意见反馈</p>'; return; }
+  var html='<table class="fb-table"><thead><tr><th style="width:40px">状态</th><th style="width:100px">姓名</th><th style="width:160px">标题</th><th>内容</th><th style="width:140px">时间</th><th style="width:60px">操作</th></tr></thead><tbody>';
+  data.sort(function(a,b){return new Date(b.timestamp)-new Date(a.timestamp)});
+  data.forEach(function(fb){
+    var cls=fb.read?'':'unread';
+    var badge=fb.read?'<span class="fb-badge read">已读</span>':'<span class="fb-badge new">未读</span>';
+    var time=new Date(fb.timestamp).toLocaleString('zh-CN');
+    var content=fb.content||'';
+    if(content.length>200)content=content.substring(0,200)+'...';
+    html+='<tr class="'+cls+'"><td>'+badge+'</td><td>'+escapeHtml(fb.name)+'</td><td><strong>'+escapeHtml(fb.title)+'</strong></td><td><div class="fb-content">'+escapeHtml(content)+'</div></td><td class="fb-time">'+time+'</td>';
+    if(!fb.read) html+='<td><button class="btn" style="padding:2px 8px;font-size:.78rem" onclick="markRead(\''+fb.id+'\')">标为已读</button></td>';
+    else html+='<td></td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  el.innerHTML=html;
 }
 
-async function saveEmailConfig(){
-  var d={
-    smtp:{
-      host:document.getElementById("smtpHost").value,
-      port:parseInt(document.getElementById("smtpPort").value)||587,
-      secure:document.getElementById("smtpSecure").value==="true",
-      auth:{
-        user:document.getElementById("smtpUser").value,
-        pass:document.getElementById("smtpPass").value
-      }
-    },
-    from:document.getElementById("emailFrom").value,
-    to:document.getElementById("emailTo").value
-  };
-  var r=await authFetch("/api/admin/email-config",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});
-  if(r.status===401){ alert("登录已过期"); localStorage.removeItem("admin_token"); window.location.href="/admin/login"; return; }
-  if(r.ok) showEmailStatus("保存成功");
-    else showEmailStatus("保存失败","#ef4444");
+async function markRead(id){
+  var r=await authFetch("/api/feedback",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,read:true})});
+  if(r.ok) loadFeedback();
 }
 
-function showEmailStatus(msg,color){ var el=document.getElementById("emailStatus"); el.textContent=msg; el.style.color=color||"#10b981"; setTimeout(function(){el.textContent=""},3000); }
+function escapeHtml(s){if(!s)return '';return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 loadCurrent();
-loadEmailConfig();
 
 </script></body></html>
-
-
