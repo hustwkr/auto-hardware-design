@@ -340,7 +340,8 @@ http.createServer(async function (req, res) {
     serveFile(res, path.join(__dirname, "admin", "login.html")); return;
   }
   if (p.startsWith("/admin/")) {
-    const fn = p.replace("/admin/", "");
+    var fn = p.replace("/admin/", "");
+    if (!fn.endsWith(".html")) fn += ".html";
     if (!["dashboard.html", "login.html", "setup.html", "change-password.html"].includes(fn)) { res.writeHead(403); res.end("Forbidden"); return; }
     serveFile(res, path.join(__dirname, "admin", fn));
     return;
