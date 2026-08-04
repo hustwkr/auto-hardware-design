@@ -121,6 +121,32 @@ function saveDefaults(d) {
   fs.writeFileSync(DEF_FILE, JSON.stringify(d, null, 2), "utf-8");
 }
 
+function validateDefaults(d) {
+  if (!d || typeof d !== "object") return { ok: false, error: "Body must be a JSON object" };
+  var warnings = [];
+  // Validate capacitor section
+  if (d.capacitor) {
+    var capFields = ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget","kva","kvb","cooling","scenario","capType"];
+    capFields.forEach(function(k) {
+      if (d.capacitor[k] === undefined) warnings.push("capacitor." + k + " is missing");
+    });
+    if (d.capacitor.segments && !Array.isArray(d.capacitor.segments)) warnings.push("capacitor.segments must be an array");
+  } else {
+    warnings.push("capacitor section is missing");
+  }
+  // Validate safety section
+  if (d.safety) {
+    var safFields = ["sStd","sPd","sMg","sAlt","sIsolation","sOvc_AC","sOvc_DC","sSysV_AC","sSysV_DC"];
+    safFields.forEach(function(k) {
+      if (d.safety[k] === undefined) warnings.push("safety." + k + " is missing");
+    });
+    if (d.safety.nodes && !Array.isArray(d.safety.nodes)) warnings.push("safety.nodes must be an array");
+  } else {
+    warnings.push("safety section is missing");
+  }
+  return { ok: true, warnings: warnings.length > 0 ? warnings : undefined };
+}
+
 // ── Feedback helpers ───────────────────────────────────
 const FEEDBACK_FILE = path.join(__dirname, "feedback.json");
 

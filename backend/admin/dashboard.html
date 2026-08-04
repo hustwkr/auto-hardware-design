@@ -47,9 +47,22 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 <div class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('capacitor')">电解电容寿命计算</button>
   <button class="tab-btn" onclick="switchTab('safety')">安规距离计算</button>
-  <button class="tab-btn" onclick="switchTab('filter')">信号滤波器设计</button>
   <button class="tab-btn" onclick="switchTab('pcb')">PCB走线载流计算</button>
+  <button class="tab-btn" onclick="switchTab('filter')">信号滤波器设计</button>
   <button class="tab-btn" onclick="switchTab('feedback')">意见反馈</button>
+</div>
+
+<div id="tab-pcb" class="tab">
+<div class="card"><h2>PCB走线参数</h2><div class="fg">
+<div class="fgl"><label>走线宽度 (mm)</label><input type="number" id="pcbWidth" value="0.25" step="0.01"></div>
+<div class="fgl"><label>铜厚 (oz)</label><select id="pcbCopper"><option value="0.5">0.5 oz</option><option value="1" selected>1 oz</option><option value="2">2 oz</option><option value="3">3 oz</option></select></div>
+<div class="fgl"><label>走线位置</label><select id="pcbPos"><option value="external" selected>外层</option><option value="internal">内层</option></select></div>
+<div class="fgl"><label>允许温升 (°C)</label><input type="number" id="pcbDeltaT" value="10"></div>
+<div class="fgl"><label>环境温度 (°C)</label><input type="number" id="pcbAmbTemp" value="25"></div>
+<div class="fgl"><label>走线长度 (mm)</label><input type="number" id="pcbLength" value="50"></div>
+<div class="fgl"><label>目标电流 (A)</label><input type="number" id="pcbTargetI" value="0"></div>
+</div></div>
+<div class="btn-bar"><button class="btn btn-p" onclick="saveDefaults()">保存默认值</button><button class="btn" onclick="loadCurrent()">重新加载</button><span class="status" id="status"></span></div>
 </div>
 
 <div id="tab-filter" class="tab">
@@ -65,19 +78,6 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 <button class="btn" onclick="loadCurrent()">重新加载</button>
 <span class="status" id="status"></span>
 </div>
-</div>
-
-<div id="tab-pcb" class="tab">
-<div class="card"><h2>PCB走线参数</h2><div class="fg">
-<div class="fgl"><label>走线宽度 (mm)</label><input type="number" id="pcbWidth" value="0.25" step="0.01"></div>
-<div class="fgl"><label>铜厚 (oz)</label><select id="pcbCopper"><option value="0.5">0.5 oz</option><option value="1" selected>1 oz</option><option value="2">2 oz</option><option value="3">3 oz</option></select></div>
-<div class="fgl"><label>走线位置</label><select id="pcbPos"><option value="external" selected>外层</option><option value="internal">内层</option></select></div>
-<div class="fgl"><label>允许温升 (°C)</label><input type="number" id="pcbDeltaT" value="10"></div>
-<div class="fgl"><label>环境温度 (°C)</label><input type="number" id="pcbAmbTemp" value="25"></div>
-<div class="fgl"><label>走线长度 (mm)</label><input type="number" id="pcbLength" value="50"></div>
-<div class="fgl"><label>目标电流 (A)</label><input type="number" id="pcbTargetI" value="0"></div>
-</div></div>
-<div class="btn-bar"><button class="btn btn-p" onclick="saveDefaults()">保存默认值</button><button class="btn" onclick="loadCurrent()">重新加载</button><span class="status" id="status"></span></div>
 </div>
 
 <div id="tab-capacitor" class="tab active">
