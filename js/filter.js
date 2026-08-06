@@ -45,7 +45,7 @@
     if (cel) {
       var ch = '<table class="sg-tbl"><thead><tr><th>' + t("filter.ref") + '</th><th>' + t("filter.value") + '</th></tr></thead><tbody>';
       if (type === "diff1") {
-        ch += '<tr><td>R1</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>R2</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>C1</td><td><span class="rv-placeholder">—</span></td></tr>';
+        ch += '<tr><td>R1</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>R2</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>R3</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>R4</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>C3</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>C4</td><td><span class="rv-placeholder">—</span></td></tr>';
       } else {
         ch += '<tr><td>R1</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>R2</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>R3</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>C1</td><td><span class="rv-placeholder">—</span></td></tr><tr><td>C2</td><td><span class="rv-placeholder">—</span></td></tr>';
       }
@@ -201,13 +201,16 @@
       var comps = r.components;
       var ch = '<table class="sg-tbl"><thead><tr><th>' + t("filter.ref") + '</th><th>' + t("filter.value") + '</th></tr></thead><tbody>';
       if (r.type === "diff1") {
-        ch += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + 'Ω</td></tr>';
-        ch += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + 'Ω</td></tr>';
-        ch += '<tr><td>C1</td><td>' + FM.capLabel(comps.C1) + '</td></tr>';
+        ch += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + '\u03A9</td></tr>';
+        ch += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + '\u03A9</td></tr>';
+        ch += '<tr><td>R3</td><td>' + FM.valLabel(comps.R3) + '\u03A9</td></tr>';
+        ch += '<tr><td>R4</td><td>' + FM.valLabel(comps.R4) + '\u03A9</td></tr>';
+        ch += '<tr><td>C3</td><td>' + FM.capLabel(comps.C3) + '</td></tr>';
+        ch += '<tr><td>C4</td><td>' + FM.capLabel(comps.C4) + '</td></tr>';
       } else {
-        ch += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + 'Ω</td></tr>';
-        ch += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + 'Ω</td></tr>';
-        ch += '<tr><td>R3</td><td>' + FM.valLabel(comps.R3) + 'Ω</td></tr>';
+        ch += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + '\u03A9</td></tr>';
+        ch += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + '\u03A9</td></tr>';
+        ch += '<tr><td>R3</td><td>' + FM.valLabel(comps.R3) + '\u03A9</td></tr>';
         ch += '<tr><td>C1</td><td>' + FM.capLabel(comps.C1) + '</td></tr>';
         ch += '<tr><td>C2</td><td>' + FM.capLabel(comps.C2) + '</td></tr>';
       }
@@ -270,8 +273,6 @@
     };
   }
 
-  /* ── Render magnitude (Bode gain) chart ─── */
-  /* Render magnitude (Bode gain) chart */// chart-fns.js — replacement for renderMagChart + renderPhaseChart
   /* ── Render magnitude (Bode gain) chart ─── */
   function renderMagChart(r) {
     var canvas = document.getElementById("filterChartMag");
@@ -435,14 +436,34 @@
     renderPhaseChart(r);
   }
 
+  /* ── Cache for static schematic SVGs ─── */
+  var _diff1SvgCache = null;
+
   /* ── Render circuit schematic (SVG) ─── */
   function renderFilterSchematic(r) {
     var el = document.getElementById("filterSchematic");
     if (!el) return;
 
-    var comps = r.components;
-    var svg = r.type === "diff1" ? renderDiff1Svg(comps) : renderMfb2Svg(comps);
-    el.innerHTML = svg;
+    if (r.type === "diff1") {
+      if (_diff1SvgCache) {
+        el.innerHTML = _diff1SvgCache;
+      } else {
+        el.innerHTML = '<p style="color:var(--color-text-soft);font-size:.85rem">Loading schematic...</p>';
+        fetch("resources/diff1.svg").then(function(resp){
+          if (!resp.ok) throw new Error("Load failed");
+          return resp.text();
+        }).then(function(svg){
+          var styled = svg.replace('<svg ', '<svg style="width:100%;height:auto;max-width:500px" ');
+          _diff1SvgCache = styled;
+          el.innerHTML = styled;
+        }).catch(function(){
+          el.innerHTML = '<p style="color:var(--color-text-soft);font-size:.85rem">Schematic unavailable.</p>';
+        });
+      }
+    } else {
+      var comps = r.components;
+      el.innerHTML = renderMfb2Svg(comps);
+    }
   }
 
   /* ── SVG Schematic Helpers ─── */
@@ -474,6 +495,19 @@
     a.push(L(cx+w/2, y, x2, y));
     if (label) a.push('<text x="' + cx.toFixed(1) + '" y="' + (y-h/2-4).toFixed(1) + '" class="flbl" text-anchor="middle">' + label + '</text>');
     if (value) a.push('<text x="' + cx.toFixed(1) + '" y="' + (y+h/2+13).toFixed(1) + '" class="fref" text-anchor="middle">' + value + '</text>');
+    return a.join('');
+  };
+
+  // vertical resistor: y1─[rect]─y2 at x
+  var resDrawV = function(y1, y2, x, label, value) {
+    var w = 14, h = 44;
+    var cy = (y1+y2)/2;
+    var a = [];
+    a.push(L(x, y1, x, cy-h/2));
+    a.push(resRect(x-w/2, cy, w, h));
+    a.push(L(x, cy+h/2, x, y2));
+    if (label) a.push('<text x="' + (x-w/2-4).toFixed(1) + '" y="' + (cy+4).toFixed(1) + '" class="flbl" text-anchor="end">' + label + '</text>');
+    if (value) a.push('<text x="' + (x+w/2+4).toFixed(1) + '" y="' + (cy+4).toFixed(1) + '" class="fref" text-anchor="start">' + value + '</text>');
     return a.join('');
   };
 
@@ -510,70 +544,108 @@
   /* ================================================================
      RENDER: 1st-Order Differential Low-Pass Filter
 
-     Topology: Vin- → R1 → (-) junction   |   Vin+ → R3 → (+) junction
-               R2 ∥ C1 as feedback from output to (-) junction
-               R4 from (+) junction to GND (matched impedance)
+     Topology (balanced differential):
+       R1: Vin+ → OP+ (non-inverting input)
+       R2: Vin- → OP- (inverting input)
+       R3∥C3: OP+ → GND (parallel RC to ground from non-inverting input)
+       R4∥C4: OP- → Vout (parallel RC feedback from output to inverting input)
+
+     Balanced design: R1=R2, R3=R4, C3=C4
+     Transfer function: H(s) = (R4/R2) / (1 + s·R4·C4)
   ================================================================ */
   function renderDiff1Svg(c) {
     var r1V = FM.valLabel(c.R1) + "\u03A9";
     var r2V = FM.valLabel(c.R2) + "\u03A9";
-    var c1V = FM.capLabel(c.C1);
+    var r3V = FM.valLabel(c.R3) + "\u03A9";
+    var r4V = FM.valLabel(c.R4) + "\u03A9";
+    var c3V = FM.capLabel(c.C3);
+    var c4V = FM.capLabel(c.C4);
     var RW = 44, RH = 14;
 
     // === Coordinate system ===
     var opX   = 240;   // op-amp left edge
-    var opCY  = 125;   // op-amp vertical centre
+    var opCY  = 120;   // op-amp vertical centre
     var opHH  = 32;    // half-height
-    var nTY   = opCY - 18;  // (-) terminal Y = 107
-    var pTY   = opCY + 18;  // (+) terminal Y = 143
-    var opR   = opX + 40;   // op-amp output tip = 280
+    var nTY   = opCY - 18;  // 102 — (-) terminal Y
+    var pTY   = opCY + 18;  // 138 — (+) terminal Y
+    var opR   = opX + 40;   // 280 — op-amp output tip
 
-    // (-) summing junction (where R1, R2∥C1 feedback all meet)
-    var negJ  = opX - 90;        // x = 150
-    // (+) bias junction (where R3, R4, op-amp(+) meet)
-    var posJ  = negJ;            // same X for clean layout
+    var negJ  = 150;        // inverting summing junction X
+    var posJ  = 150;        // non-inverting junction X
 
-    var vinMinusY = 70;          // upper input path
-    var vinPlusY  = 177;         // lower input path
+    var vinMinusY = 65;     // Vin- horizontal path Y
+    var vinPlusY  = 178;    // Vin+ horizontal path Y
 
-    // feedback routing
-    var fbTakeX  = opR + 18;     // output takeoff X = 298
-    var fbTopY   = 30;           // upper feedback bus Y
-    var fbMidY   = 50;           // C1 bus Y
-    var fbBusX   = opX - 10;     // feedback vertical bus X = 230
+    // feedback routing (R4∥C4)
+    var fbTakeX = opR + 18;  // 298 — output takeoff X
+    var fbTopY = 45;         // upper feedback bus (R4) Y
+    var fbBotY = 65;         // lower feedback bus (C4) Y
+    var fbBusX = opX - 10;   // 230 — feedback vertical bus X
+
+    // R3∥C3 to GND routing (vertical)
+    var r3s = posJ + 14;      // 164 — horizontal lead X
+    var r3x = r3s + 10;      // 174 — R3 vertical X
+    var c3x = r3s + 30;      // 194 — C3 vertical X
+    var r3Top = pTY;          // 138 — R3 top
+    var r3Bot = pTY + 48;     // 186 — R3 bottom
+    var c3Bot = pTY + 48;     // 186 — C3 bottom
+    var gndY = r3Bot + 12;    // 198 — GND Y
 
     var parts = [];
-    parts.push('<svg viewBox="0 0 450 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:380px;color:var(--color-text)">');
+    parts.push('<svg viewBox="0 0 450 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:380px;color:var(--color-text)">');
     parts.push('<style>.flbl{fill:currentColor;font:12px -apple-system,sans-serif;}.fref{fill:var(--color-text-soft);font:10px -apple-system,sans-serif;}.fnode{fill:currentColor;font:11px -apple-system,sans-serif;font-weight:600}.fdes{fill:currentColor;font:12px -apple-system,sans-serif;font-weight:600}</style>');
     parts.push('<text x="190" y="16" class="fdes" text-anchor="middle">1st-Order Differential Low-Pass Filter</text>');
 
-    // ── Vin- → R1 → negJ ──
+    // ── Vin- → R2 → negJ → OP- ──
     parts.push('<text x="5" y="' + (vinMinusY+4) + '" class="fnode">Vin\u2212</text>');
-    parts.push(L(34, vinMinusY, 34, vinMinusY));  // short lead
-    parts.push(resDraw(34, 86, vinMinusY, RW, RH, 'R1', r1V));
-    parts.push(L(86, vinMinusY, 86, opCY));
-    parts.push(L(86, opCY, negJ, opCY));
-    // wire from negJ up to (-) terminal level, then into op-amp
-    parts.push(L(negJ, opCY, negJ, nTY));
+    parts.push(resDraw(34, 86, vinMinusY, RW, RH, 'R2', r2V));
+    parts.push(L(86, vinMinusY, 86, nTY));         // down to (-) level
+    parts.push(L(86, nTY, negJ, nTY));              // to summing junction
+    parts.push(dot(negJ, nTY));
+    // negJ to op-amp(-) terminal
     parts.push(L(negJ, nTY, opX-12, nTY));
-    parts.push(dot(negJ, opCY));
 
-    // ── Vin+ → R3 → posJ ──
+    // ── Vin+ → R1 → posJ → OP+ ──
     parts.push('<text x="5" y="' + (vinPlusY+4) + '" class="fnode">Vin+</text>');
-    parts.push(resDraw(34, 86, vinPlusY, RW, RH, 'R3', FM.valLabel(c.R1)+'\u03A9')); // R3=R1 label
-    parts.push(L(86, vinPlusY, 86, pTY));
-    parts.push(L(86, pTY, posJ, pTY));
+    parts.push(resDraw(34, 86, vinPlusY, RW, RH, 'R1', r1V));
+    parts.push(L(86, vinPlusY, 86, pTY));           // up to (+) level
+    parts.push(L(86, pTY, posJ, pTY));              // to non-inverting junction
     parts.push(dot(posJ, pTY));
-    // posJ to (+) terminal
+    // posJ to op-amp(+) terminal
     parts.push(L(posJ, pTY, opX-12, pTY));
 
-    // ── R4 from posJ to GND ──
-    var r4s = posJ + 14;  // small gap from junction
-    parts.push(L(posJ, pTY, r4s, pTY));
-    parts.push(resDraw(r4s, r4s + RW, pTY, RW, RH, 'R4', r2V));
-    var r4e = r4s + RW;
-    parts.push(L(r4e, pTY, r4e, pTY + 54));
-    parts.push(GND(r4e, pTY + 54));
+    // ── R4∥C4 feedback: output → feedback bus → negJ ──
+    // Output takeoff up to feedback bus
+    parts.push(L(fbTakeX, opCY, fbTakeX, fbTopY));  // R4 right connection
+    parts.push(L(fbTakeX, opCY, fbTakeX, fbBotY));  // C4 right connection
+    // R4 on upper feedback bus
+    parts.push(resDraw(fbBusX, fbTakeX, fbTopY, RW, RH, 'R4', r4V));
+    // C4 on lower feedback bus (parallel to R4)
+    parts.push(capH(fbBusX, fbTakeX, fbBotY));
+    parts.push('<text x="' + ((fbBusX+fbTakeX)/2).toFixed(0) + '" y="' + (fbBotY-9) + '" class="flbl" text-anchor="middle">C4</text>');
+    parts.push('<text x="' + ((fbBusX+fbTakeX)/2).toFixed(0) + '" y="' + (fbBotY+19) + '" class="fref" text-anchor="middle">' + c4V + '</text>');
+    // Vertical bus at fbBusX: connects R4, C4 left sides down to (-) level
+    parts.push(L(fbBusX, fbTopY, fbBusX, nTY));
+    // Connect feedback bus to inverting summing junction
+    parts.push(L(fbBusX, nTY, negJ, nTY));
+    parts.push(dot(fbBusX, nTY));
+
+    // ── R3∥C3 from posJ to GND (vertical) ──
+    // Horizontal lead from posJ to the vertical components
+    parts.push(L(posJ, pTY, r3s, pTY));
+    // R3 vertical
+    parts.push(resDrawV(r3Top, r3Bot, r3x, 'R3', r3V));
+    // C3 vertical (parallel to R3)
+    parts.push(capV(c3x, r3Top, c3Bot));
+    parts.push('<text x="' + (c3x+14).toFixed(0) + '" y="' + ((r3Top+r3Bot)/2-6) + '" class="flbl">C3</text>');
+    parts.push('<text x="' + (c3x+14).toFixed(0) + '" y="' + ((r3Top+r3Bot)/2+6) + '" class="fref">' + c3V + '</text>');
+    // Horizontal wire at top connecting R3 and C3 in parallel
+    parts.push(L(r3x, r3Top, c3x, r3Top));
+    // Horizontal wire at bottom connecting R3 and C3
+    parts.push(L(r3x, r3Bot, c3x, c3Bot));
+    // Down to GND
+    parts.push(L(c3x, c3Bot, c3x, gndY));
+    parts.push(GND(c3x, gndY));
 
     // ── Op-amp ──
     parts.push(opAmpTri(opX, opCY, opHH));
@@ -583,24 +655,8 @@
     parts.push(L(opR, opCY, voutX, opCY));
     parts.push('<text x="' + (voutX+3) + '" y="' + (opCY+4) + '" class="fnode">Vout</text>');
 
-    // ── Feedback R2 ∥ C1: output → top → back to negJ ──
-    // Takeoff from output up to feedback bus
-    parts.push(L(fbTakeX, opCY, fbTakeX, fbTopY));
-    // R2 on upper horizontal
-    parts.push(resDraw(fbBusX, fbTakeX, fbTopY, RW, RH, 'R2', r2V));
-    // C1 on lower horizontal (parallel with R2)
-    parts.push(L(fbTakeX, opCY, fbTakeX, fbMidY));  // second takeoff for C1
-    parts.push(capH(fbBusX, fbTakeX, fbMidY));
-    parts.push('<text x="' + ((fbBusX+fbTakeX)/2).toFixed(0) + '" y="' + (fbMidY-9) + '" class="flbl" text-anchor="middle">C1</text>');
-    parts.push('<text x="' + ((fbBusX+fbTakeX)/2).toFixed(0) + '" y="' + (fbMidY+19) + '" class="fref" text-anchor="middle">' + c1V + '</text>');
-    // vertical drop bus at fbBusX: connects both R2 and C1 down to (-) level
-    parts.push(L(fbBusX, fbTopY, fbBusX, nTY));
-    // horizontal from feedback bus to negJ (-) terminal node
-    parts.push(L(fbBusX, nTY, negJ, nTY));
-
-    // ── Junction dots ──
-    parts.push(dot(negJ, nTY));     // (-) input node
-    parts.push(dot(fbBusX, nTY));   // feedback bus join
+    // ── Junction dots (additional) ──
+    parts.push(dot(r3s, pTY));   // R3 left junction
 
     parts.push('</svg>');
     return parts.join('');
@@ -740,13 +796,16 @@
     html += '<h3>2. ' + t("filter.components") + '</h3>';
     html += '<table class="data-tbl"><thead><tr><th>Ref</th><th>' + t("filter.value") + '</th></tr></thead><tbody>';
     if (r.type === "diff1") {
-      html += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + 'Ω</td></tr>';
-      html += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + 'Ω</td></tr>';
-      html += '<tr><td>C1</td><td>' + FM.capLabel(comps.C1) + '</td></tr>';
+      html += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + '\u03A9</td></tr>';
+      html += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + '\u03A9</td></tr>';
+      html += '<tr><td>R3</td><td>' + FM.valLabel(comps.R3) + '\u03A9</td></tr>';
+      html += '<tr><td>R4</td><td>' + FM.valLabel(comps.R4) + '\u03A9</td></tr>';
+      html += '<tr><td>C3</td><td>' + FM.capLabel(comps.C3) + '</td></tr>';
+      html += '<tr><td>C4</td><td>' + FM.capLabel(comps.C4) + '</td></tr>';
     } else {
-      html += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + 'Ω</td></tr>';
-      html += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + 'Ω</td></tr>';
-      html += '<tr><td>R3</td><td>' + FM.valLabel(comps.R3) + 'Ω</td></tr>';
+      html += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + '\u03A9</td></tr>';
+      html += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + '\u03A9</td></tr>';
+      html += '<tr><td>R3</td><td>' + FM.valLabel(comps.R3) + '\u03A9</td></tr>';
       html += '<tr><td>C1</td><td>' + FM.capLabel(comps.C1) + '</td></tr>';
       html += '<tr><td>C2</td><td>' + FM.capLabel(comps.C2) + '</td></tr>';
     }
@@ -756,9 +815,10 @@
     html += '<h3>3. ' + t("filter.report.formulas", null, "Calculation Formulas") + '</h3>';
     html += '<div class="rep-model-box">';
     if (r.type === "diff1") {
-      html += '<p><span class="latex" data-l="H(s) = -\\frac{R_2/R_1}{1 + s\\,R_2 C_1}"></span></p>';
-      html += '<p><span class="latex" data-l="G = \\frac{R_2}{R_1} = \\frac{' + FM.valLabel(comps.R2) + '}{' + FM.valLabel(comps.R1) + '} = ' + FM.fv(r.gain_actual, 2) + '"></span></p>';
-      html += '<p><span class="latex" data-l="f_c = \\frac{1}{2\\pi\\,R_2 C_1} = \\frac{1}{2\\pi\\cdot' + FM.valLabel(comps.R2) + '\\cdot' + FM.capLabel(comps.C1) + '} = ' + FM.fv(r.fc_actual, 1) + '\\text{ Hz}"></span></p>';
+      html += '<p><span class="latex" data-l="H(s) = \\frac{R_4/R_2}{1 + s\\,R_4 C_4}"></span></p>';
+      html += '<p><span class="latex" data-l="G = \\frac{R_4}{R_2} = \\frac{' + FM.valLabel(comps.R4) + '}{' + FM.valLabel(comps.R2) + '} = ' + FM.fv(r.gain_actual, 2) + '"></span></p>';
+      html += '<p><span class="latex" data-l="f_c = \\frac{1}{2\\pi\\,R_4 C_4} = \\frac{1}{2\\pi\\cdot' + FM.valLabel(comps.R4) + '\\cdot' + FM.capLabel(comps.C4) + '} = ' + FM.fv(r.fc_actual, 1) + '\\text{ Hz}"></span></p>';
+      html += '<p><span class="latex" data-l="R_1 = R_2, R_3 = R_4, C_3 = C_4 \\text{ (balanced design)}"></span></p>';
     } else {
       html += '<p><span class="latex" data-l="H(s) = -\\frac{R_2/(R_1+R_3)}{1 + s\\left(R_2C_2 + \\frac{C_1 R_1 R_3}{R_1+R_3}\\right) + s^2\\frac{C_1 C_2 R_1 R_2 R_3}{R_1+R_3}}"></span></p>';
       html += '<p><span class="latex" data-l="G = \\frac{R_2}{R_1+R_3} = \\frac{' + FM.valLabel(comps.R2) + '}{' + FM.valLabel(comps.R1) + '+' + FM.valLabel(comps.R3) + '} = ' + FM.fv(r.gain_actual, 2) + '"></span></p>';
@@ -813,13 +873,16 @@
     html += '<h3>2. ' + (lang === 'en' ? 'Component Values' : '器件值') + '</h3>';
     html += '<table><tr><th>Ref</th><th>' + (lang === 'en' ? 'Value' : '值') + '</th></tr>';
     if (r.type === "diff1") {
-      html += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + 'Ω</td></tr>';
-      html += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + 'Ω</td></tr>';
-      html += '<tr><td>C1</td><td>' + FM.capLabel(comps.C1) + '</td></tr>';
+      html += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + '\u03A9</td></tr>';
+      html += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + '\u03A9</td></tr>';
+      html += '<tr><td>R3</td><td>' + FM.valLabel(comps.R3) + '\u03A9</td></tr>';
+      html += '<tr><td>R4</td><td>' + FM.valLabel(comps.R4) + '\u03A9</td></tr>';
+      html += '<tr><td>C3</td><td>' + FM.capLabel(comps.C3) + '</td></tr>';
+      html += '<tr><td>C4</td><td>' + FM.capLabel(comps.C4) + '</td></tr>';
     } else {
-      html += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + 'Ω</td></tr>';
-      html += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + 'Ω</td></tr>';
-      html += '<tr><td>R3</td><td>' + FM.valLabel(comps.R3) + 'Ω</td></tr>';
+      html += '<tr><td>R1</td><td>' + FM.valLabel(comps.R1) + '\u03A9</td></tr>';
+      html += '<tr><td>R2</td><td>' + FM.valLabel(comps.R2) + '\u03A9</td></tr>';
+      html += '<tr><td>R3</td><td>' + FM.valLabel(comps.R3) + '\u03A9</td></tr>';
       html += '<tr><td>C1</td><td>' + FM.capLabel(comps.C1) + '</td></tr>';
       html += '<tr><td>C2</td><td>' + FM.capLabel(comps.C2) + '</td></tr>';
     }
