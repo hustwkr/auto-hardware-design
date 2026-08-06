@@ -453,7 +453,7 @@
           if (!resp.ok) throw new Error("Load failed");
           return resp.text();
         }).then(function(svg){
-          var styled = svg.replace('<svg ', '<svg style="width:100%;height:auto;max-width:500px" ');
+          var styled = svg.replace('<svg ', '<svg style="width:100%;height:auto;max-width:300px" ');
           _diff1SvgCache = styled;
           el.innerHTML = styled;
         }).catch(function(){
