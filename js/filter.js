@@ -68,6 +68,8 @@
     if (ctx2) { var c = document.getElementById("filterChartPhase"); var x = c.getContext("2d"); x.clearRect(0,0,c.width,c.height); }
     var schematic = document.getElementById("filterSchematic");
     if (schematic) schematic.innerHTML = "";
+    _diff1SvgCache = null;
+    _mfb2SvgCache = null;
     global._filterResult = null;
     global._filterPrevResult = null;
   }
@@ -175,6 +177,8 @@
     if (ctx2) { var c = document.getElementById("filterChartPhase"); var x = c.getContext("2d"); x.clearRect(0,0,c.width,c.height); }
     var schematic = document.getElementById("filterSchematic");
     if (schematic) schematic.innerHTML = "";
+    _diff1SvgCache = null;
+    _mfb2SvgCache = null;
     global._filterResult = null;
     global._filterPrevResult = null;
   }
@@ -446,6 +450,7 @@
 
   /* ── Cache for static schematic SVGs ─── */
   var _diff1SvgCache = null;
+  var _mfb2SvgCache = null;
 
   /* ── Render circuit schematic (SVG) ─── */
   function renderFilterSchematic(r) {
@@ -469,8 +474,21 @@
         });
       }
     } else {
-      var comps = r.components;
-      el.innerHTML = renderMfb2Svg(comps);
+      if (_mfb2SvgCache) {
+        el.innerHTML = _mfb2SvgCache;
+      } else {
+        el.innerHTML = '<p style="color:var(--color-text-soft);font-size:.85rem">Loading schematic...</p>';
+        fetch("resources/MFB2.svg").then(function(resp){
+          if (!resp.ok) throw new Error("Load failed");
+          return resp.text();
+        }).then(function(svg){
+          var styled = svg.replace('<svg ', '<svg style="width:100%;height:auto;max-width:300px" ');
+          _mfb2SvgCache = styled;
+          el.innerHTML = styled;
+        }).catch(function(){
+          el.innerHTML = '<p style="color:var(--color-text-soft);font-size:.85rem">Schematic unavailable.</p>';
+        });
+      }
     }
   }
 
