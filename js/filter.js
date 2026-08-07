@@ -21,6 +21,14 @@
   function filterTypeChange() {
     var type = gvs("filterType");
     document.getElementById("filterQGroup").style.display = (type === "mfb2") ? "" : "none";
+    // Apply per-topology defaults from server cache
+    var fd = window.__filterDefaults;
+    if (fd) {
+      var cfg = fd[type] || {};
+      var elFc = document.getElementById("filterFc"); if (elFc && cfg.fc != null) elFc.value = cfg.fc;
+      var elG = document.getElementById("filterGain"); if (elG && cfg.gain != null) elG.value = cfg.gain;
+      var elQ = document.getElementById("filterQ"); if (elQ && cfg.Q != null) elQ.value = cfg.Q;
+    }
     filterShowPlaceholders();
   }
 

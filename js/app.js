@@ -151,13 +151,16 @@
 
     /* Filter defaults — per-topology */
     var f=d.filter;if(f&&typeof f==='object'){
-      var type = f.type || 'mfb2';
       if(f.type)setValSelect('filterType',f.type);
       if(f.series)setValSelect('filterSeries',f.series);
-      var cfg = f[type] || {};
+      // Read filterType from the live DOM after it was set above
+      var liveType = document.getElementById('filterType').value;
+      var cfg = f[liveType] || {};
       if(cfg.fc != null) setVal('filterFc',cfg.fc);
       if(cfg.gain != null) setVal('filterGain',cfg.gain);
       if(cfg.Q != null) setVal('filterQ',cfg.Q);
+      // Cache on window so filter.js can read per-topology defaults on type switch
+      window.__filterDefaults = f;
     }
 
     /* PCB defaults */
