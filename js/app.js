@@ -149,11 +149,15 @@
       }
     }
 
-    /* Filter defaults */
+    /* Filter defaults — per-topology */
     var f=d.filter;if(f&&typeof f==='object'){
+      var type = f.type || 'mfb2';
       if(f.type)setValSelect('filterType',f.type);
       if(f.series)setValSelect('filterSeries',f.series);
-      setVal('filterFc',f.fc);setVal('filterGain',f.gain);setVal('filterQ',f.Q);
+      var cfg = f[type] || {};
+      if(cfg.fc != null) setVal('filterFc',cfg.fc);
+      if(cfg.gain != null) setVal('filterGain',cfg.gain);
+      if(cfg.Q != null) setVal('filterQ',cfg.Q);
     }
 
     /* PCB defaults */

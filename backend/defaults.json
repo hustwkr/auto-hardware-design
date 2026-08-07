@@ -82,11 +82,10 @@
     ]
   },
   "filter": {
-    "filterType": "mfb2",
-    "filterSeries": "e24",
-    "filterFc": "1000",
-    "filterGain": "5",
-    "filterQ": "0.707"
+    "type": "diff1",
+    "series": "e24",
+    "diff1": { "fc": 25, "gain": 5 },
+    "mfb2": { "fc": 1000, "gain": 1, "Q": 0.707 }
   },
   "pcb": {
     "pcbWidth": "0.25",

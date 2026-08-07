@@ -40,6 +40,13 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 .fb-badge.new{background:#dbeafe;color:#1e40af}
 .fb-badge.read{background:#f1f5f9;color:#94a3b8}
 .fb-empty{padding:40px;text-align:center;color:#94a3b8;font-size:.9rem}
+.fb-check{width:40px;text-align:center}
+.fb-check input{width:16px;height:16px;cursor:pointer}
+.fb-bar{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:.85rem}
+.fb-bar label{display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:500;color:#475569}
+.fb-bar .btn-d{background:#ef4444;color:#fff;border-color:#ef4444}
+.fb-bar .btn-d:hover{background:#dc2626}
+.fb-bar .btn-d:disabled{background:#fca5a5;border-color:#fca5a5;cursor:not-allowed}
 </style></head>
 <body>
 <div class="nav"><h1>默认值管理后台</h1><span><a href="/">返回工具</a><a href="/admin/change-password">修改密码</a><a onclick="logout()">退出登录</a></span></div>
@@ -66,12 +73,18 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 </div>
 
 <div id="tab-filter" class="tab">
-<div class="card"><h2>滤波器设计参数</h2><div class="fg">
+<div class="card"><h2>滤波器 — 公共参数</h2><div class="fg">
 <div class="fgl"><label>滤波器类型</label><select id="filterType"><option value="diff1">一阶差分 (Differential LPF)</option><option value="mfb2" selected>二阶MFB (Multiple Feedback LPF)</option></select></div>
 <div class="fgl"><label>电阻精度系列</label><select id="filterSeries"><option value="e24" selected>E24 (5%)</option><option value="e48">E48 (2%)</option></select></div>
-<div class="fgl"><label>截止频率 (Hz)</label><input type="number" id="filterFc" value="1000"></div>
-<div class="fgl"><label>直流增益 (V/V)</label><input type="number" id="filterGain" value="1"></div>
-<div class="fgl"><label>Q值</label><input type="number" id="filterQ" value="0.707" step="0.001"></div>
+</div></div>
+<div class="card"><h2>一阶差分 (diff1) 指标</h2><div class="fg">
+<div class="fgl"><label>截止频率 (Hz)</label><input type="number" id="filterFcDiff1" value="25"></div>
+<div class="fgl"><label>直流增益 (V/V)</label><input type="number" id="filterGainDiff1" value="5"></div>
+</div></div>
+<div class="card"><h2>二阶MFB (mfb2) 指标</h2><div class="fg">
+<div class="fgl"><label>截止频率 (Hz)</label><input type="number" id="filterFcMfb2" value="1000"></div>
+<div class="fgl"><label>直流增益 (V/V)</label><input type="number" id="filterGainMfb2" value="1"></div>
+<div class="fgl"><label>Q值</label><input type="number" id="filterQMfb2" value="0.707" step="0.001"></div>
 </div></div>
 <div class="btn-bar">
 <button class="btn btn-p" onclick="saveDefaults()">保存默认值</button>
@@ -125,6 +138,10 @@ textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-
 
 <div id="tab-feedback" class="tab">
 <div class="card"><h2 style="display:flex;align-items:center;justify-content:space-between">意见反馈 <span id="fbCount" style="font-size:.8rem;font-weight:400;color:#94a3b8"></span></h2>
+<div class="fb-bar" style="justify-content:flex-end">
+  <button class="btn btn-d" id="fbDeleteBtn" onclick="deleteSelected()" disabled>删除选中</button>
+  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:500;color:#475569"><input type="checkbox" id="fbCheckAll" onchange="toggleAll()" style="width:16px;height:16px;cursor:pointer"> 全选</label>
+</div>
 <div id="fbList"></div>
 </div>
 </div><!-- /tab-feedback -->
@@ -167,9 +184,8 @@ async function loadCurrent(){
     var f=d.filter;
     var elType=document.getElementById("filterType");if(elType&&f.type)elType.value=f.type;
     var elSeries=document.getElementById("filterSeries");if(elSeries&&f.series)elSeries.value=f.series;
-    var elFc=document.getElementById("filterFc");if(elFc&&f.fc!=null)elFc.value=f.fc;
-    var elGain=document.getElementById("filterGain");if(elGain&&f.gain!=null)elGain.value=f.gain;
-    var elQ=document.getElementById("filterQ");if(elQ&&f.Q!=null)elQ.value=f.Q;
+    var d1=f.diff1||{}; ["Fc","Gain"].forEach(function(k){var el=document.getElementById("filter"+k+"Diff1");if(el)el.value=d1[k.toLowerCase()]||""});
+    var m2=f.mfb2||{}; ["Fc","Gain","Q"].forEach(function(k){var el=document.getElementById("filter"+k+"Mfb2");if(el)el.value=m2[k.toLowerCase()]||""});
   }
   if(d.pcb){
     var p=d.pcb;
@@ -189,7 +205,7 @@ async function saveDefaults(){
   ["sStd","sPd","sMg","sAlt","sIsolation","sOvc_AC","sOvc_DC","sSysV_AC","sSysV_DC"].forEach(function(k){d.safety[k]=document.getElementById(k).value});
   try{ d.safety.nodes=JSON.parse(document.getElementById("nodesJson").value); }catch(e){ showStatus("节点定义JSON错误: "+e.message,"#ef4444"); return; }
 
-  d.filter.type=document.getElementById("filterType").value;d.filter.series=document.getElementById("filterSeries").value;d.filter.fc=document.getElementById("filterFc").value;d.filter.gain=document.getElementById("filterGain").value;d.filter.Q=document.getElementById("filterQ").value;
+  d.filter.type=document.getElementById("filterType").value;d.filter.series=document.getElementById("filterSeries").value;d.filter.diff1={fc:parseFloat(document.getElementById("filterFcDiff1").value)||25,gain:parseFloat(document.getElementById("filterGainDiff1").value)||5};d.filter.mfb2={fc:parseFloat(document.getElementById("filterFcMfb2").value)||1000,gain:parseFloat(document.getElementById("filterGainMfb2").value)||1,Q:parseFloat(document.getElementById("filterQMfb2").value)||0.707};
 
   d.pcb={};
   ["pcbWidth","pcbCopper","pcbPos","pcbDeltaT","pcbAmbTemp","pcbLength","pcbTargetI"].forEach(function(k){d.pcb[k]=document.getElementById(k).value});
@@ -209,7 +225,7 @@ async function loadFeedback(){
   var data=await r.json();
   document.getElementById("fbCount").textContent='共 '+data.length+' 条';
   if(!data.length){ el.innerHTML='<p class="fb-empty">暂无意见反馈</p>'; return; }
-  var html='<table class="fb-table"><thead><tr><th style="width:40px">状态</th><th style="width:100px">姓名</th><th style="width:160px">标题</th><th>内容</th><th style="width:140px">时间</th><th style="width:60px">操作</th></tr></thead><tbody>';
+  var html='<table class="fb-table"><thead><tr><th style="width:60px">状态</th><th style="width:100px">姓名</th><th style="width:160px">标题</th><th>内容</th><th style="width:140px">时间</th><th style="width:70px">操作</th></tr></thead><tbody>';
   data.sort(function(a,b){return new Date(b.timestamp)-new Date(a.timestamp)});
   data.forEach(function(fb){
     var cls=fb.read?'':'unread';
@@ -218,8 +234,9 @@ async function loadFeedback(){
     var content=fb.content||'';
     if(content.length>200)content=content.substring(0,200)+'...';
     html+='<tr class="'+cls+'"><td>'+badge+'</td><td>'+escapeHtml(fb.name)+'</td><td><strong>'+escapeHtml(fb.title)+'</strong></td><td><div class="fb-content">'+escapeHtml(content)+'</div></td><td class="fb-time">'+time+'</td>';
-    if(!fb.read) html+='<td><button class="btn" style="padding:2px 8px;font-size:.78rem" onclick="markRead(\''+fb.id+'\')">标为已读</button></td>';
-    else html+='<td></td>';
+    html+='<td style="white-space:nowrap"><input type="checkbox" class="fb-row-check" value="'+fb.id+'" onchange="updateDeleteBtn()" style="width:16px;height:16px;vertical-align:middle;cursor:pointer;margin-right:6px">';
+    if(!fb.read) html+='<button class="btn" style="padding:2px 8px;font-size:.78rem;vertical-align:middle" onclick="markRead(\''+fb.id+'\')">标为已读</button>';
+    html+='</td>';
     html+='</tr>';
   });
   html+='</tbody></table>';
@@ -229,6 +246,28 @@ async function loadFeedback(){
 async function markRead(id){
   var r=await authFetch("/api/feedback",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,read:true})});
   if(r.ok) loadFeedback();
+}
+
+function toggleAll(){
+  var checked=document.getElementById("fbCheckAll").checked;
+  document.querySelectorAll(".fb-row-check").forEach(function(cb){cb.checked=checked});
+  updateDeleteBtn();
+}
+
+function updateDeleteBtn(){
+  var checked=document.querySelectorAll(".fb-row-check:checked").length;
+  document.getElementById("fbDeleteBtn").disabled=checked===0;
+}
+
+async function deleteSelected(){
+  var ids=[];
+  document.querySelectorAll(".fb-row-check:checked").forEach(function(cb){ids.push(cb.value)});
+  if(!ids.length)return;
+  if(!confirm("确定删除选中的 "+ids.length+" 条反馈？此操作不可恢复。"))return;
+  var r=await authFetch("/api/feedback",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids:ids})});
+  if(r.status===401){ alert("登录已过期"); localStorage.removeItem("admin_token"); window.location.href="/admin/login"; return; }
+  if(r.ok) loadFeedback();
+  else alert("删除失败");
 }
 
 function escapeHtml(s){if(!s)return '';return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
