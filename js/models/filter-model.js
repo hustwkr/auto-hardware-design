@@ -75,56 +75,71 @@
 
   /* ================================================================
      1st-Order Differential Low-Pass Filter
-     Transfer function: H(s) = -(R2/R1) / (1 + s·R2·C1)
-     DC gain: G = R2/R1
-     Cutoff: fc = 1/(2π·R2·C1)
 
-     Design: choose C1 so that R2 falls in the sweet-spot range
-     (Rmin…Rmax, default 1kΩ…470kΩ), then snap R1,R2,C1 to standard values.
+     Topology (balanced differential):
+       R1: Vin+ → OP+ (non-inverting input)
+       R2: Vin- → OP- (inverting input)
+       R3∥C3: OP+ → GND (parallel RC to ground from non-inverting input)
+       R4∥C4: OP- → Vout (parallel RC feedback from output to inverting input)
+
+     Balanced design: R1=R2, R3=R4, C3=C4
+
+     Transfer function for differential signal:
+       H(s) = (R4/R2) / (1 + s·R4·C4)
+
+     DC gain:  G = R4/R2
+     Cutoff:   fc = 1/(2π·R4·C4)
+
+     Design: choose C4 so that R4 falls in the sweet-spot range
+     (Rmin…Rmax, default 1kΩ…470kΩ), then snap to standard values.
      ================================================================ */
-  function designDiff1(fc, gain, series, C1_hint) {
+  function designDiff1(fc, gain, series, C4_hint) {
     series = series || "e24";
     if (!fc || fc <= 0) return null;
     if (!gain || gain <= 0) gain = 1;
 
-    var Rmin = 1e3, Rmax = 470e3;  // sweet-spot for op-amp circuits
+    var Rmin = 1e3, Rmax = 1e6;  // 1kΩ … 1MΩ range
 
-    // If C1_hint is given (>0) and usable, keep it; otherwise auto-pick
-    var C1_nominal;
-    if (C1_hint && C1_hint > 0) {
-      C1_nominal = C1_hint;
+
+    // Choose C4 so R4 lands in the sweet-spot
+    var C4_nominal;
+    if (C4_hint && C4_hint > 0) {
+      C4_nominal = C4_hint;
     } else {
-      // Choose C1 from E12 preferred values so R2=R2_ideal lands near Rmid=sqrt(Rmin*Rmax)≈21.8k
-      // R2_ideal = 1/(2π·fc·C1)  ⇒  C1 = 1/(2π·fc·R2_ideal)
-      // Try each standard cap decade until R2_ideal is in range
       var preferredCaps = [1.0, 1.5, 2.2, 3.3, 4.7, 6.8];
-      var bestC1 = 1e-7, bestScore = Infinity;
+      var bestC4 = 1e-7, bestScore = Infinity;
       for (var decade = -12; decade <= -3; decade++) {  // pF to μF
         for (var j = 0; j < preferredCaps.length; j++) {
           var c = preferredCaps[j] * Math.pow(10, decade);
-          var r2d = 1 / (2 * Math.PI * fc * c);
-          if (r2d >= Rmin && r2d <= Rmax) {
-            var score = Math.abs(Math.log(r2d) - 0.5 * Math.log(Rmin * Rmax));
-            if (score < bestScore) { bestScore = score; bestC1 = c; }
+          var r4d = 1 / (2 * Math.PI * fc * c);
+          if (r4d >= Rmin && r4d <= Rmax) {
+            var score = Math.abs(Math.log(r4d) - 0.5 * Math.log(Rmin * Rmax));
+            if (score < bestScore) { bestScore = score; bestC4 = c; }
           }
         }
       }
-      C1_nominal = bestC1;
+      C4_nominal = bestC4;
     }
 
-    var R2_ideal = 1 / (2 * Math.PI * fc * C1_nominal);
-    var R1_ideal = R2_ideal / gain;
+    var R4_ideal = 1 / (2 * Math.PI * fc * C4_nominal);
+    var R2_ideal = R4_ideal / gain;
 
-    var C1 = nearestStdCap(C1_nominal, series);  // snap cap to nearest E-series value
+    var C4 = nearestStdCap(C4_nominal, series);
+    var R4 = nearestStd(R4_ideal, series);
     var R2 = nearestStd(R2_ideal, series);
-    var R1 = nearestStd(R1_ideal, series);
+    // Balanced: R1=R2, R3=R4, C3=C4
+    var R1 = R2;
+    var R3 = R4;
+    var C3 = C4;
+    // Reject if any resistor ≥ 1MΩ
+    if (R1 >= 1e6 || R2 >= 1e6 || R3 >= 1e6 || R4 >= 1e6) return null;
 
-    var actual_fc = 1 / (2 * Math.PI * R2 * C1);
-    var actual_gain = R2 / R1;
+    var actual_fc = 1 / (2 * Math.PI * R4 * C4);
+    var actual_gain = R4 / R2;
 
     var freqs = genFreqPoints(actual_fc * 0.01, actual_fc * 100, 300);
     var freqResp = [];
-    var tau = R2 * C1;
+    var tau = R4 * C4;
     for (var i = 0; i < freqs.length; i++) {
       var w = 2 * Math.PI * freqs[i];
       var denom = Math.sqrt(1 + (w * tau) * (w * tau));
@@ -141,10 +156,13 @@
       gain_actual: actual_gain,
       Q: 0.5,
       components: {
-        R1: R1, R2: R2, C1: C1,
+        R1: R1, R2: R2, R3: R3, R4: R4, C3: C3, C4: C4,
         R1_label: valLabel(R1) + "Ω",
         R2_label: valLabel(R2) + "Ω",
-        C1_label: capLabel(C1)
+        R3_label: valLabel(R3) + "Ω",
+        R4_label: valLabel(R4) + "Ω",
+        C3_label: capLabel(C3),
+        C4_label: capLabel(C4)
       },
       freqResp: freqResp,
       poles: [{real: -1/tau, imag: 0}]
@@ -218,6 +236,8 @@
         }
       }
     }
+    // Reject if any resistor exceeds 1MΩ
+    if (!best || best.R1 >= 1e6 || best.R2 >= 1e6 || best.R3 >= 1e6) return null;
     if(!best) return null;
     var R1=best.R1,R2=best.R2,R3=best.R3,C1=best.C1,C2=best.C2;
 
@@ -241,14 +261,15 @@
   }
 
   /* ── Evaluate from existing component values ─── */
-  function evalDiff1(R1, R2, C1) {
-    if (!R1 || !R2 || !C1 || R1 <= 0 || R2 <= 0 || C1 <= 0) return null;
-    var gain = R2 / R1;
-    var fc = 1 / (2 * Math.PI * R2 * C1);
+  function evalDiff1(R1, R2, R3, R4, C3, C4) {
+    if (!R1 || !R2 || !R3 || !R4 || !C3 || !C4) return null;
+    if (R1 <= 0 || R2 <= 0 || R3 <= 0 || R4 <= 0 || C3 <= 0 || C4 <= 0) return null;
+    var gain = R4 / R2;
+    var fc = 1 / (2 * Math.PI * R4 * C4);
 
     var freqs = genFreqPoints(fc * 0.01, fc * 100, 300);
     var freqResp = [];
-    var tau = R2 * C1;
+    var tau = R4 * C4;
     for (var i = 0; i < freqs.length; i++) {
       var w = 2 * Math.PI * freqs[i];
       var denom = Math.sqrt(1 + (w * tau) * (w * tau));
@@ -262,7 +283,7 @@
       fc_actual: fc,
       gain_actual: gain,
       Q: 0.5,
-      components: { R1: R1, R2: R2, C1: C1 },
+      components: { R1: R1, R2: R2, R3: R3, R4: R4, C3: C3, C4: C4 },
       freqResp: freqResp
     };
   }
@@ -335,7 +356,7 @@
   /* ── Design entry point ──────────────── */
   function designFilter(type, params) {
     if (type === "diff1") {
-      return designDiff1(params.fc, params.gain, params.series, params.C1);
+      return designDiff1(params.fc, params.gain, params.series, params.C4);
     } else if (type === "mfb2") {
       return designMfb2(params.fc, params.gain, params.Q, params.series, params.C1, params.C2);
     }
@@ -345,7 +366,7 @@
   /* ── Evaluate entry point ────────────── */
   function evalFilter(type, comps) {
     if (type === "diff1") {
-      return evalDiff1(comps.R1, comps.R2, comps.C1);
+      return evalDiff1(comps.R1, comps.R2, comps.R3, comps.R4, comps.C3, comps.C4);
     } else if (type === "mfb2") {
       return evalMfb2(comps.R1, comps.R2, comps.R3, comps.C1, comps.C2);
     }
