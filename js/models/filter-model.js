@@ -62,6 +62,17 @@
     return result;
   }
 
+  // Next lower standard value (snap down) — ensures R < 1MΩ
+  function predecessorStd(val, series) {
+    var arr = series === "e48" ? E48 : E24;
+    var decade = Math.pow(10, Math.floor(Math.log10(val)));
+    var best = arr[arr.length-1] * decade / 10;
+    for (var i = 0; i < arr.length; i++) { var c = arr[i] * decade; if (c < val && c > best) best = c; }
+    var dec2 = decade / 10;
+    for (var i = 0; i < arr.length; i++) { var c = arr[i] * dec2; if (c < val && c > best) best = c; }
+    return best;
+  }
+
   /* ── Generate frequency response points ─── */
   function genFreqPoints(fMin, fMax, points) {
     points = points || 200;
@@ -127,12 +138,13 @@
     var C4 = nearestStdCap(C4_nominal, series);
     var R4 = nearestStd(R4_ideal, series);
     var R2 = nearestStd(R2_ideal, series);
+    // Ensure R < 1MΩ: if snap overshoots, step down one standard value
+    if (R4 >= 1e6) R4 = predecessorStd(R4_ideal, series);
+    if (R2 >= 1e6) R2 = predecessorStd(R2_ideal, series);
     // Balanced: R1=R2, R3=R4, C3=C4
     var R1 = R2;
     var R3 = R4;
     var C3 = C4;
-    // Reject if any resistor ≥ 1MΩ
-    if (R1 >= 1e6 || R2 >= 1e6 || R3 >= 1e6 || R4 >= 1e6) return null;
 
     var actual_fc = 1 / (2 * Math.PI * R4 * C4);
     var actual_gain = R4 / R2;
@@ -217,14 +229,15 @@
       for(var cj=0;cj<CAPS.length;cj++){
         var c2t=CAPS[cj];
         if(c2t<c1t*0.05||c2t>c1t*20) continue;
-        for(var logR1=2;logR1<=6.5;logR1+=0.015){
+        for(var logR1=3;logR1<=6;logR1+=0.015){
           var R1=Math.pow(10,logR1);
+          if(R1>=1e6) continue;
           // R2 = G·R1  (from gain = R2/R1)
           var R2 = gain * R1;
-          if(R2<0.5||R2>2e7) continue;
+          if(R2<10||R2>=1e6) continue;
           // R3 = 1/(C1·C2·R2·ω₀²)  (from d2 = 1/ω₀²)
           var R3 = 1/(c1t*c2t*R2*w0*w0);
-          if(R3<0.5||R3>2e7) continue;
+          if(R3<10||R3>=1e6) continue;
           var R1s=nearestStd(R1,series),R2s=nearestStd(R2,series),R3s=nearestStd(R3,series);
           var C1s=nearestStdCap(c1t,series),C2s=nearestStdCap(c2t,series);
           if(R1s<=0||R2s<=0||R3s<=0) continue;
@@ -236,8 +249,6 @@
         }
       }
     }
-    // Reject if any resistor exceeds 1MΩ
-    if (!best || best.R1 >= 1e6 || best.R2 >= 1e6 || best.R3 >= 1e6) return null;
     if(!best) return null;
     var R1=best.R1,R2=best.R2,R3=best.R3,C1=best.C1,C2=best.C2;
 
@@ -380,6 +391,7 @@
     capLabel: capLabel,
     nearestStd: nearestStd,
     nearestStdCap: nearestStdCap,
+    predecessorStd: predecessorStd,
     E24: E24,
     E48: E48,
     designFilter: designFilter,
