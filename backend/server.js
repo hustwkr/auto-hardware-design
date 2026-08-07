@@ -18,7 +18,7 @@ function loadAdminHash() {
       ADMIN_HASH = { salt: parts[0], hash: parts[1] };
       return true;
     }
-  } catch (_) {}
+  } catch (e) { console.warn("Failed to load admin hash:", e.message); }
   return false;
 }
 
@@ -182,7 +182,7 @@ function safePath(p) {
 
 // ── Security headers (applied to every response) ────────
 function addSecurityHeaders(res) {
-  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net");
+  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net; object-src 'self'");
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("X-Content-Type-Options", "nosniff");
 }
@@ -341,6 +341,21 @@ http.createServer(async function (req, res) {
     return;
   }
 
+  // ── Feedback batch delete (admin only) ────────────────
+  if (p === "/api/feedback" && req.method === "DELETE") {
+    if (!validateToken(tok)) { json(res, 401, { error: "Unauthorized" }, false); return; }
+    const body = await parseBody(req);
+    var ids = body.ids;
+    if (!Array.isArray(ids) || ids.length === 0) { json(res, 400, { error: "ids must be a non-empty array" }, false); return; }
+    var feedback = loadFeedback();
+    var before = feedback.length;
+    feedback = feedback.filter(function(fb) { return ids.indexOf(fb.id) === -1; });
+    var removed = before - feedback.length;
+    if (removed > 0) saveFeedback(feedback);
+    json(res, 200, { success: true, removed: removed }, false);
+    return;
+  }
+
   // ── ADMIN defaults ──────────────────────────────────
   if (p === "/api/admin/defaults") {
     if (!validateToken(tok)) { json(res, 401, { error: "Unauthorized" }, false); return; }
@@ -379,7 +394,7 @@ http.createServer(async function (req, res) {
   // ── Fallback: static file (whitelist only safe paths) ─
   const sp = p === "/" ? "index.html" : p;
   const safeSp = sp.replace(/\\/g, "/").replace(/^\/+/, "");
-  const ALLOWED_PREFIXES = ["css/", "js/"];
+  const ALLOWED_PREFIXES = ["css/", "js/", "resources/"];
   const ALLOWED_FILES = ["index.html", "hwlogo.png", "sw.js"];
   const isAllowed = ALLOWED_FILES.includes(safeSp) || ALLOWED_PREFIXES.some(prefix => safeSp.startsWith(prefix));
   if (!isAllowed) { res.writeHead(403, {"Content-Type":"text/plain"}); res.end("Forbidden"); return; }
