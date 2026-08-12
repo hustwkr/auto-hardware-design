@@ -80,14 +80,14 @@ An IPC-2221 based PCB trace current capacity calculator supporting forward (widt
 ### 4. 信号滤波器设计
 ### Signal Filter Designer
 
-基于运放的有源低通滤波器设计工具，支持一阶差分和二阶 MFB (Multiple Feedback) 拓扑。自动匹配 E24/E48 标准电阻值，渲染伯德图和电路原理图。
+基于运放的有源低通滤波器设计工具，支持一阶差分和二阶 MFB (Multiple Feedback) 拓扑。自动匹配 E24/E12 标准电阻值，渲染伯德图和电路原理图。
 
-An op-amp based active low-pass filter design tool supporting 1st-order differential and 2nd-order MFB topologies. Auto-matches E24/E48 standard resistor values, renders Bode plots and circuit schematics.
+An op-amp based active low-pass filter design tool supporting 1st-order differential and 2nd-order MFB topologies. Auto-matches E24/E12 standard resistor values, renders Bode plots and circuit schematics.
 
 #### 功能特性 Features
 
 - **双拓扑** Dual topology — 一阶差分 LPF / 二阶 MFB LPF，输入端切换显示对应参数
-- **E24/E48 标准值** Standard value matching — 自动选取最接近的标准电阻值，计算截止频率/增益/Q 值实际误差
+- **E24/E12 标准值** Standard value matching — 自动选取最接近的标准电阻值，计算截止频率/增益/Q 值实际误差
 - **伯德图** Bode plot — Canvas 渲染幅频 + 相频特性曲线，含 -3dB 参考线
 - **电路原理图** Schematic — SVG 内联渲染，标注元件编号与参数值
 - **频率响应点** Pole analysis — 计算并展示极点频率
@@ -162,7 +162,7 @@ auto-hardware-design/
 │       ├── capacitor-model.js     # 纯计算模型（Arrhenius + Miner，零 DOM 依赖）
 │       ├── safety-model.js        # 纯计算模型（IEC 62109-1 / UL 840 / UL 1741）
 │       ├── pcb-model.js           # 纯计算模型（IPC-2221）
-│       └── filter-model.js        # 纯计算模型（一阶差分/二阶MFB + E24/E48）
+│       └── filter-model.js        # 纯计算模型（一阶差分/二阶MFB + E24/E12）
 ├── backend/                       # Node.js 后端服务（零 npm 依赖）
 │   ├── server.js                  # HTTP 服务器 + REST API + scrypt认证 + HMAC Token
 │   ├── defaults.json              # 默认参数持久化存储
@@ -191,7 +191,7 @@ auto-hardware-design/
 | `CapacitorModel` | `calcLifetime(params)` | Arrhenius + Miner 累积损伤 |
 | `SafetyModel` | `calcSafety(params)` | IEC 62109-1 §7.3.7 / UL 840 / UL 1741 |
 | `PcbTraceModel` | `calcCurrent(params)` | IPC-2221 标准公式 |
-| `FilterModel` | `designFilter(type, params)` | 一阶差分 / 二阶 MFB 传递函数 + E24/E48 逼近 |
+| `FilterModel` | `designFilter(type, params)` | 一阶差分 / 二阶 MFB 传递函数 + E24/E12 逼近 |
 
 UI 层 (`capacitor.js`, `safety.js`, `filter.js`, `pcb.js`) 仅负责 DOM 操作和事件绑定，通过 `window.CapacitorModel` / `window.SafetyModel` / `window.FilterModel` 调用计算。
 

@@ -83,7 +83,7 @@
   },
   "filter": {
     "type": "diff1",
-    "series": "e24",
+    "series": "e12",
     "diff1": {
       "fc": 5000,
       "gain": 1
@@ -91,7 +91,7 @@
     "mfb2": {
       "fc": 25,
       "gain": 5,
-      "Q": 0.7
+      "Q": 0.707
     }
   },
   "pcb": {

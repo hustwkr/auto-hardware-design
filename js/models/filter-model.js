@@ -1,6 +1,6 @@
 /* ===== Signal Filter Design — Pure Calculation Model ===== */
 /* Zero DOM dependency. Implements 1st-order differential LPF   */
-/* and 2nd-order MFB LPF, E24/E48 nearest-value lookup.         */
+/* and 2nd-order MFB LPF, E24/E12 nearest-value lookup.         */
 
 (function (global) {
   "use strict";
@@ -9,18 +9,14 @@
   var E24 = [1.0,1.1,1.2,1.3,1.5,1.6,1.8,2.0,2.2,2.4,2.7,
              3.0,3.3,3.6,3.9,4.3,4.7,5.1,5.6,6.2,6.8,7.5,8.2,9.1];
 
-  /* ── E48 series (2% tolerance) ─────────── */
-  var E48 = [1.00,1.05,1.10,1.15,1.21,1.27,1.33,1.40,1.47,1.54,
-             1.62,1.69,1.78,1.87,1.96,2.05,2.15,2.26,2.37,2.49,
-             2.61,2.74,2.87,3.01,3.16,3.32,3.48,3.65,3.83,4.02,
-             4.22,4.42,4.64,4.87,5.11,5.36,5.62,5.90,6.19,6.49,
-             6.81,7.15,7.50,7.87,8.25,8.66,9.09,9.53];
+  /* ── E12 series (10% tolerance) ────────── */
+  var E12 = [1.0,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2];
 
   function fv(v, d) { return typeof v !== "number" || !isFinite(v) ? "-" : v.toFixed(d); }
 
   /* ── Nearest standard value (scaled) ──── */
   function nearestStd(val, series, minR, maxR) {
-    var seriesArr = series === "e48" ? E48 : E24;
+    var seriesArr = series === "e12" ? E12 : E24;
     minR = minR || 10; maxR = maxR || 10000000; // 10Ω – 10MΩ default range
 
     // Find appropriate decade
@@ -64,7 +60,7 @@
 
   // Next lower standard value (snap down) — ensures R < 1MΩ
   function predecessorStd(val, series) {
-    var arr = series === "e48" ? E48 : E24;
+    var arr = series === "e12" ? E12 : E24;
     var decade = Math.pow(10, Math.floor(Math.log10(val)));
     var best = arr[arr.length-1] * decade / 10;
     for (var i = 0; i < arr.length; i++) { var c = arr[i] * decade; if (c < val && c > best) best = c; }
@@ -204,7 +200,7 @@
     if (!Q || Q <= 0) Q = 0.707;
     var Q_target = Q;
     var w0 = 2 * Math.PI * fc;
-    var seriesArr = series === "e48" ? E48 : E24;
+    var seriesArr = series === "e12" ? E12 : E24;
 
     // Generate standard capacitor values (1pF .. 10uF)
     var CAPS = [];
@@ -351,7 +347,7 @@
 
   /* ── Nearest standard capacitor value ─── */
   function nearestStdCap(val, series) {
-    var seriesArr = series === "e48" ? E48 : E24;
+    var seriesArr = series === "e12" ? E12 : E24;
     // Find the appropriate decade
     var decade = Math.pow(10, Math.floor(Math.log10(val)));
     var norm = val / decade;
@@ -393,7 +389,7 @@
     nearestStdCap: nearestStdCap,
     predecessorStd: predecessorStd,
     E24: E24,
-    E48: E48,
+    E12: E12,
     designFilter: designFilter,
     evalFilter: evalFilter,
     designDiff1: designDiff1,
