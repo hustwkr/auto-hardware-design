@@ -536,7 +536,7 @@
     "filter.fc":         { zh: "截止频率 (Hz)", en: "Cutoff Frequency (Hz)" },
     "filter.gain":       { zh: "直流增益 (V/V)", en: "DC Gain (V/V)" },
     "filter.q":          { zh: "Q值", en: "Q Factor" },
-    "filter.q.hint":     { zh: "MFB 拓扑的 Q 值由电容比值 C₁/C₂ 决定，较⼤的 C₁/C₂ ⽐值可实现更⾼的 Q 值。若计算失败，请尝试调整增益或⽬标 Q 值。", en: "MFB topology Q is determined by the C₁/C₂ ratio — larger C₁/C₂ yields higher Q. If calculation fails, try adjusting gain or target Q." },
+    "filter.q.hint":     { zh: "MFB 拓扑的 Q 值由电容比值 C₂/C₁ 决定，C₂/C₁ 越大可实现的 Q 越高（Q_max = ½·√(C₂/(C₁(1+G)))）。若计算失败，请尝试调整增益或目标 Q 值。", en: "MFB topology Q is set by the capacitor ratio C₂/C₁ — larger C₂/C₁ yields higher achievable Q (Q_max = ½·√(C₂/(C₁(1+G)))). If calculation fails, try adjusting gain or target Q." },
     "filter.c1":         { zh: "C1 预设电容", en: "C1 Preset Capacitor" },
     "filter.c2":         { zh: "C2 预设电容", en: "C2 Preset Capacitor" },
     "filter.target":     { zh: "目标", en: "Target" },

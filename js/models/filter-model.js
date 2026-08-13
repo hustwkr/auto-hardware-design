@@ -225,9 +225,25 @@
       for(var cj=0;cj<CAPS.length;cj++){
         var c2t=CAPS[cj];
         if(c2t<c1t*0.05||c2t>c1t*20) continue;
-        for(var logR1=3;logR1<=6;logR1+=0.015){
-          var R1=Math.pow(10,logR1);
-          if(R1>=1e6) continue;
+        // Analytical solve for R1. With R2=G·R1 and R3 chosen so d2=1/ω₀²:
+        //   d1 = C1·(R2+R3+R2·R3/R1) = A·R1 + B/R1,  Q = 1/(ω₀·(A·R1+B/R1))
+        //   where A=C1·G, B=(1+G)/(C2·G·ω₀²).  Solving Q=Q_target is a quadratic in R1.
+        var Acoef = c1t*gain;
+        var Bcoef = (1+gain)/(c2t*gain*w0*w0);
+        var K = 1/(w0*Q_target);
+        var disc = K*K - 4*Acoef*Bcoef;
+        var r1Cands = [];
+        if (disc >= 0) {
+          var s = Math.sqrt(disc);
+          r1Cands.push((K+s)/(2*Acoef));
+          r1Cands.push((K-s)/(2*Acoef));
+        } else {
+          // Q_target unreachable for this (C1,C2); fall back to the Q-max point
+          r1Cands.push(Math.sqrt(Bcoef/Acoef));
+        }
+        for(var ir=0; ir<r1Cands.length; ir++){
+          var R1=r1Cands[ir];
+          if(!(R1>=1e3)||R1>=1e6) continue;
           // R2 = G·R1  (from gain = R2/R1)
           var R2 = gain * R1;
           if(R2<10||R2>=1e6) continue;
