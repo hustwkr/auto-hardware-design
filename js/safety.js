@@ -63,11 +63,13 @@
     document.getElementById('sOvc_DC').value = label;
   }
 
-  /* ── Apply standard-specific UI mode (IEC vs UL) ─── */
+  /* ── Apply standard-specific UI mode (IEC / IEC 62477 vs UL) ─── */
   function applyStandardMode(std){
-    // Toggle data-standard="iec" and data-standard="ul" elements
+    // IEC 62477 shares the IEC input layout (pollution degree, material group,
+    // OVC, isolation, system voltage). Map iec62477 → iec for UI visibility.
+    var uiStd = (std === 'iec62477') ? 'iec' : std;
     document.querySelectorAll("[data-standard]").forEach(function(el){
-      if(el.getAttribute("data-standard") === std){
+      if(el.getAttribute("data-standard") === uiStd){
         el.style.display = "";
       } else {
         el.style.display = "none";
@@ -165,11 +167,18 @@
     }
 
     // Compute impulse withstand voltage (kV) for AC and DC sides
-    var impAC = impulseFor(ovc_AC, sysVAC, false);
-    var impDC = impulseFor(ovc_DC, sysVDC, true, 'dc');
-
-    /* PV circuit rule: minimum 2.5 kV per IEC 62109-1 §7.3.7.1.2b */
-    if(impDC < 2.5) impDC = 2.5;
+    var impAC, impDC;
+    if (std === 'iec62477') {
+      // IEC 62477-1 Table 9 — impulse values same as 62109 Table 12 but
+      // DC system-voltage breakpoints differ (75/150/225/450/900/1500).
+      impAC = SM.lookupImpulse62477(sysVAC, ovc_AC, false);
+      impDC = SM.lookupImpulse62477(sysVDC, ovc_DC, true, 'dc');
+    } else {
+      impAC = impulseFor(ovc_AC, sysVAC, false);
+      impDC = impulseFor(ovc_DC, sysVDC, true, 'dc');
+      /* PV circuit rule: minimum 2.5 kV per IEC 62109-1 §7.3.7.1.2b */
+      if(impDC < 2.5) impDC = 2.5;
+    }
 
     // Impulse level stepping helpers (for within-circuit reduction display)
     var IMPULSE_LEVELS = [0.33, 0.5, 0.8, 1.5, 2.5, 4.0, 6.0, 8.0];
@@ -180,18 +189,18 @@
       return kv;
     }
 
-    /* ── Display impulse + TOV info in #sImpulseInfo (IEC only) ─── */
-    if(std === 'iec'){
+    /* ── Display impulse + TOV info in #sImpulseInfo (IEC / IEC 62477) ─── */
+    if(std === 'iec' || std === 'iec62477'){
       (function(){
         var el = document.getElementById("sImpulseInfo");
         if(!el) return;
         var ovcLabel = function(n){return {1:'I',2:'II',3:'III',4:'IV'}[n]||'II';};
-        var tovAC_info = tovFor(sysVAC);
-        var isoNote = '';
+        var tovAC_info = std === 'iec62477' ? SM.lookupTov62477(sysVAC) : tovFor(sysVAC);
+        var stdRef = std === 'iec62477' ? 'IEC 62477-1 Table 9' : 'IEC 62109-1 Table 12';
         el.innerHTML =
           '<div><span class="imp-label">'+_t("safe.imp.acLbl")+'</span> ' +
           '<span class="imp-val">'+impAC+' kV</span> ' +
-          '<span class="imp-sub">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V)</span></div>' +
+          '<span class="imp-sub">(OVC '+ovcLabel(ovc_AC)+', V='+sysVAC+'V, '+stdRef+')</span></div>' +
           '<div><span class="imp-label">'+_t("safe.imp.dcLbl")+'</span> ' +
           '<span class="imp-val">'+impDC+' kV</span> ' +
           '<span class="imp-sub">(OVC '+ovcLabel(ovc_DC)+', V='+sysVDC+'V)</span></div>' +
@@ -261,8 +270,9 @@
       var peakWarn = (r.recurringPeakOk === false) ? ' <span style="color:#ef4444;font-size:.7rem" title="'+_t("safe.tip.peakOver")+'">🔴 '+_t("safe.chain.warnPeak")+'</span>' : '';
       var t241Warn = r.tbl241Note ? ' <span style="color:#f59e0b;font-size:.7rem" title="'+_t("safe.tip.t241")+'">⚠T24.1</span>' : '';
       var crFloorNote = r.crFloorApplied ? ' <span style="color:#64748b;font-size:.65rem" title="爬电距离不低于电气间隙 (Cr≥Cl)">Cr≥Cl</span>' : '';
+      var iiiBNote = r.grIIIbNoData ? ' <span style="color:#f59e0b;font-size:.7rem" title="'+_t("safe.chain.warnIIIb62477")+'">IIIb→IIIa</span>' : '';
       var pcbLabel = r.pcb ? _t("safe.pcb.yes") : _t("safe.pcb.no");
-      tb+="<tr><td>"+(i+1)+"</td><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+_t(r.insL)+warnNote+withinNote+"</td><td>"+pcbLabel+"</td><td>"+r.reqClr+t241Warn+"</td><td>"+r.reqCrp+crFloorNote+peakWarn+"</td></tr>";
+      tb+="<tr><td>"+(i+1)+"</td><td>"+r.name+" "+gndMark+"</td><td>"+r.vrms+"</td><td>"+_t(r.insL)+warnNote+withinNote+"</td><td>"+pcbLabel+"</td><td>"+r.reqClr+t241Warn+"</td><td>"+r.reqCrp+crFloorNote+iiiBNote+peakWarn+"</td></tr>";
     });
     document.getElementById("sRtb").innerHTML=tb;
 
@@ -280,19 +290,22 @@
     var html="";
 
     /* ── Voltage calculation summary (before per-node details) ─── */
-    if(d.std === 'iec'){
+    if(d.std === 'iec' || d.std === 'iec62477'){
       var ovcLabel = function(n){return {1:'I',2:'II',3:'III',4:'IV'}[n]||'II';};
-      var tovInfo = typeof SM.lookupTov === 'function' ? SM.lookupTov(d.sysVAC) : null;
+      var is62477 = (d.std === 'iec62477');
+      var tblRef = is62477 ? 'Table 9' : 'Table 12';
+      var tovInfo = is62477 ? (typeof SM.lookupTov62477 === 'function' ? SM.lookupTov62477(d.sysVAC) : null)
+                            : (typeof SM.lookupTov === 'function' ? SM.lookupTov(d.sysVAC) : null);
       html += "<div style=margin:6px 0;padding:10px 14px;border-left:3px solid #7c3aed;background:#f5f3ff;font-size:.85rem;line-height:1.7>";
-      html += "<strong>冲击电压与暂态过电压确定 (Table 12)</strong><br>";
+      html += "<strong>冲击电压与暂态过电压确定 (" + (is62477 ? 'IEC 62477-1 ' : '') + tblRef + ")</strong><br>";
       html += "&nbsp;&nbsp;AC侧: 系统电压 " + d.sysVAC + " V, OVC " + ovcLabel(d.ovc_AC) + " → 冲击电压 = <strong>" + d.impAC + " kV</strong> (电网电路，不允许插值，向上取整)<br>";
       html += "&nbsp;&nbsp;DC侧: 系统电压 " + d.sysVDC + " V, OVC " + ovcLabel(d.ovc_DC);
       if(d.isolation === 'isolated') html += " (隔离降档)";
       html += " → 冲击电压 = <strong>" + d.impDC + " kV</strong>";
-      if(d.impDC <= 2.5) html += " (PV最低2.5kV)";
+      if(!is62477 && d.impDC <= 2.5) html += " (PV最低2.5kV)";
       html += " (PV电路，允许插值)<br>";
       if(tovInfo){
-        html += "&nbsp;&nbsp;暂态过电压: Table 12 第6列 → " + (tovInfo.peak/1000).toFixed(2) + " kV pk / " + (tovInfo.rms/1000).toFixed(2) + " kV rms (仅电网电路)<br>";
+        html += "&nbsp;&nbsp;暂态过电压: " + tblRef + " 第6列 → " + (tovInfo.peak/1000).toFixed(2) + " kV pk / " + (tovInfo.rms/1000).toFixed(2) + " kV rms (仅电网电路)<br>";
       }
       html += "</div>";
     }
@@ -316,30 +329,31 @@
       } else {
         // IEC clearance with full detail chain
         var det = r.clrDetail;
+        var clrTblRef = (d.std === 'iec62477') ? 'IEC 62477-1 Table 10' : _t("safe.chain.clrT13");
         txt += "<strong>" + _t("safe.chain.clrIec") + "</strong><br>";
         if(det){
           if(det.type === 'reinf'){
-            txt += "&nbsp;&nbsp;" + _t("safe.chain.clrA") + ": " + det.impKV + " kV " + _t("safe.chain.clrT13") + " = <span style=\"font-weight:600\">" + det.clrA + " mm</span><br>";
-            txt += "&nbsp;&nbsp;" + _t("safe.chain.clrB") + ": " + det.wrkPeak + " V × 1.6 " + _t("safe.chain.clrT13") + " = <span style=\"font-weight:600\">" + det.clrB + " mm</span><br>";
+            txt += "&nbsp;&nbsp;" + _t("safe.chain.clrA") + ": " + det.impKV + " kV " + clrTblRef + " = <span style=\"font-weight:600\">" + det.clrA + " mm</span><br>";
+            txt += "&nbsp;&nbsp;" + _t("safe.chain.clrB") + ": " + det.wrkPeak + " V × 1.6 " + clrTblRef + " = <span style=\"font-weight:600\">" + det.clrB + " mm</span><br>";
             if(det.clrC !== undefined){
-              txt += "&nbsp;&nbsp;" + _t("safe.chain.clrC") + ": " + (det.tovPeakV/1000).toFixed(2) + " kV × 1.6 " + _t("safe.chain.clrT13") + " = <span style=\"font-weight:600\">" + det.clrC + " mm</span><br>";
+              txt += "&nbsp;&nbsp;" + _t("safe.chain.clrC") + ": " + (det.tovPeakV/1000).toFixed(2) + " kV × 1.6 " + clrTblRef + " = <span style=\"font-weight:600\">" + det.clrC + " mm</span><br>";
             } else {
               txt += "&nbsp;&nbsp;" + _t("safe.chain.clrCna") + "<br>";
             }
           } else if(det.type === 'func'){
-            txt += "&nbsp;&nbsp;" + _t("safe.chain.clrImp") + ": " + det.impKV + " kV " + _t("safe.chain.clrT13") + " = <span style=\"font-weight:600\">" + det.cImp + " mm</span><br>";
+            txt += "&nbsp;&nbsp;" + _t("safe.chain.clrImp") + ": " + det.impKV + " kV " + clrTblRef + " = <span style=\"font-weight:600\">" + det.cImp + " mm</span><br>";
             if(det.cWk !== undefined){
-              txt += "&nbsp;&nbsp;" + _t("safe.chain.clrWk") + ": " + det.wrkPeak + " V " + _t("safe.chain.clrT13") + " = <span style=\"font-weight:600\">" + det.cWk + " mm</span><br>";
+              txt += "&nbsp;&nbsp;" + _t("safe.chain.clrWk") + ": " + det.wrkPeak + " V " + clrTblRef + " = <span style=\"font-weight:600\">" + det.cWk + " mm</span><br>";
             }
           } else {
             // basic/supp
-            txt += "&nbsp;&nbsp;" + _t("safe.chain.clrImp") + ": " + det.impKV + " kV " + _t("safe.chain.clrT13") + " = <span style=\"font-weight:600\">" + det.cImp + " mm</span><br>";
+            txt += "&nbsp;&nbsp;" + _t("safe.chain.clrImp") + ": " + det.impKV + " kV " + clrTblRef + " = <span style=\"font-weight:600\">" + det.cImp + " mm</span><br>";
             if(det.cTov !== undefined){
-              txt += "&nbsp;&nbsp;" + _t("safe.chain.clrC") + ": " + (det.tovPeakV/1000).toFixed(2) + " kV × 1.6 " + _t("safe.chain.clrT13") + " = <span style=\"font-weight:600\">" + det.cTov + " mm</span><br>";
+              txt += "&nbsp;&nbsp;" + _t("safe.chain.clrC") + ": " + (det.tovPeakV/1000).toFixed(2) + " kV × 1.6 " + clrTblRef + " = <span style=\"font-weight:600\">" + det.cTov + " mm</span><br>";
             } else {
               txt += "&nbsp;&nbsp;" + _t("safe.chain.clrCna") + "<br>";
             }
-            txt += "&nbsp;&nbsp;" + _t("safe.chain.clrWk") + ": " + det.wrkPeak + " V " + _t("safe.chain.clrT13") + " = <span style=\"font-weight:600\">" + det.cWk + " mm</span><br>";
+            txt += "&nbsp;&nbsp;" + _t("safe.chain.clrWk") + ": " + det.wrkPeak + " V " + clrTblRef + " = <span style=\"font-weight:600\">" + det.cWk + " mm</span><br>";
           }
           // Final clearance with altitude factor
           var clrBase = (r.reqClr / d.altk).toFixed(2);
@@ -364,7 +378,8 @@
         if(r.crFloorApplied) txt += " → Cr≥Cl: " + r.reqClr + " mm";
         txt += " → " + _t("safe.chain.reqCrp") + " = <strong>" + r.reqCrp + " mm</strong>";
       } else {
-        txt += "<br><strong>" + _t("safe.chain.crpIec") + "</strong> "+_t("safe.chain.workV") + " " + r.vrms + " V, PD" + d.pd + ", MG-" + (d.mg||'II').toUpperCase() + ", " + _t("safe.chain.iecTableBase");
+        var iec62477Tbl = (d.std === 'iec62477') ? 'IEC 62477-1 Table 11' : _t("safe.chain.iecTableBase");
+        txt += "<br><strong>" + _t("safe.chain.crpIec") + "</strong> "+_t("safe.chain.workV") + " " + r.vrms + " V, PD" + d.pd + ", MG-" + (d.mg||'II').toUpperCase() + ", " + iec62477Tbl;
         txt += " ~" + crpBase + " mm";
         if(mult > 1) txt += " × " + _t("safe.chain.insMult") + "×" + mult;
         if(r.crFloorApplied) txt += " → Cr≥Cl: " + r.reqClr + " mm";
@@ -373,6 +388,7 @@
 
       // ── Warnings/notes ──
       if(r.forcedReinforced) txt += "<br><span style=color:#f59e0b>" + _t("safe.chain.warnGnd2") + "</span>";
+      if(r.grIIIbNoData) txt += "<br><span style=color:#f59e0b>" + _t("safe.chain.warnIIIb62477") + "</span>";
       if(r.tbl241Note) txt += "<br><span style=color:#f59e0b>" + _t("safe.chain.warnT241b") + "</span>";
       if(r.recurringPeakOk === false) txt += "<br><span style=color:#ef4444>" + _t("safe.chain.warnPeakB") + "</span>";
       txt += "</div>";
@@ -388,7 +404,7 @@
     // Show export button after report generation
     var eg=document.getElementById('exportSafeGroup');if(eg)eg.style.display='';
     var n=new Date(),locale=_getLang()==='en'?'en-US':'zh-CN',ds=n.toLocaleDateString(locale,{year:"numeric",month:"2-digit",day:"2-digit"}),ts=n.toLocaleTimeString(locale,{hour:"2-digit",minute:"2-digit"});
-    var sr="";d.results.forEach(function(r){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLine");var f=r.forcedReinforced?' '+_t("safe.chain.forcedReinf"):'';var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';var pcb=r.pcb?_t("safe.pcb.yes"):_t("safe.pcb.no");sr+="<tr><td>"+(d.results.indexOf(r)+1)+"</td><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+_t(r.insL)+f+"</td><td>"+pcb+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+pw+"</td></tr>";});
+    var sr="";d.results.forEach(function(r){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLine");var f=r.forcedReinforced?' '+_t("safe.chain.forcedReinf"):'';var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';var iiiB=r.grIIIbNoData?' '+_t("safe.chain.warnIIIb62477"):'';var pcb=r.pcb?_t("safe.pcb.yes"):_t("safe.pcb.no");sr+="<tr><td>"+(d.results.indexOf(r)+1)+"</td><td>"+r.name+g+"</td><td>"+r.vrms+"</td><td>"+_t(r.insL)+f+"</td><td>"+pcb+"</td><td>"+r.reqClr+t241+"</td><td>"+r.reqCrp+iiiB+pw+"</td></tr>";});
 
     var isoLabel = (d.isolation==='isolated')?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
 
@@ -400,7 +416,7 @@
 
     /* ── Build base params table based on standard ─── */
     var baseTable;
-    if(d.std === 'iec'){
+    if(d.std === 'iec' || d.std === 'iec62477'){
       baseTable=
         "<tr><td>"+_t("safe.report.std")+"</td><td>"+sot("sStd")+"</td></tr>"
         +"<tr><td>"+_t("safe.report.pd")+"</td><td>PD "+d.pd+"</td></tr>"
@@ -457,7 +473,7 @@
     css+='</style>';
 
     /* ── Results rows ─── */
-    d.results.forEach(function(r,i){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLineShort");var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';var pcb=r.pcb?_t("safe.pcb.yes"):_t("safe.pcb.no");sr+='<tr><td>'+(i+1)+'</td><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+_t(r.insL)+'</td><td>'+pcb+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+pw+'</td></tr>'});
+    d.results.forEach(function(r,i){var g=r.toGnd?' '+_t("safe.chain.toGnd"):' '+_t("safe.chain.lineLineShort");var pw=(r.recurringPeakOk===false)?' '+_t("safe.chain.warnPeak"):'';var t241=r.tbl241Note?' '+_t("safe.chain.warnT241"):'';var iiiB=r.grIIIbNoData?' '+_t("safe.chain.warnIIIb62477"):'';var pcb=r.pcb?_t("safe.pcb.yes"):_t("safe.pcb.no");sr+='<tr><td>'+(i+1)+'</td><td>'+r.name+g+'</td><td>'+r.vrms+'</td><td>'+_t(r.insL)+'</td><td>'+pcb+'</td><td>'+r.reqClr+t241+'</td><td>'+r.reqCrp+iiiB+pw+'</td></tr>'});
 
     var isoLabel = (d.isolation==='isolated')?_t("safe.report.iso.yes"):_t("safe.report.iso.no");
     var n=new Date(),locale=_getLang()==='en'?'en-US':'zh-CN',ds=n.toLocaleDateString(locale,{year:"numeric",month:"2-digit",day:"2-digit"});
@@ -470,7 +486,7 @@
 
     /* ── Build project info + base params based on standard ─── */
     var projInfo, baseParams;
-    if(d.std === 'iec'){
+    if(d.std === 'iec' || d.std === 'iec62477'){
       projInfo=
         '<tr><td>'+_t("safe.report.std")+'</td><td>'+sot("sStd")+'</td></tr>'
         +'<tr><td>'+_t("safe.report.proj")+'</td><td>'+(pn||'-')+'</td></tr>';
@@ -482,7 +498,7 @@
         +'<tr><td>'+_t("safe.report.dcOvc")+'</td><td>OVC '+(d.ovc_DC?d.ovc_DC.toUpperCase():'II')+' ('+d.impDC+' kV)' +(d.isolation==='isolated'?' '+_t("safe.word.addNote"):'')+'</td></tr>'
         +'<tr><td>'+_t("safe.report.acV")+'</td><td>'+sysVAC_val+' V</td></tr>'
         +'<tr><td>'+_t("safe.report.dcV")+'</td><td>'+sysVDC_val+' V</td></tr>'
-        +'<tr><td>'+_t("safe.word.note")+'</td><td>'+_t("safe.word.noteIec")+'</td></tr>';
+        +'<tr><td>'+_t("safe.word.note")+'</td><td>'+(d.std === 'iec62477' ? _t("safe.word.noteIec62477") : _t("safe.word.noteIec"))+'</td></tr>';
     } else {
       projInfo=
         '<tr><td>'+_t("safe.report.std")+'</td><td>'+sot("sStd")+'</td></tr>'

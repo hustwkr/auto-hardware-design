@@ -43,8 +43,84 @@
     [4.000, 56.0, 56.0, 56.0, 56.0] // 4000V → 40.0kV impulse
   ];
 
-  /* Combined lookup table for UL clearance (standard + extended) */
+  /* ── Combined lookup table for UL clearance (standard + extended) */
   CLR_TBL_UL = CLR_TBL_UL.concat(CLR_TBL_UL_EXT);
+
+  /* ════════════════════════════════════════════════════════════════
+     IEC 62477-1:2012 — Safety of power converter systems (PECS)
+     Clearance / creepage per Table 9 / Table 10 / Table 11.
+
+     Table 9  — Impulse withstand voltage & temporary overvoltage
+                (DC system voltage breakpoints differ from 62109).
+     Table 10 — Clearance distances (PD1–PD4, functional/basic/
+                supplementary insulation).
+     Table 11 — Creepage distances (PD1–PD3; Group IIIb columns are
+                intentionally blank in the standard — no IIIb values
+                are provided for PD2/PD3).
+  ════════════════════════════════════════════════════════════════ */
+
+  /* Table 9 — Impulse withstand (V). Columns: [sysV AC, sysV DC,
+     OVC-I, OVC-II, OVC-III, OVC-IV, TOV rms, TOV peak] */
+  var TBL9_AC = [
+    [50,  75,  330,  500,   800,   1500,  1250, 1770],
+    [100, 150, 500,  800,   1500,  2500,  1300, 1840],
+    [150, 225, 800,  1500,  2500,  4000,  1350, 1910],
+    [300, 450, 1500, 2500,  4000,  6000,  1500, 2120],
+    [600, 900, 2500, 4000,  6000,  8000,  1800, 2550],
+    [1000,1500,4000, 6000,  8000,  12000, 2200, 3110]
+  ];
+
+  /* Table 10 — Clearance (mm). Columns: [impulse V, TOV peak V,
+     working recurring peak V, PD1, PD2, PD3, PD4] */
+  var CLR_TBL_IEC62477 = [
+    [330,  330,  260,  0.01, 0.2,  0.8,  1.6],
+    [500,  500,  400,  0.04, 0.2,  0.8,  1.6],
+    [800,  710,  560,  0.10, 0.2,  0.8,  1.6],
+    [1500, 1270, 1010, 0.5,  0.5,  0.8,  1.6],
+    [2500, 2220, 1770, 1.5,  1.5,  1.5,  1.6],
+    [4000, 3430, 2740, 3.0,  3.0,  3.0,  3.0],
+    [6000, 4890, 3910, 5.5,  5.5,  5.5,  5.5],
+    [8000, 6060, 4840, 8.0,  8.0,  8.0,  8.0],
+    [12000,9430, 7540, 14.0, 14.0, 14.0, 14.0]
+  ];
+
+  /* Table 11 — Creepage (mm). Columns same layout as 62109 Table 14:
+     [Vrms, PWBs-PD1, PWBs-PD2, Other-PD1,
+      Other-PD2-I, II, IIIa, IIIb,
+      Other-PD3-I, II, IIIa, IIIb]
+     IIIb columns (idx 7, 11) are null — standard provides no values. */
+  var CRP_TBL_IEC62477 = [
+    [2,    0.025, 0.04,  0.056, 0.35, 0.35, 0.35, null, 0.87, 0.87, 0.87, null],
+    [5,    0.025, 0.04,  0.065, 0.37, 0.37, 0.37, null, 0.92, 0.92, 0.92, null],
+    [10,   0.025, 0.04,  0.08,  0.40, 0.40, 0.40, null, 1.0,  1.0,  1.0,  null],
+    [25,   0.025, 0.04,  0.125, 0.50, 0.50, 0.50, null, 1.25, 1.25, 1.25, null],
+    [32,   0.025, 0.04,  0.14,  0.53, 0.53, 0.53, null, 1.3,  1.3,  1.3,  null],
+    [40,   0.025, 0.04,  0.16,  0.56, 0.80, 1.1,  null, 1.4,  1.6,  1.8,  null],
+    [50,   0.025, 0.04,  0.18,  0.60, 0.85, 1.20, null, 1.5,  1.7,  1.9,  null],
+    [63,   0.04,  0.063, 0.20,  0.63, 0.90, 1.25, null, 1.6,  1.8,  2.0,  null],
+    [80,   0.063, 0.10,  0.22,  0.67, 0.95, 1.3,  null, 1.7,  1.9,  2.1,  null],
+    [100,  0.10,  0.16,  0.25,  0.71, 1.0,  1.4,  null, 1.8,  2.0,  2.2,  null],
+    [125,  0.16,  0.25,  0.28,  0.75, 1.05, 1.5,  null, 1.9,  2.1,  2.4,  null],
+    [160,  0.25,  0.40,  0.32,  0.80, 1.1,  1.6,  null, 2.0,  2.2,  2.5,  null],
+    [200,  0.40,  0.63,  0.42,  1.0,  1.4,  2.0,  null, 2.5,  2.8,  3.2,  null],
+    [250,  0.56,  1.0,   0.56,  1.25, 1.8,  2.5,  null, 3.2,  3.6,  4.0,  null],
+    [320,  0.75,  1.6,   0.75,  1.6,  2.2,  3.2,  null, 4.0,  4.5,  5.0,  null],
+    [400,  1.0,   2.0,   1.0,   2.0,  2.8,  4.0,  null, 5.0,  5.6,  6.3,  null],
+    [500,  1.3,   2.5,   1.3,   2.5,  3.6,  5.0,  null, 6.3,  7.1,  8.0,  null],
+    [630,  1.8,   3.2,   1.8,   3.2,  4.5,  6.3,  null, 8.0,  9.0,  10.0, null],
+    [800,  2.4,   4.0,   2.4,   4.0,  5.6,  8.0,  null, 10.0, 11.0, 12.5, null],
+    [1000, 3.2,   5.0,   3.2,   5.0,  7.1,  10.0, null, 12.5, 14.0, 16.0, null],
+    [1250, 4.2,   6.3,   4.2,   6.3,  9.0,  12.5, null, 16.0, 18.0, 20.0, null],
+    [1600, null,  null,  5.6,   8.0,  11.0, 16.0, null, 20.0, 22.0, 25.0, null],
+    [2000, null,  null,  7.5,   10.0, 14.0, 20.0, null, 25.0, 28.0, 32.0, null],
+    [2500, null,  null,  10.0,  12.5, 18.0, 25.0, null, 32.0, 36.0, 40.0, null],
+    [3200, null,  null,  12.5,  16.0, 22.0, 32.0, null, 40.0, 45.0, 50.0, null],
+    [4000, null,  null,  16.0,  20.0, 28.0, 40.0, null, 50.0, 56.0, 63.0, null],
+    [5000, null,  null,  20.0,  25.0, 36.0, 50.0, null, 63.0, 71.0, 80.0, null],
+    [6300, null,  null,  25.0,  32.0, 45.0, 63.0, null, 80.0, 90.0, 100.0, null],
+    [8000, null,  null,  32.0,  40.0, 56.0, 81.0, null, 100.0, 110.0, 125.0, null],
+    [10000,null,  null,  40.0,  50.0, 71.0, 100.0,null, 125.0, 140.0, 160.0, null]
+  ];
 
   /* ── IEC Creepage Table per IEC 62109-1 Table 14 ── */
   /* [Vrms, PWBs-PD1, PWBs-PD2, Other-PD1, Other-PD2-I, Other-PD2-II, Other-PD2-IIIa, Other-PD2-IIIb,
@@ -292,10 +368,44 @@
     return { peak: last[1], rms: last[2] };
   }
 
+  /* ── IEC 62477-1 Table 9 — impulse withstand voltage (returns kV) ─── */
+  function lookupImpulse62477(sysV, ovcClass, interp, circType) {
+    // sysV: system voltage (V)
+    // ovcClass: 1-4 for OVC I-IV
+    // interp: allow linear interpolation
+    // circType: 'ac' | 'dc'
+    // Returns impulse withstand voltage in kV (Table 9 values are in V)
+    // Table 9 layout: [sysV AC, sysV DC, OVC-I, OVC-II, OVC-III, OVC-IV, TOV rms, TOV peak]
+    // OVC column index = 1 + ovcClass (OVC-I→idx2 ... OVC-IV→idx5)
+    var ov = Math.min(ovcClass || 2, 4);
+    for (var i = 0; i < TBL9_AC.length; i++) {
+      var rowV = (circType === 'dc') ? TBL9_AC[i][1] : TBL9_AC[i][0];
+      if (sysV == rowV) return TBL9_AC[i][1 + ov] / 1000;
+      if (sysV < rowV) {
+        if (!interp || i == 0) return TBL9_AC[i][1 + ov] / 1000;
+        var x0 = (circType === 'dc') ? TBL9_AC[i-1][1] : TBL9_AC[i-1][0];
+        var x1 = rowV;
+        var y0 = TBL9_AC[i-1][1 + ov], y1 = TBL9_AC[i][1 + ov];
+        return Math.round((y0 + (sysV - x0) / (x1 - x0) * (y1 - y0)) * 100) / 100 / 1000;
+      }
+    }
+    var last = TBL9_AC[TBL9_AC.length - 1];
+    return last[1 + ov] / 1000;
+  }
+
+  /* ── IEC 62477-1 Table 9 — temporary overvoltage (V) ─── */
+  function lookupTov62477(sysV) {
+    for (var i = 0; i < TBL9_AC.length; i++) {
+      if (sysV <= TBL9_AC[i][0]) return { rms: TBL9_AC[i][6], peak: TBL9_AC[i][7] };
+    }
+    var last = TBL9_AC[TBL9_AC.length - 1];
+    return { rms: last[6], peak: last[7] };
+  }
+
   function lookupClr(impulseV, pd, standard, interp, col) {
     // impulseV: in Volts peak (IEC) or Volts (UL: kVRMS*1000 from caller)
     // pd: pollution degree 1-4
-    // standard: 'iec' | 'ul'
+    // standard: 'iec' | 'ul' | 'iec62477'
     // col: voltage column index for IEC table (default 0 = impulse). Ignored for UL.
     if (impulseV <= 0) return 0;
 
@@ -315,19 +425,21 @@
       return CLR_TBL_UL[CLR_TBL_UL.length - 1][pdIdx];
     }
 
-    // IEC extended table: [impulse_V, tov_peak_V, wrk_peak_surr_V, PD1, PD2, PD3]
-    // PD columns at index 3,4,5 → offset = pd (since pd=1→idx3, pd=2→idx4, pd=3→idx5)
+    // IEC 62477-1 Table 10: [impulse, tov_peak, wrk_recurring_peak, PD1, PD2, PD3, PD4]
+    // IEC 62109-1 Table 13: [impulse, tov_peak, wrk_peak_surr, PD1, PD2, PD3]
+    // PD columns at index 3..6 → offset = pd (pd=1→idx3, pd=4→idx6)
+    var tbl = (standard === 'iec62477') ? CLR_TBL_IEC62477 : CLR_TBL_IEC;
     var colIdx = col || 0;
-    for (var i = 0; i < CLR_TBL_IEC.length; i++) {
-      if (impulseV == CLR_TBL_IEC[i][colIdx]) return CLR_TBL_IEC[i][2 + pd];
-      if (impulseV < CLR_TBL_IEC[i][colIdx]) {
-        if (!interp || i == 0) return CLR_TBL_IEC[i][2 + pd];
-        var x0 = CLR_TBL_IEC[i-1][colIdx], x1 = CLR_TBL_IEC[i][colIdx];
-        var y0 = CLR_TBL_IEC[i-1][2 + pd], y1 = CLR_TBL_IEC[i][2 + pd];
+    for (var i = 0; i < tbl.length; i++) {
+      if (impulseV == tbl[i][colIdx]) return tbl[i][2 + pd];
+      if (impulseV < tbl[i][colIdx]) {
+        if (!interp || i == 0) return tbl[i][2 + pd];
+        var x0 = tbl[i-1][colIdx], x1 = tbl[i][colIdx];
+        var y0 = tbl[i-1][2 + pd], y1 = tbl[i][2 + pd];
         return Math.round((y0 + (impulseV - x0) / (x1 - x0) * (y1 - y0)) * 1000) / 1000;
       }
     }
-    return CLR_TBL_IEC[CLR_TBL_IEC.length - 1][2 + pd];
+    return tbl[tbl.length - 1][2 + pd];
   }
 
   function lookupCrp(rmsV, pd, mgGroup, standard, pcb, interp) {
@@ -365,11 +477,13 @@
     // Column layout: [Vrms, PWBs-PD1(1), PWBs-PD2(2), Other-PD1(3),
     //   Other-PD2-I(4), Other-PD2-II(5), Other-PD2-IIIa(6), Other-PD2-IIIb(7),
     //   Other-PD3-I(8), Other-PD3-II(9), Other-PD3-IIIa(10), Other-PD3-IIIb(11)]
-    var tbl = CRP_IEC;
+    var tbl = (standard === 'iec62477') ? CRP_TBL_IEC62477 : CRP_IEC;
     var mi = MG_I[mgGroup] || 0;
     var col = pcb && pd <= 2 ? 2 : (pd === 1 ? 3 : (pd === 2 ? 4 + mi : 8 + mi));
     // PCB columns (PWBs) only cover ≤1250V; above that, fall back to Other columns
     var pcbFallback = pcb && pd <= 2 ? (pd === 1 ? 3 : 4 + mi) : -1;
+    // IEC 62477 Table 11 has no Group IIIb values (columns 7 and 11 are null)
+    var is62477 = (standard === 'iec62477');
     for (var i = 0; i < tbl.length; i++) {
       if (v == tbl[i][0]) {
         var val = tbl[i][col];
@@ -484,24 +598,27 @@
     return v; // Already at or below the lowest level
   }
 
-  /* ── Table 13 lookup — IEC clearance from peak voltage & PD ─── */
-  function clrFromPeak(peakV, pd, col) {
+  /* ── Table 13 / Table 10 lookup — IEC clearance from peak voltage & PD ─── */
+  function clrFromPeak(peakV, pd, col, standard) {
     // peakV: in Volts (e.g. impulse Vpeak, TOV Vpeak, working Vpeak)
     // pd: pollution degree (default 2)
     // col: voltage column index — 0=impulse (default), 1=tov_peak, 2=wrk_peak_surr
-    return lookupClr(peakV, pd || 2, 'iec', true, col);
+    // standard: 'iec' (62109-1 Table 13) | 'iec62477' (Table 10)
+    return lookupClr(peakV, pd || 2, standard || 'iec', true, col);
   }
 
-  /* ── Clearance calculation per IEC 62109-1 §7.3.7 / Table 14 ─── */
-  function calcClearance(vrms, impKV, tovPeakV, isMains, insType, pd) {
+  /* ── Clearance calculation per IEC 62109-1 §7.3.7 / Table 14, or IEC 62477-1 Table 10 ─── */
+  function calcClearance(vrms, impKV, tovPeakV, isMains, insType, pd, standard) {
     // Parameters:
     //   vrms     — working RMS voltage (V)
-    //   impKV    — impulse withstand voltage from Table 12 (kV)
-    //   tovPeakV — temporary overvoltage peak from Table 12 col 6 (V), null if N/A
+    //   impKV    — impulse withstand voltage from Table 12 / Table 9 (kV)
+    //   tovPeakV — temporary overvoltage peak (V), null if N/A
     //   isMains  — true for AC mains circuits, false for DC/PV/internal
     //   insType  — 'func' | 'basic' | 'supp' | 'reinf'
-    //   pd       — pollution degree 1-3
+    //   pd       — pollution degree 1-4
+    //   standard — 'iec' | 'iec62477'
 
+    var std = standard || 'iec';
     var impPeak = impKV * 1000;            // kV → V
     var wrkPeak = vrms * Math.sqrt(2);     // working voltage peak
     var detail = null;                     // intermediate values for report
@@ -514,13 +631,13 @@
       //   (c) 1.6 × TOV peak → Table 13 (mains circuits only)
 
       var impNext = nextImpulseLevel(impKV);          // step up one level (kV)
-      var clrA    = clrFromPeak(impNext * 1000, pd);  // criterion (a): stepped-up impulse
+      var clrA    = clrFromPeak(impNext * 1000, pd, 0, std);  // criterion (a): stepped-up impulse
 
-      var clrB    = clrFromPeak(wrkPeak * 1.6, pd, 2);   // criterion (b): col 2 = wrk_peak_surr
+      var clrB    = clrFromPeak(wrkPeak * 1.6, pd, 2, std);   // criterion (b): col 2 = wrk_peak_surr
 
       var reqClr;
       if (isMains && tovPeakV) {
-        var clrC  = clrFromPeak(tovPeakV * 1.6, pd, 1);  // criterion (c): col 1 = tov_peak
+        var clrC  = clrFromPeak(tovPeakV * 1.6, pd, 1, std);  // criterion (c): col 1 = tov_peak
         reqClr    = Math.max(clrA, clrB, clrC);       // most stringent of all three
         detail = { type:'reinf', impKV: impNext, clrA: Math.round(clrA*10)/10, wrkPeak: Math.round(wrkPeak), clrB: Math.round(clrB*10)/10, tovPeakV: tovPeakV, clrC: Math.round(clrC*10)/10 };
       } else {
@@ -536,9 +653,9 @@
       // Since per-node OVC is not tracked, we use the more conservative approach:
       // for mains circuits → max(impulse, working peak) covers both cases
 
-      var clrImp = clrFromPeak(impPeak, pd);
+      var clrImp = clrFromPeak(impPeak, pd, 0, std);
       if (isMains) {
-        var wrkClr = clrFromPeak(wrkPeak, pd);
+        var wrkClr = clrFromPeak(wrkPeak, pd, 0, std);
         detail = { type:'func', impKV: impKV, cImp: Math.round(clrImp*10)/10, wrkPeak: Math.round(wrkPeak), cWk: Math.round(wrkClr*10)/10 };
         return { reqClr: Math.max(clrImp, wrkClr), detail };
       }
@@ -549,10 +666,10 @@
       /* ── BASIC / SUPPLEMENTARY INSULATION ────────────────── */
       if (isMains) {
         // Mains circuits: most stringent of impulse, TOV peak, working voltage peak
-        var cImp   = clrFromPeak(impPeak, pd);
-        var cWk    = clrFromPeak(wrkPeak, pd);
+        var cImp   = clrFromPeak(impPeak, pd, 0, std);
+        var cWk    = clrFromPeak(wrkPeak, pd, 0, std);
         if (tovPeakV) {
-          var cTov  = clrFromPeak(tovPeakV, pd);
+          var cTov  = clrFromPeak(tovPeakV, pd, 0, std);
           detail = { type:'basic', impKV: impKV, cImp: Math.round(cImp*10)/10, wrkPeak: Math.round(wrkPeak), cWk: Math.round(cWk*10)/10, tovPeakV: tovPeakV, cTov: Math.round(cTov*10)/10 };
           return { reqClr: Math.max(cImp, cWk, cTov), detail };
         }
@@ -560,8 +677,8 @@
         return { reqClr: Math.max(cImp, cWk), detail };
       } else {
         // Non-mains (PV/DC): most stringent of impulse or working voltage recurring peak
-        var cI = clrFromPeak(impPeak, pd);
-        var cW = clrFromPeak(wrkPeak, pd);
+        var cI = clrFromPeak(impPeak, pd, 0, std);
+        var cW = clrFromPeak(wrkPeak, pd, 0, std);
         detail = { type:'basic', impKV: impKV, cImp: Math.round(cI*10)/10, wrkPeak: Math.round(wrkPeak), cWk: Math.round(cW*10)/10 };
         return { reqClr: Math.max(cI, cW), detail };
       }
@@ -611,16 +728,16 @@
     var reqClr;
     var clrDetail = null;  // intermediate values for detailed report (IEC only)
     var interpUsed = false;  // true when linear interpolation was applied (UL secondary circuits)
-    if (standard === 'iec') {
+    if (standard === 'iec' || standard === 'iec62477') {
       // sysVAC: AC system voltage for TOV lookup (from calcSafety)
       var tovPeak = null;
       /* TOV only applies to circuit-to-earth insulation — within-circuit nodes skip it */
       if (isMains && sysVAC && toGnd) {
-        var tovInfo = lookupTov(sysVAC);
+        var tovInfo = standard === 'iec62477' ? lookupTov62477(sysVAC) : lookupTov(sysVAC);
         tovPeak = tovInfo ? tovInfo.peak : null;
       }
 
-      var clrResult = calcClearance(vrms, impKV, tovPeak, isMains, effIns, pd);
+      var clrResult = calcClearance(vrms, impKV, tovPeak, isMains, effIns, pd, standard);
       reqClr = clrResult.reqClr;
       clrDetail = clrResult.detail;
     } else {
@@ -700,14 +817,19 @@
       reqCrp = Math.round(0.15 * 10) / 10;
       baseCrp = reqCrp;
     } else {
-      var rawCrp = lookupCrp(vrms, localPd, mgGroup, standard, pcb ? 1 : 0, true);
+      // IEC 62477 Table 11 provides no Group IIIb creepage values (columns 7/11 null).
+      // Fall back to Group IIIa and flag it so the UI can warn.
+      var grIIIbNoData = (standard === 'iec62477' && mgGroup === 'iiib');
+      var effMg = grIIIbNoData ? 'iiia' : mgGroup;
+      var rawCrp = lookupCrp(vrms, localPd, effMg, standard, pcb ? 1 : 0, true);
       if (rawCrp === null) {
         reqCrp = Math.round(reqClr * 10) / 10;
         baseCrp = reqCrp;
       } else {
+        baseCrp = rawCrp;
         reqCrp = Math.round(rawCrp * crpMult * 10) / 10;
-        baseCrp = reqCrp;
       }
+      if (grIIIbNoData) grIIIbNoData = true;
     }
 
     /* ── P1: Cr ≥ Cl floor constraint (UL 840 §3.2.2 + Notebook rule) ─── */
@@ -779,6 +901,7 @@
       tbl1Note: tbl1Note,                // UL 1741 Table 1 enclosure floor: null/clr/crp/both
       interpUsed: interpUsed,              // true when linear interpolation was applied
       grIIIbNa: grIIIbNa,                 // Group IIIb @ PD3 >630V → N/A warning (fallback to IIIa)
+      grIIIbNoData: (standard === 'iec62477' && mgGroup === 'iiib'), // 62477 Table 11: no IIIb creepage values
       crFloorApplied: crFloorApplied,      // true when Cr ≥ Cl floor constraint raised creepage
       baseCrp: baseCrp                     // Table 14 base creepage before Cr≥Cl floor
     };
@@ -796,7 +919,9 @@
     var nodes    = params.nodes || [];
 
     // Impulse withstand voltage (kV) — accept from caller or compute via lookupImpulse as fallback
-    var impAC = typeof params.impAC === 'number' ? params.impAC : lookupImpulse(sysVAC, params.ovcClass||2, false);
+    var is62477 = (standard === 'iec62477');
+    var impAC = typeof params.impAC === 'number' ? params.impAC
+      : (is62477 ? lookupImpulse62477(sysVAC, params.ovcClass||2, false) : lookupImpulse(sysVAC, params.ovcClass||2, false));
 
     /* DC impulse: per IEC 62109-1 §7.3.7.1.2b — PV circuits have
        minimum 2.5kV regardless of system voltage. Use Table 12 lookup
@@ -806,11 +931,13 @@
       impDC = params.impDC;
     } else {
       // Table 12 lookup for DC system voltage at OVC II + minimum clamp
-      impDC = lookupImpulse(sysVDC, 2, true, 'dc');
+      impDC = is62477 ? lookupImpulse62477(sysVDC, 2, true, 'dc') : lookupImpulse(sysVDC, 2, true, 'dc');
     }
 
     // IEC 62109-1 §7.3.7.1.2b: PV circuits minimum 2.5kV impulse regardless of system voltage
     if (standard === 'iec') impDC = Math.max(impDC, 2.5);
+    // IEC 62477 Table 9 also clamps minimum impulse at 0.5 kV (OVC II baseline); no PV-specific floor
+    if (is62477) impDC = Math.max(impDC, 0.5);
 
     if (!nodes.length) return null;
 
@@ -837,6 +964,8 @@
     INS_LABELS: INS_LABELS, // Insulation type labels
     lookupImpulse: lookupImpulse,
     lookupTov: lookupTov,
+    lookupImpulse62477: lookupImpulse62477,
+    lookupTov62477: lookupTov62477,
     lookupClr: lookupClr,
     lookupCrp: lookupCrp,
     lookupRecurringPeakMax: lookupRecurringPeakMax, // UL 840 Table 9.3 PCB recurring peak check

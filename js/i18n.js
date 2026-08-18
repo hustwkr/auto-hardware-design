@@ -168,7 +168,7 @@
 
     /* Safety page */
     "safe.title":        { zh: "安规距离计算工具", en: "Creepage & Clearance Calculator" },
-    "safe.subtitle":     { zh: "IEC 62109-1 / UL 1741 爬电距离 + 电气间隙 | 适用于并网逆变器", en: "IEC 62109-1 / UL 1741 Creepage + Clearance | Grid-tied Inverter Design" },
+    "safe.subtitle":     { zh: "IEC 62109-1 / IEC 62477-1 / UL 1741 爬电距离 + 电气间隙 | 适用于并网逆变器/PECS", en: "IEC 62109-1 / IEC 62477-1 / UL 1741 Creepage + Clearance | Grid-tied Inverter / PECS Design" },
 
     /* Safety — standard system */
     "safe.standard":     { zh: "标准体系", en: "Standard System" },
@@ -472,6 +472,7 @@
     "safe.chain.pd":     { zh: "污染等级", en: "Pollution degree" },
     "safe.chain.mg":     { zh: "材料组", en: "Material group" },
     "safe.chain.warnGnd2":{ zh: "⚠ 对地节点，标准强制要求加强绝缘", en: "⚠ Ground node: standard requires reinforced" },
+    "safe.chain.warnIIIb62477":{ zh: "⚠ IEC 62477-1 Table 11 不提供 IIIb 材料组的爬电数值，已按 IIIa 组计算", en: "⚠ IEC 62477-1 Table 11 provides no Group IIIb creepage; computed as Group IIIa" },
     "safe.chain.warnT241b":{ zh: "⚠ UL Table 24.1最小值约束生效", en: "⚠ UL Table 24.1 minimum active" },
     "safe.chain.warnPeakB":{ zh: "🔴 UL §9.6 PCB峰值电压超限", en: "🔴 UL §9.6 PCB peak exceeded" },
     "safe.chain.toGnd":  { zh: "(对地)", en: "(To Gnd)" },
@@ -514,6 +515,7 @@
     "safe.word.insLvl":  { zh: "绝缘等级", en: "Insulation" },
     "safe.word.note":    { zh: "说明", en: "Note" },
     "safe.word.noteIec": { zh: "线间节点按IEC 62109-1 §7.3.7降一档计算电气间隙", en: "Line-line nodes derated one level per IEC 62109-1 §7.3.7" },
+    "safe.word.noteIec62477": { zh: "线间节点按IEC 62477-1 §4.4.7.3/4.4.7.4降一档计算电气间隙", en: "Line-line nodes derated one level per IEC 62477-1 §4.4.7.3/4.4.7.4" },
     "safe.word.noteUl":  { zh: "UL 电气间隙由相地额定系统电压(kVRMS)查表确定 (§25.4g)", en: "UL clearance from phase-ground rated sys voltage (kVRMS) per §25.4g" },
     "safe.word.addNote": { zh: "(隔离降档)", en: "(Isolated step-down)" },
 
