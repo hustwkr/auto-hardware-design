@@ -121,29 +121,50 @@ function saveDefaults(d) {
   fs.writeFileSync(DEF_FILE, JSON.stringify(d, null, 2), "utf-8");
 }
 
+// ── Defaults schema: allowed keys per section (strict — unknown keys rejected) ──
+var DEFAULTS_SCHEMA = {
+  capacitor: ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget","kva","kvb","cooling","scenario","capType","segments"],
+  safety:    ["sStd","sPd","sMg","sAlt","sIsolation","sOvc_AC","sOvc_DC","sSysV_AC","sSysV_DC","nodes"],
+  filter:    ["type","series","diff1","mfb2"],
+  pcb:       ["pcbWidth","pcbCopper","pcbPos","pcbDeltaT","pcbAmbTemp","pcbLength","pcbTargetI"]
+};
+// Nested object keys allowed inside filter sub-objects
+var FILTER_SUBKEYS = { diff1: ["fc","gain"], mfb2: ["fc","gain","Q"] };
+
 function validateDefaults(d) {
-  if (!d || typeof d !== "object") return { ok: false, error: "Body must be a JSON object" };
+  if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, error: "Body must be a JSON object" };
   var warnings = [];
-  // Validate capacitor section
-  if (d.capacitor) {
-    var capFields = ["l0","tmax","vrated","irated","dt0","workdays","warrantyTarget","kva","kvb","cooling","scenario","capType"];
-    capFields.forEach(function(k) {
-      if (d.capacitor[k] === undefined) warnings.push("capacitor." + k + " is missing");
-    });
-    if (d.capacitor.segments && !Array.isArray(d.capacitor.segments)) warnings.push("capacitor.segments must be an array");
-  } else {
-    warnings.push("capacitor section is missing");
+  // Reject unknown top-level sections (strict per README: 拒绝未知键)
+  for (var secName in d) {
+    if (!DEFAULTS_SCHEMA[secName]) return { ok: false, error: "Unknown section: " + secName };
   }
-  // Validate safety section
-  if (d.safety) {
-    var safFields = ["sStd","sPd","sMg","sAlt","sIsolation","sOvc_AC","sOvc_DC","sSysV_AC","sSysV_DC"];
-    safFields.forEach(function(k) {
-      if (d.safety[k] === undefined) warnings.push("safety." + k + " is missing");
-    });
-    if (d.safety.nodes && !Array.isArray(d.safety.nodes)) warnings.push("safety.nodes must be an array");
-  } else {
-    warnings.push("safety section is missing");
+  var sections = ["capacitor","safety","filter","pcb"];
+  for (var si = 0; si < sections.length; si++) {
+    var sec = sections[si];
+    var allowed = DEFAULTS_SCHEMA[sec];
+    if (d[sec] === undefined) { warnings.push(sec + " section is missing"); continue; }
+    if (typeof d[sec] !== "object" || Array.isArray(d[sec])) return { ok: false, error: sec + " must be an object" };
+    // Reject unknown keys within the section
+    for (var k in d[sec]) {
+      if (allowed.indexOf(k) === -1) return { ok: false, error: "Unknown key in " + sec + ": " + k };
+    }
+    for (var ai = 0; ai < allowed.length; ai++) {
+      if (d[sec][allowed[ai]] === undefined) warnings.push(sec + "." + allowed[ai] + " is missing");
+    }
   }
+  // filter sub-objects: reject unknown nested keys
+  var subs = ["diff1","mfb2"];
+  for (var bi = 0; bi < subs.length; bi++) {
+    var sub = subs[bi];
+    if (d.filter && d.filter[sub] !== undefined) {
+      if (typeof d.filter[sub] !== "object" || Array.isArray(d.filter[sub])) return { ok: false, error: "filter." + sub + " must be an object" };
+      for (var nk in d.filter[sub]) {
+        if (FILTER_SUBKEYS[sub].indexOf(nk) === -1) return { ok: false, error: "Unknown key in filter." + sub + ": " + nk };
+      }
+    }
+  }
+  if (d.capacitor && d.capacitor.segments !== undefined && !Array.isArray(d.capacitor.segments)) return { ok: false, error: "capacitor.segments must be an array" };
+  if (d.safety && d.safety.nodes !== undefined && !Array.isArray(d.safety.nodes)) return { ok: false, error: "safety.nodes must be an array" };
   return { ok: true, warnings: warnings.length > 0 ? warnings : undefined };
 }
 
@@ -159,8 +180,24 @@ function saveFeedback(feedback) {
   fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(feedback, null, 2), "utf-8");
 }
 
+// ── Feedback input sanitisation (defense in depth) ───────
+// Client renders via escapeHtml(); server additionally strips control
+// chars (log-injection / rendering abuse) and enforces length caps.
+function sanitizeText(s, maxLen, allowNewlines) {
+  if (typeof s !== "string") return "";
+  // Strip C0 controls except \n and \t; strip DEL and C1 range
+  var cleaned = allowNewlines
+    ? s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\u0080-\u009F]/g, "")
+    : s.replace(/[\x00-\x1F\x7F\u0080-\u009F]/g, "");
+  return cleaned.trim().slice(0, maxLen);
+}
+
 function addFeedback(name, title, content) {
   var feedback = loadFeedback();
+  name    = sanitizeText(name, 50, false);
+  title   = sanitizeText(title, 200, false);
+  content = sanitizeText(content, 10000, true);
+  if (!name || !title || !content) return null;
   var entry = {
     id: Date.now() + '-' + crypto.randomBytes(8).toString('hex'),
     name: name,
@@ -175,9 +212,21 @@ function addFeedback(name, title, content) {
 }
 
 // ── URL sanitisation ────────────────────────────────────
+// url.pathname is already percent-decoded by the URL parser, so
+// /..%2f..%2fetc arrives as /../../etc. Normalize with path.normalize
+// (collapses ../ segments) instead of string-stripping "..", which would
+// also mangle legitimate filenames like "file..js".
 function safePath(p) {
-  const cleaned = p.replace(/\.\./g, "").replace(/\/+/g, "/");
-  return cleaned.startsWith("/") ? cleaned : "/";
+  if (!p || p.indexOf("\0") !== -1) return "/";
+  const normalized = path.posix.normalize("/" + p.replace(/^\/+/, ""));
+  // normalize keeps leading "/" and collapses any ../ that would escape it
+  return normalized.startsWith("/") ? normalized : "/";
+}
+
+// True if fp is ROOT itself or a file inside the ROOT directory tree.
+function isWithinRoot(fp) {
+  const resolved = path.resolve(fp);
+  return resolved === ROOT || resolved.startsWith(ROOT + path.sep);
 }
 
 // ── Security headers (applied to every response) ────────
@@ -203,8 +252,7 @@ function json(res, code, data, corsAny) {
 }
 
 function serveFile(res, fp) {
-  const resolved = path.resolve(fp);
-  if (!resolved.startsWith(ROOT)) { res.writeHead(403, {"Content-Type":"text/plain"}); res.end("Forbidden"); return; }
+  if (!isWithinRoot(fp)) { res.writeHead(403, {"Content-Type":"text/plain"}); res.end("Forbidden"); return; }
   try {
     const data = fs.readFileSync(fp);
     const ext = path.extname(fp).toLowerCase();
@@ -321,7 +369,8 @@ http.createServer(async function (req, res) {
     const content = body.content || "";
     if (!name || !title || !content) { json(res, 400, { error: "Missing required fields (name, title, content)" }, true); return; }
     const entry = addFeedback(name, title, content);
-    console.log(`[FEEDBACK] New feedback from "${name}": "${title}" (ID: ${entry.id})`);
+    if (!entry) { json(res, 400, { error: "Missing required fields (name, title, content)" }, true); return; }
+    console.log(`[FEEDBACK] New feedback from "${entry.name}": "${entry.title}" (ID: ${entry.id})`);
     json(res, 201, { success: true, id: entry.id }, true); return;
   }
 
