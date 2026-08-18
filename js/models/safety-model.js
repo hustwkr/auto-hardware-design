@@ -809,6 +809,9 @@
       impDC = lookupImpulse(sysVDC, 2, true, 'dc');
     }
 
+    // IEC 62109-1 §7.3.7.1.2b: PV circuits minimum 2.5kV impulse regardless of system voltage
+    if (standard === 'iec') impDC = Math.max(impDC, 2.5);
+
     if (!nodes.length) return null;
 
     var altk = (standard === 'ul') ? altFactorUL(alt) : altFactor(alt);

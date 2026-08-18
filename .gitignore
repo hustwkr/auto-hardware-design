@@ -41,6 +41,12 @@ codexprojects/
 # Token secret (auto-generated, per-instance)
 backend/.token_secret
 
+# Admin password hash (per-instance, must not be committed)
+backend/.admin_hash
+
+# Test artifacts
+backend/test_utf8.txt
+
 # Test coverage reports
 coverage/
 .nyc_output/

@@ -261,9 +261,10 @@ test("lookupCrp - basic IEC creepage lookup", function () {
   approx(crp, 1.8, 0.1);
 });
 
-test("lookupCrp - PCB trace uses column 5", function () {
-  var crp = SM.lookupCrp(230, 2, "ii", "iec", true);
-  approx(crp, 0.56, 0.01);
+test("lookupCrp - PCB trace uses PWBs-PD2 column", function () {
+  // At Vrms=250, PWBs-PD2 = 1.0 (vs Other-PD2-II = 1.8) — verifies PCB path selects shorter distance
+  var crp = SM.lookupCrp(250, 2, "ii", "iec", true);
+  approx(crp, 1.0, 0.01);
 });
 
 test("lookupCrp - coating reduces pollution degree", function () {
