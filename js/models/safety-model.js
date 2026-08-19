@@ -625,13 +625,17 @@
 
     if (insType === 'reinf') {
       /* ── REINFORCED INSULATION ───────────────────────────── */
-      // IEC 60664-1 / IEC 62109-1: use the MOST STRINGENT of three criteria:
-      //   (a) Table 13 with impulse voltage stepped up one level
-      //   (b) 1.6 × working voltage peak → Table 13
-      //   (c) 1.6 × TOV peak → Table 13 (mains circuits only)
+      // IEC 62477-1 §4.4.7.4.1: reinforced clearance = max of
+      //   (a) impulse one step higher — implemented by selecting a higher OVC
+      //       category at the input (E column already reflects the stepped-up
+      //       impulse, e.g. OVCⅢ/Ⅳ → 5556/8000 V), so we query Table 10
+      //       directly with that value — NO double step-up here.
+      //   (b) 1.6 × peak working voltage → Table 10 col 2
+      //   (c) 1.6 × TOV peak → Table 10 col 1 (mains circuits only)
+      // IEC 62109-1 keeps the legacy nextImpulseLevel step-up.
 
-      var impNext = nextImpulseLevel(impKV);          // step up one level (kV)
-      var clrA    = clrFromPeak(impNext * 1000, pd, 0, std);  // criterion (a): stepped-up impulse
+      var impNext = (std === 'iec62477') ? impKV : nextImpulseLevel(impKV);
+      var clrA    = clrFromPeak(impNext * 1000, pd, 0, std);  // criterion (a)
 
       var clrB    = clrFromPeak(wrkPeak * 1.6, pd, 2, std);   // criterion (b): col 2 = wrk_peak_surr
 
