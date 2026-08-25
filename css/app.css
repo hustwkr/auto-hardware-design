@@ -342,14 +342,18 @@ h1.page-title, .tab-content > h1 {
   box-shadow: none;
 }
 
+/* Nav bar spans the full viewport width (decoupled from the 820px body
+   column) so future module tabs have room; wraps to a second row if tight. */
 .nav-inner {
-  max-width: 820px;
+  max-width: none;
   margin: 0 auto;
   display: flex;
+  flex-wrap: wrap;               /* overflow → second row, never clipped */
   gap: 0;
-  padding: 6px var(--space-sm) 0;
+  row-gap: 3px;                  /* only visible when actually wrapped */
+  padding: 6px var(--space-md) 0;
   align-items: stretch;
-  overflow-x: auto;              /* safety net on narrow screens */
+  overflow-x: auto;              /* last-resort safety net */
   scrollbar-width: none;         /* Firefox — keep the bar clean */
 }
 .nav-inner::-webkit-scrollbar { display: none; }
