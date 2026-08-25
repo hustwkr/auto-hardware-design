@@ -7,6 +7,7 @@
   /* ── Translation dictionary ─── */
   var D = {
     /* Nav */
+    "nav.home":          { zh: "首页", en: "Home" },
     "nav.capacitor":     { zh: "电解电容寿命计算", en: "Capacitor Lifetime" },
     "nav.safety":        { zh: "安规距离计算", en: "Safety Distance" },
     "nav.pcb":           { zh: "PCB走线载流计算", en: "PCB Trace Current" },
@@ -15,6 +16,22 @@
     "theme.light":       { zh: "浅色", en: "Light" },
     "theme.dark":        { zh: "深色", en: "Dark" },
     "theme.system":      { zh: "系统", en: "System" },
+
+    /* Home / welcome page */
+    "brand.name":        { zh: "自动硬件设计工具", en: "Auto Hardware Design Tool" },
+    "home.title":        { zh: "自动硬件设计工具", en: "Auto Hardware Design Tool" },
+    "home.tagline":      { zh: "面向硬件工程师的在线计算与设计工具集", en: "Online calculation & design tools for hardware engineers" },
+    "home.card.capacitor.desc": { zh: "纹波电流与温度/电压降额下的寿命估算，含多段工况、多频叠加与质保期判定。", en: "Lifetime estimation under ripple current and temp/voltage derating — multi-segment profiles, multi-frequency ripple, warranty assessment." },
+    "home.card.capacitor.tags": { zh: "Nichicon 模型 · 多频纹波叠加", en: "Nichicon model · multi-freq ripple" },
+    "home.card.safety.desc":    { zh: "爬电距离 + 电气间隙查表计算，支持隔离架构分析，面向并网逆变器 / PECS。", en: "Creepage + clearance table lookups with isolation-architecture analysis — for grid-tied inverters / PECS." },
+    "home.card.safety.tags":    { zh: "IEC 62109-1 · IEC 62477-1 · UL 1741", en: "IEC 62109-1 · IEC 62477-1 · UL 1741" },
+    "home.card.pcb.desc":       { zh: "内外层走线宽度 ↔ 电流/温升，正向/反向计算、压降分析与多宽度对比。", en: "Internal/external trace width ↔ current / temp-rise — forward & reverse, voltage drop, multi-width compare." },
+    "home.card.pcb.tags":       { zh: "IPC-2221 · 压降分析", en: "IPC-2221 · voltage drop" },
+    "home.card.filter.desc":    { zh: "一阶差分 / 二阶 MFB 低通设计，含 E24/E12 取整与运放选型稳定性分析。", en: "1st-order diff / 2nd-order MFB low-pass design with E24/E12 rounding and op-amp stability analysis." },
+    "home.card.filter.tags":    { zh: "E24/E12 · PM/噪声/失调", en: "E24/E12 · PM / noise / offset" },
+    "home.gh.title":       { zh: "开源项目 · 欢迎 Star ⭐", en: "Open Source · Give it a Star ⭐" },
+    "home.gh.desc":        { zh: "本项目完全开源，源码、标准依据与计算模型均可在 GitHub 上查阅。如果这套工具对你的设计工作有帮助，一个 Star 是对持续更新最大的支持；也欢迎提交 Issue 反馈问题或贡献代码。", en: "Fully open source — browse the code, standard references and calculation models on GitHub. If these tools help your design work, a star is the best support for ongoing updates; issues and contributions are welcome." },
+    "home.disclaimer":     { zh: "计算结果基于标准公式与典型参数，仅供设计参考；量产前请核对标准原文与器件手册。", en: "Results are based on standard formulas and typical parameters for design reference only — verify against the original standards and datasheets before production." },
 
     /* Capacitor page */
     "cap.title":         { zh: "电解电容寿命计算工具", en: "Electrolytic Capacitor Lifetime Calculator" },

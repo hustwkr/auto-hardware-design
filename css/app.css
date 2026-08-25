@@ -349,11 +349,23 @@ h1.page-title, .tab-content > h1 {
   gap: 0;
   padding: 6px var(--space-sm) 0;
   align-items: stretch;
+  overflow-x: auto;              /* safety net on narrow screens */
+  scrollbar-width: none;         /* Firefox — keep the bar clean */
 }
+.nav-inner::-webkit-scrollbar { display: none; }
+
+/* Brand mark (left of tabs, click → home) */
+.nav-brand {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 6px 8px 0 2px;
+}
+.nav-brand img { width: 30px; height: 30px; border-radius: 7px; display: block; }
 
 .tab-btn {
   flex: none;
-  padding: 10px 22px;
+  padding: 10px 16px;
   border: none;
   background: transparent;
   font-size: var(--fs-base);
@@ -378,6 +390,73 @@ h1.page-title, .tab-content > h1 {
 
 .tab-content   { display: none; }
 .tab-content.active { display: block; }
+
+/* ============================================================
+   Home / Welcome page (#tab-home)
+   ============================================================ */
+.home-hero { text-align: center; padding: 34px 12px 6px; }
+.home-logo { width: 72px; height: 72px; border-radius: 16px; box-shadow: var(--shadow-md); margin-bottom: 14px; display: inline-block; }
+.home-hero h1 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 6px; }
+.home-hero p  { color: var(--color-text-soft); font-size: var(--fs-base); margin-bottom: 0; line-height: 1.6; }
+
+/* Module card grid */
+.home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+@media (max-width: 640px) { .home-grid { grid-template-columns: 1fr; } }
+
+.home-card {
+  display: block;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.home-card:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+.home-card-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10px;
+}
+.home-card-icon svg { width: 22px; height: 22px; }
+
+.home-card h3 { font-size: var(--fs-md); font-weight: 600; color: var(--color-text); margin-bottom: 4px; }
+.home-card p  { font-size: var(--fs-sm); color: var(--color-text-mid); line-height: 1.55; margin-bottom: 8px; }
+.home-tags    { font-size: var(--fs-xs); color: var(--color-text-soft); letter-spacing: .02em; }
+
+/* GitHub / open-source banner */
+.home-gh { display: flex; gap: 14px; align-items: center; margin-top: 20px; }
+.home-gh-icon {
+  flex: none; width: 46px; height: 46px; border-radius: 50%;
+  background: var(--color-bg); color: var(--color-text);
+  display: flex; align-items: center; justify-content: center;
+}
+.home-gh-icon svg { width: 28px; height: 28px; }
+.home-gh-body { flex: 1; min-width: 0; }
+.home-gh h3 { font-size: var(--fs-md); font-weight: 600; color: var(--color-text); margin-bottom: 4px; padding: 0; border: none; }
+.home-gh p  { font-size: var(--fs-sm); color: var(--color-text-mid); line-height: 1.55; margin: 0; }
+.home-gh-btn {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  background: #24292f; color: #fff;
+  text-decoration: none;
+  font-size: var(--fs-sm); font-weight: 500;
+  transition: opacity .15s ease;
+}
+.home-gh-btn:hover { opacity: .88; }
+@media (max-width: 640px) {
+  .home-gh { flex-wrap: wrap; justify-content: center; text-align: center; }
+}
+
+/* Disclaimer */
+.home-disclaimer { margin-top: 20px; font-size: var(--fs-xs); color: var(--color-text-soft); text-align: center; line-height: 1.6; padding-bottom: 24px; }
 
 /* ============================================================
    Cards — the visual container for every section
@@ -822,6 +901,7 @@ table.data-tbl tbody tr:hover {
   /* Show all tab content for full report */
   .tab-content       { display: block !important; page-break-before: always; }
   .tab-content:first-of-type { page-break-before: auto; }
+  #tab-home          { display: none !important; } /* welcome page never prints */
 
   /* Force light theme colors for print */
   [data-theme="dark"] body,

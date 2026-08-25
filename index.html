@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>自动硬件设计工具</title>
 <link rel="icon" type="image/png" href="/hwlogo.png">
-<link rel="stylesheet" href="css/app.css?v=41">
+<link rel="stylesheet" href="css/app.css?v=42">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>
 </head>
@@ -13,7 +13,11 @@
 <!-- ── Tab Navigation (full-width top bar) ─────────────── -->
 <nav class="tab-nav">
   <div class="nav-inner">
-    <button class="tab-btn active" data-tab="capacitor" data-i18n="nav.capacitor">电解电容寿命计算</button>
+    <!-- Brand (click → home) -->
+    <a class="nav-brand" href="#home" data-i18n-title="brand.name" title="自动硬件设计工具"><img src="/hwlogo.png" alt=""></a>
+
+    <button class="tab-btn active" data-tab="home" data-i18n="nav.home">首页</button>
+    <button class="tab-btn" data-tab="capacitor" data-i18n="nav.capacitor">电解电容寿命计算</button>
     <button class="tab-btn" data-tab="safety" data-i18n="nav.safety">安规距离计算</button>
     <button class="tab-btn" data-tab="pcb" data-i18n="nav.pcb">PCB走线载流计算</button>
 	    <button class="tab-btn" data-tab="filter" data-i18n="nav.filter">信号滤波器设计</button>
@@ -94,9 +98,67 @@
 <div class="container">
 
 <!-- ════════════════════════════════════════ -->
+<!-- Tab: Home (welcome page)                 -->
+<!-- ════════════════════════════════════════ -->
+<div id="tab-home" class="tab-content active">
+
+  <!-- Hero -->
+  <div class="home-hero">
+    <img src="/hwlogo.png" alt="" class="home-logo">
+    <h1 data-i18n="home.title">自动硬件设计工具</h1>
+    <p data-i18n="home.tagline">面向硬件工程师的在线计算与设计工具集</p>
+  </div>
+
+  <!-- Module cards -->
+  <div class="home-grid">
+    <a class="home-card" href="#capacitor">
+      <div class="home-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="7" x2="15" y2="17"/><path d="M9 4H6M9 20H6M15 7h3M15 17h3"/></svg></div>
+      <h3 data-i18n="nav.capacitor">电解电容寿命计算</h3>
+      <p data-i18n="home.card.capacitor.desc">纹波电流与温度/电压降额下的寿命估算，含多段工况、多频叠加与质保期判定。</p>
+      <div class="home-tags" data-i18n="home.card.capacitor.tags">Nichicon 模型 · 多频纹波叠加</div>
+    </a>
+
+    <a class="home-card" href="#safety">
+      <div class="home-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z"/><path d="M12.8 8l-2.5 4h3l-2.5 4"/></svg></div>
+      <h3 data-i18n="nav.safety">安规距离计算</h3>
+      <p data-i18n="home.card.safety.desc">爬电距离 + 电气间隙查表计算，支持隔离架构分析，面向并网逆变器 / PECS。</p>
+      <div class="home-tags" data-i18n="home.card.safety.tags">IEC 62109-1 · IEC 62477-1 · UL 1741</div>
+    </a>
+
+    <a class="home-card" href="#pcb">
+      <div class="home-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M9.5 3v4M14.5 3v4M9.5 17v4M14.5 17v4M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4"/></svg></div>
+      <h3 data-i18n="nav.pcb">PCB走线载流计算</h3>
+      <p data-i18n="home.card.pcb.desc">内外层走线宽度 ↔ 电流/温升，正向/反向计算、压降分析与多宽度对比。</p>
+      <div class="home-tags" data-i18n="home.card.pcb.tags">IPC-2221 · 压降分析</div>
+    </a>
+
+    <a class="home-card" href="#filter">
+      <div class="home-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c1.5-6 3.5-6 5 0s3.5 6 5 0 3.5-6 5 0 2.5 4 3 2"/></svg></div>
+      <h3 data-i18n="nav.filter">信号滤波器设计</h3>
+      <p data-i18n="home.card.filter.desc">一阶差分 / 二阶 MFB 低通设计，含 E24/E12 取整与运放选型稳定性分析。</p>
+      <div class="home-tags" data-i18n="home.card.filter.tags">E24/E12 · PM/噪声/失调</div>
+    </a>
+  </div>
+
+  <!-- GitHub / open source -->
+  <div class="card home-gh">
+    <div class="home-gh-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11.04 11.04 0 0 1 5.77 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.66.41.36.78 1.06.78 2.14 0 1.55-.02 2.79-.02 3.17 0 .31.21.67.8.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg></div>
+    <div class="home-gh-body">
+      <h3 data-i18n="home.gh.title">开源项目 · 欢迎 Star ⭐</h3>
+      <p data-i18n="home.gh.desc">本项目完全开源，源码、标准依据与计算模型均可在 GitHub 上查阅。如果这套工具对你的设计工作有帮助，一个 Star 是对持续更新最大的支持；也欢迎提交 Issue 反馈问题或贡献代码。</p>
+    </div>
+    <a class="home-gh-btn" href="https://github.com/hustwkr/hw-tools" target="_blank" rel="noopener">hustwkr/hw-tools ↗</a>
+  </div>
+
+  <!-- Disclaimer -->
+  <p class="home-disclaimer" data-i18n="home.disclaimer">计算结果基于标准公式与典型参数，仅供设计参考；量产前请核对标准原文与器件手册。</p>
+
+</div><!-- /tab-home -->
+
+<!-- ════════════════════════════════════════ -->
 <!-- Tab: Capacitor Lifetime                  -->
 <!-- ════════════════════════════════════════ -->
-<div id="tab-capacitor" class="tab-content active">
+<div id="tab-capacitor" class="tab-content">
 <h1 style="font-size:1.4rem;margin-bottom:2px"><span data-i18n="cap.title">电解电容寿命计算工具</span></h1>
 <p style="color:#64748b;margin-bottom:12px;font-size:.78rem;line-height:1.35" data-i18n="cap.subtitle">Arrhenius + Miner 累积损伤 + 多段运行剖面 + 多频率纹波叠加 + 质保期判定</p>
 
@@ -374,7 +436,7 @@
 </div><!-- /container -->
 
 <!-- ── Scripts (order: i18n → models → ui modules → app) ── -->
-<script src="js/i18n.js?v=35"></script>
+<script src="js/i18n.js?v=36"></script>
 <script src="js/models/capacitor-model.js?v=15"></script>
 <script src="js/models/safety-model.js?v=19"></script>
 <script src="js/models/pcb-model.js?v=2"></script>
@@ -385,6 +447,6 @@
 <script src="js/models/opamp-analysis.js?v=4"></script>
 <script src="js/filter.js?v=89"></script>
 <script src="js/feedback.js?v=1"></script>
-<script src="js/app.js?v=29"></script>
+<script src="js/app.js?v=30"></script>
 </body>
 </html>

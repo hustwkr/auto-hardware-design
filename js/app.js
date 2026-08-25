@@ -27,32 +27,45 @@
   window.toggleInfo = toggleInfo;
   window.toggleExportDropdown = toggleExportDropdown;
 
-  /* ── Tab switching ─────────────────────── */
+  /* ── Tab switching + hash deep links (#home #capacitor #safety #pcb #filter) ─── */
+  var TAB_NAMES = ["home","capacitor","safety","pcb","filter"];
+
+  function activateTab(name){
+    if(TAB_NAMES.indexOf(name)<0)name="home";
+    // Update nav
+    document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.toggle("active",b.dataset.tab===name)});
+
+    // Toggle content with forced reflow (Chrome layout fix)
+    document.querySelectorAll(".tab-content").forEach(function(tc){tc.style.display="none"});
+    var target=document.getElementById("tab-"+name);
+    if(!target)return;
+    target.style.display="block";
+    void(target.offsetHeight); // force reflow
+
+    // Lazy-init tab content on first visit
+    if(name==="safety"&&!document.querySelector("#sN [data-id]")){
+      var defaultNodes = _defaults && _defaults.safety && Array.isArray(_defaults.safety.nodes) ? _defaults.safety.nodes : null;
+      if(typeof initSafety==='function')initSafety(defaultNodes);
+    }
+    if(name==="pcb"&&!document.querySelector("#pcbResult .pcb-result")){
+      if(typeof initPcb==='function')initPcb();
+    }
+    if(name==="filter"&&typeof initFilter==="function")initFilter();
+  }
+
+  function gotoTab(name){
+    name=String(name||"").replace(/^#/,"");
+    if(TAB_NAMES.indexOf(name)<0)name="home";
+    if(location.hash.slice(1)!==name){location.hash=name;} // fires hashchange → activateTab
+    else{activateTab(name);}
+  }
+
   document.querySelectorAll(".tab-btn[data-tab]").forEach(function(btn){
-    btn.addEventListener("click", function(){
-      // Update nav
-      document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});
-      this.classList.add("active");
-
-      // Toggle content with forced reflow (Chrome layout fix)
-      document.querySelectorAll(".tab-content").forEach(function(tc){tc.style.display="none"});
-      var targetId="tab-"+this.dataset.tab;
-      var target=document.getElementById(targetId);
-      if(!target)return;
-      target.style.display="block";
-      void(target.offsetHeight); // force reflow
-
-      // Lazy-init tab content on first visit
-      if(this.dataset.tab==="safety"&&!document.querySelector("#sN [data-id]")){
-        var defaultNodes = _defaults && _defaults.safety && Array.isArray(_defaults.safety.nodes) ? _defaults.safety.nodes : null;
-        if(typeof initSafety==='function')initSafety(defaultNodes);
-      }
-      if(this.dataset.tab==="pcb"&&!document.querySelector("#pcbResult .pcb-result")){
-        if(typeof initPcb==='function')initPcb();
-      }
-	      if(typeof initFilter==="function")initFilter();
-    });
+    btn.addEventListener("click",function(){gotoTab(this.dataset.tab)});
   });
+  window.addEventListener("hashchange",function(){activateTab(location.hash.slice(1))});
+  // Initial route: hash deep link, or home by default
+  activateTab(location.hash.slice(1));
 
   /* ── Defaults loading (from server API → localStorage fallback) ─── */
   var _defaults = null; // Cache defaults for initSafety/initCapacitor
