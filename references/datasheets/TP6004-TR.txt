@@ -1,0 +1,1260 @@
+
+===== PAGE 1 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+1 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+Features 
+ 
+Supply Voltage: 2.1V to 6.0V  
+ 
+Low Supply Current: 80μA per channel 
+ 
+Rail to Rail Input and Output 
+ 
+Bandwidth: 1 MHz  
+ 
+Slew Rate: 0.7V/μs 
+ 
+Excellent EMI Suppress Performance 
+ 
+Offset Voltage: ±3mV Maximum 
+ 
+Offset Voltage Temperature Drift: 2 μV/°C 
+ 
+Low Noise: 27 nV/√Hz at 1kHz 
+ 
+High Output Capability: 100mA 
+ 
+–40°C to 125°C Operation Temperature Range 
+Applications 
+ 
+Active Filters, ASIC Input or Output Amplifier 
+ 
+Sensor Interface 
+ 
+Smoke/Gas/Environment Sensors 
+ 
+Portable Instruments and Mobile Device 
+ 
+Description 
+The TP600X series are CMOS dual, and quad RRIO op-amps 
+with low offset, low power and stable high frequency response. 
+They incorporate 3PEAK’s proprietary and patented design 
+techniques to achieve very good AC performance with 1MHz 
+bandwidth, 0.6V/μs slew rate and low distortion while drawing 
+only 80μA of quiescent current per amplifier. The input common-
+mode voltage range extends 300mV beyond V– and V+, and 
+the outputs swing rail-to-rail. The TP600X family can be used as 
+plug-in replacements for many commercially available op-amps 
+to reduce power and improve input/output range and 
+performance. 
+The combination of features makes the TP600X ideal choices 
+for motor control and portable audio amplification, sound ports, 
+and other consumer Audio. The TP600X Op-amp is very stable, 
+and it is capable of driving heavy capacitive loads such as those 
+found in LCDs. The ability to swing rail-to-rail at the inputs and 
+outputs enables designers to buffer CMOS DACs, ASICs, or 
+other wide output swing devices in single-supply systems. 
+ 
+ 
+ 
+ 
+Pin Configuration 
+TP6001
+5-Pin SOT23/SC70
+-T and -C Suffixes
+TP6002
+8-Pin SOIC/TSSOP/MSOP
+-S, -T, -TS and -V Suffixes
+8
+6
+5
+7
+3
+2
+1
+4
+Out A
+﹢In A
+﹣In A
+﹢In B
+﹣In B
+Out B
+A
+B
+﹣Vs
+﹢Vs
+TP6004
+14-Pin SOIC/TSSOP
+-S and -T Suffixes
+14
+13
+12
+11
+10
+9
+8
+6
+5
+7
+3
+2
+1
+4
+Out A
+﹢In A
+﹣In A
+D
+A
+C
+B
+Out D
+﹢In D
+﹣In D
+Out B
+﹢In B
+﹣In B
+Out C
+﹢In C
+﹣In C
+﹣Vs
+﹢Vs
+4
+5
+3
+2
+1
+Out
++ In
+- In
+﹣Vs
+﹢Vs
+TP6001R
+5-Pin SOT23
+-T Suffixes
+4
+5
+3
+2
+1
+Out
++ In
+- In
++ Vs
+- Vs
+TP6001U
+5-Pin SOT23/SC70
+-T and -C Suffixes
+4
+5
+3
+2
+1
++In
+-VS
+-In
+Out
++VS
+8
+7
+6
+5
+4
+3
+2
+1
+Out A
+﹢In A
+﹣In A
+﹣Vs
+﹢In B
+﹣In B
+Out B
+﹢Vs
+TP6002
+8-Pin DFN 2*2
+(-F  Suffix)
+The thermal pad of DFN package is recommended 
+to be left float or connected to -Vs
+ 
+ 
+ 
+ 
+
+===== PAGE 2 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+2 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+Table of Contents 
+Features ........................................................................................................................................................................... 1 
+Applications ..................................................................................................................................................................... 1 
+Description ....................................................................................................................................................................... 1 
+Pin Configuration ............................................................................................................................................................ 1 
+Table of Contents ............................................................................................................................................................ 2 
+Revision History .............................................................................................................................................................. 3 
+Order Information ............................................................................................................................................................ 3 
+Absolute Maximum Ratings Note 1 ................................................................................................................................... 4 
+ESD Rating ....................................................................................................................................................................... 4 
+Thermal Information ....................................................................................................................................................... 4 
+Electrical Characteristics ............................................................................................................................................... 5 
+Typical Performance Characteristics ............................................................................................................................ 6 
+Application Information .................................................................................................................................................. 9 
+Low Supply Voltage and Low Power Consumption ...................................................................................................................... 9 
+Ground Sensing and Rail to Rail Output ...................................................................................................................................... 9 
+Driving Large Capacitive Load ..................................................................................................................................................... 9 
+Tape and Reel Information ........................................................................................................................................... 10 
+Package Outline Dimensions ....................................................................................................................................... 11 
+SC70-5 /SOT-353 ........................................................................................................................................................................ 11 
+SOT23-5 ..................................................................................................................................................................................... 12 
+SOIC-8 ....................................................................................................................................................................................... 12 
+TSSOP8 ..................................................................................................................................................................................... 13 
+MSOP-8 ..................................................................................................................................................................................... 14 
+DFN-8 2*2 .................................................................................................................................................................................. 15 
+SOIC-14 ..................................................................................................................................................................................... 16 
+TSSOP-14 .................................................................................................................................................................................. 16 
+ 
+ 
+ 
+
+===== PAGE 3 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+3 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+Revision History 
+Date 
+Revision 
+Notes 
+2017/3/1 
+Rev.Pre 
+Pre-Release Version 
+2017/8/11 
+Rev.0 
+Release Version, confirm spec limit 
+2017/10/28 
+Rev.0.01 
+Correct the max of Common-mode Input Voltage Range in Electrical Characteristics from (V+) - 
+0.1 to (V+) + 0.1.  
+Correct Operating Temperature Range in Maximum Ratings from –45 to 125°C to –40 to 125°C. 
+2017/12/7 
+Rev 0.02 
+Add Package: TP6001U-CR 
+2018/2/1 
+Rev 0.03 
+Correct Pin configuration of TP6001R. Correct the quiescent current per amplifier in “Description” 
+from 500uA to 80uA 
+2018/5/10 
+Rev 0.04 
+Add new part number TP6002-FR. Update package dimension with new data.  
+Order Information 
+Order Number 
+Operating Temperature Range 
+Package 
+Marking Information 
+MSL 
+Transport Media, Quantity 
+TP6001-TR 
+-40 to 125°C 
+5-Pin SOT23 
+601XX Note 2 
+3 
+Tape and Reel, 3000 
+TP6001-CR 
+-40 to 125°C 
+5-Pin SC70 
+601XX Note 2 
+1 
+Tape and Reel, 3000 
+TP6001R-TR 
+-40 to 125°C 
+5-Pin SOT23 
+60RXX Note 2 
+3 
+Tape and Reel, 3000 
+TP6001U-TR Note 1 
+-40 to 125°C 
+5-Pin SOT23 
+60UXX Note 2 
+3 
+Tape and Reel, 3000 
+TP6001U-CR 
+-40 to 125°C 
+5-Pin SC70 
+60UXX Note 2 
+1 
+Tape and Reel, 3000 
+TP6002-SR 
+-40 to 125°C 
+8-Pin SOIC 
+6002 
+XXXX Note 3 
+3 
+Tape and Reel, 4000 
+TP6002-TSR 
+-40 to 125°C 
+8-Pin TSSOP 
+6002 
+XXXX Note 3 
+3 
+Tape and Reel, 3000 
+TP6002-VR 
+-40 to 125°C 
+8-Pin MSOP 
+6002 
+XXXX Note 3 
+3 
+Tape and Reel, 3000 
+TP6002-FR 
+-40 to 125°C 
+8-Pin DFN 
+6002 
+XXXX Note 3 
+3 
+Tape and Reel, 3000 
+TP6004-SR 
+-40 to 125°C 
+14-Pin SOIC 
+6004 
+XXXX Note 3 
+3 
+Tape and Reel, 2500 
+TP6004-TR 
+-40 to 125°C 
+14-Pin TSSOP 
+6004 
+XXXX Note 3 
+3 
+Tape and Reel, 3000 
+Note 1: The sample will be ready in 1 month. 
+Note 2: XX is the date code. 
+Note 3: XXXX is date code. 
+ 
+ 
+ 
+
+===== PAGE 4 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+4 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+Absolute Maximum Ratings Note 1 
+Parameters 
+Rating 
+Supply Voltage, (+VS)– (-VS) 
+7 V 
+Input Voltage 
+(-VS) – 0.3 to (+VS) + 0.3 
+Differential Input Voltage 
+±7V 
+Input Current: +IN, –IN Note 2 
+±10mA 
+Output Short-Circuit Duration Note 3 
+Infinite 
+Maximum Junction Temperature 
+150°C 
+Operating Temperature Range 
+–40 to 125°C 
+Storage Temperature Range 
+–65 to 150°C 
+Lead Temperature (Soldering, 10 sec) 
+260°C 
+Note 1: Stresses beyond those listed under Absolute Maximum Ratings may cause permanent damage to the device. Exposure to 
+any Absolute Maximum Rating condition for extended periods may affect device reliability and lifetime. 
+Note 2: The inputs are protected by ESD protection diodes to each power supply. If the input extends more than 300mV beyond the 
+power supply, the input current should be limited to less than 10mA. 
+Note 3: A heat sink may be required to keep the junction temperature below the absolute maximum. This depends on the power 
+supply voltage and how many amplifiers are shorted. Thermal resistance varies with the amount of PC board metal connected to the 
+package. The specified values are for short traces connected to the leads. 
+ESD Rating 
+Symbol 
+Parameter 
+Condition 
+Minimum Level 
+Unit 
+HBM 
+Human Body Model ESD 
+MIL-STD-883H Method 3015.8 
+8 
+kV 
+CDM 
+Charged Device Model ESD 
+JEDEC-EIA/JESD22-C101E 
+2 
+kV 
+Thermal Information 
+Package Type 
+θJA 
+θJC 
+Unit 
+5-Pin SC70 
+400 
+ 
+°C/W 
+5-Pin SOT23 
+250 
+81 
+°C/W 
+8-Pin SOIC 
+158 
+43 
+°C/W 
+8-Pin TSSOP 
+191 
+44 
+°C/W 
+8-Pin MSOP 
+210 
+45 
+°C/W 
+8-Pin DFN 2*2 
+100 
+60 
+°C/W 
+14-Pin SOIC 
+120 
+36 
+°C/W 
+14-Pin TSSOP 
+180 
+35 
+°C/W 
+ 
+ 
+
+===== PAGE 5 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+5 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+Electrical Characteristics 
+All test condition is VS = 5V, TA = 25°C, RL = 2kΩ, CL =100pF, unless otherwise noted. 
+Symbol 
+Parameter 
+Conditions 
+Min 
+Typ 
+Max 
+Unit 
+Power Supply 
+VS 
+Supply Voltage Range 
+ 
+2.1 
+ 
+6 
+V 
+IQ 
+Quiescent Current per Amplifier 
+ 
+ 
+80 
+130 
+μA 
+PSRR 
+Power Supply Rejection Ratio 
+ 
+80 
+100 
+ 
+dB 
+Input Characteristics 
+VOS 
+Input Offset Voltage 
+VCM = 0V to 3V 
+-3 
+0.5 
+3 
+mV 
+VOS TC 
+Input Offset Voltage Drift 
+TA = -40°C to 125°C 
+ 
+2 
+ 
+μV/°C 
+IB 
+Input Bias Current 
+TA = 25 °C 
+ 
+1 
+ 
+pA 
+TA = 85 °C 
+ 
+25 
+ 
+pA 
+IOS 
+Input Offset Current 
+ 
+ 
+1 
+ 
+pA 
+CIN 
+Input Capacitance 
+Differential Mode 
+ 
+8 
+ 
+pF 
+Common Mode 
+ 
+7 
+ 
+pF 
+Av 
+Open-loop Voltage Gain 
+RLOAD = 10kΩ 
+85 
+110 
+ 
+dB 
+VCMR 
+Common-mode Input Voltage 
+Range 
+ 
+(V-) - 0.1 
+ 
+(V+) + 0.1 
+V 
+CMRR 
+Common Mode Rejection Ratio 
+VCM = 0V to 3V 
+70 
+100 
+ 
+dB 
+Xtalk 
+Channel Separation 
+f = 1kHz, RL = 2kΩ 
+ 
+110 
+ 
+dB 
+Output Characteristics 
+VOH, VOL 
+Maximum Output Voltage Swing 
+RLOAD = 10kΩ 
+ 
+3 
+15 
+mV 
+ISC 
+Output Short-Circuit Current 
+ 
+ 
+100 
+ 
+mA 
+AC Specifications 
+GBW 
+Gain-Bandwidth Product 
+ 
+ 
+1 
+ 
+MHz 
+SR 
+Slew Rate 
+AV = 1, VOUT = 1.5V to 3.5V, CLOAD 
+= 60pF, RLOAD = 1kΩ 
+ 
+0.7 
+ 
+V/μs 
+tS 
+Settling Time, 0.1% 
+AV = 1, 2V Step, CLOAD = 60pF, 
+RLOAD = 1kΩ 
+ 
+3.5 
+ 
+μs 
+Settling Time, 0.01% 
+ 
+4.8 
+ 
+μs 
+PM 
+Phase Margin 
+RLOAD = 1kΩ, CLOAD = 60pF 
+ 
+60 
+ 
+° 
+GM 
+Gain Margin 
+RLOAD = 1kΩ, CLOAD = 60pF 
+ 
+15 
+ 
+dB 
+Noise Performance 
+EN 
+Input Voltage Noise 
+f = 0.1Hz to 10Hz 
+ 
+8 
+ 
+μVPP 
+eN 
+Input Voltage Noise Density 
+f = 1kHz 
+ 
+27 
+ 
+nV/√Hz 
+iN 
+Input Current Noise 
+f = 1kHz 
+ 
+2 
+ 
+fA/√Hz 
+THD+N 
+Total Harmonic Distortion and 
+Noise 
+f = 1kHz, AV =1, RL = 2kΩ, 
+VOUT = 1Vp-p 
+ 
+0.003 
+ 
+% 
+ 
+ 
+ 
+
+===== PAGE 6 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+6 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+Typical Performance Characteristics 
+VS = 5V, VCM = 2.5V, RL = Open, unless otherwise specified. 
+ 
+Figure 1. Unity Gain Bandwidth vs. Temperature 
+ 
+Figure 2. Open-Loop Gain and Phase 
+ 
+Figure 3. Supply Current vs. Temperature 
+ 
+Figure 4. Short Circuit Current vs. Temperature 
+ 
+Figure 5. Quiescent Current vs. Supply Voltage 
+ 
+Figure 6. Offset Voltage vs. Common-Mode Voltage 
+ 
+ 
+ 
+0.0
+0.3
+0.5
+0.8
+1.0
+1.3
+1.5
+1.8
+2.0
+-50
+0
+50
+100
+150
+GBW(MHz)
+Temperature(℃)
+-150
+-100
+-50
+0
+50
+100
+150
+200
+-60
+-40
+-20
+0
+20
+40
+60
+80
+100
+120
+140
+0.1
+10
+1k
+100k
+10M
+1000M
+Phase (°)
+Gain(dB)
+Frequency (Hz)
+Phase
+Gain
+0
+20
+40
+60
+80
+100
+120
+-50
+0
+50
+100
+150
+Supply current(μA)
+Temperature(℃)
+VCM= 0V
+VCM= 2.5V
+VCM= 5.0V
+0
+20
+40
+60
+80
+100
+120
+140
+-50
+0
+50
+100
+150
+Current(mA)
+Temperature(℃)
+ISINK
+ISOURCE
+0
+20
+40
+60
+80
+100
+120
+1.5
+2
+2.5
+3
+3.5
+4
+4.5
+5
+Supply current (uA)
+Supply Voltage (V)
+-1500
+-1000
+-500
+0
+500
+1000
+1500
+0
+1
+2
+3
+4
+5
+Offset voltage Change(μV)
+Common-mode voltage(V)
+
+===== PAGE 7 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+7 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+ 
+Figure 7. CMRR vs. Frequency 
+ 
+Figure 8. CMRR vs. Temperature 
+ 
+Figure 9. PSRR vs. Frequency 
+ 
+Figure 10. PSRR vs. Temperature 
+ 
+Figure 11. Input Voltage Noise Spectral Density 
+ 
+Figure 12. 0.1 Hz to 10 Hz Input Voltage Noise 
+ 
+ 
+ 
+0
+20
+40
+60
+80
+100
+120
+140
+160
+1
+10
+100
+1k
+10k
+100k
+1M
+CMRR(dB)
+Frequency(Hz)
+0
+20
+40
+60
+80
+100
+120
+140
+-50
+0
+50
+100
+150
+CMRR(dB)
+Temperature(℃)
+-20
+0
+20
+40
+60
+80
+100
+120
+0.1
+10
+1k
+100k
+PSRR(dB)
+Frequency(Hz)
+PSRR+
+PSRR-
+0
+20
+40
+60
+80
+100
+120
+-50
+0
+50
+100
+150
+PSRR(-dB)
+Temperature(℃)
+1
+10
+100
+1000
+1
+10
+100
+1k
+10k
+100k
+1M
+Noise(nV/√Hz)
+Frequency(Hz)
+Time (1s/div)
+5μV/div
+
+===== PAGE 8 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+8 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+ 
+Figure 13. EMIRR IN+ vs. Frequency 
+ 
+Figure 14. Large-Scale Step Response 
+ 
+Figure 15. Negative Over-Voltage Recovery 
+ 
+Figure 16. Positive Over-Voltage Recovery 
+ 
+Figure 17. Negative Output Swing vs. Load Current 
+ 
+Figure 18. Positive Output Swing vs. Load Current 
+ 
+ 
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90
+1
+10
+100
+1000
+EMIRR IN+ (dB)
+Frequency (MHz)
+Time (50μs/div)
+2V/div                             2V/div
+Gain = 1
+RL = 10kΩ
+Time (50μs/div)
+1V/div                             2V/div
+Gain = +10
+±V = ±2.5V
+Time (50μs/div)
+1V/div                             2V/div
+Gain = +10
+±V = ±2.5V
+-140
+-120
+-100
+-80
+-60
+-40
+-20
+0
+0
+1
+2
+3
+4
+5
+Iout(mA)
+Vout Dropout (V)
+25℃
+-40℃
+125℃
+0
+20
+40
+60
+80
+100
+120
+0
+1
+2
+3
+4
+5
+Iout(mA)
+Vout Dropout (V)
+25℃
+-40℃
+125℃
+
+===== PAGE 9 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+9 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+Application Information 
+Low Supply Voltage and Low Power Consumption 
+The TP600X family of operational amplifiers can operate with power supply voltages from 2.1 V to 6.0 V. Each amplifier draws only 
+80 μA quiescent current. The low supply voltage capability and low supply current are ideal for portable applications demanding high 
+capacitive load driving capability and stable wide bandwidth. The TP600X family is optimized for wide bandwidth low power 
+applications. They have an industry leading high GBWP to power ratio and are unity gain stable for any capacitive load. When the 
+load capacitance increases, the increased capacitance at the output pushed the non-dominant pole to lower frequency in the open 
+loop frequency response, lowering the phase and gain margin. Higher gain configurations tend to have better capacitive drive 
+capability than lower gain configurations due to lower closed loop bandwidth and hence higher phase margin. 
+Ground Sensing and Rail to Rail Output 
+The TP600X family has excellent output drive capability, delivering over 100 mA of output drive current. The output stage is a rail-to-
+rail topology that is capable of swinging to within 10mV of either rail. Since the inputs can go 300 mV beyond either rail, the op-amp 
+can easily perform ‘true ground’ sensing. 
+The maximum output current is a function of total supply voltage. As the supply voltage to the amplifier increases, the output current 
+capability also increases. Attention must be paid to keep the junction temperature of the IC below 150°C when the output is in 
+continuous short-circuit. The output of the amplifier has reverse-biased ESD diodes connected to each supply. The output should not 
+be forced more than 0.5V beyond either supply, otherwise current will flow through these diodes. 
+Driving Large Capacitive Load 
+The TP600X family of OPA is designed to drive large capacitive loads. Refer to Typical Performance Characteristics for “Phase Margin 
+vs. Load Capacitance”.  As always, larger load capacitance decreases overall phase margin in a feedback system where internal 
+frequency compensation is utilized.  As the load capacitance increases, the feedback loop’s phase margin decreases, and the 
+closed-loop bandwidth is reduced. This produces gain peaking in the frequency response, with overshoot and ringing in output step 
+response. The unity-gain buffer (G = +1V/V) is the most sensitive to large capacitive loads.  
+When driving large capacitive loads with the TP600X OPA family (e.g., > 200 pF when G = +1V/V), a small series resistor at the 
+output (RISO in Figure 3) improves the feedback loop’s phase margin and stability by making the output load resistive at higher 
+frequencies.  
+Vin
+Vout
+Cload
+Riso
+ 
+ 
+ 
+
+===== PAGE 10 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+10 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+Tape and Reel Information 
+ 
+Package 
+D1 
+W1 
+A0 
+B0 
+K0 
+P0 
+W0 
+Pin1 
+Quadrant 
+5-Pin SC70 
+178.0 
+12.3 
+2.4 
+2.5 
+1.2 
+4.0 
+8.0 
+Q3 
+5-Pin SOT23 
+180.0  
+13.1  
+3.2  
+3.2  
+1.4  
+4.0  
+8.0  
+Q3 
+8-Pin SOIC 
+330.0  
+17.6  
+6.4  
+5.4  
+2.1  
+8.0  
+12.0  
+Q1 
+8-Pin MSOP 
+330.0  
+17.6  
+5.2  
+3.3  
+1.5  
+8.0  
+12.0  
+Q1 
+8-Pin TSSOP 
+330.0  
+17.6  
+6.8  
+3.3  
+1.2  
+8.0  
+12.0  
+Q1 
+8-Pin DFN 2*2 
+180.0 
+13.1 
+2.3 
+2.3 
+1.1 
+4.0 
+8.0 
+Q1 
+14-Pin SOIC 
+330.0  
+21.6  
+6.5  
+9.0  
+2.1  
+8.0  
+16.0  
+Q1 
+14-Pin TSSOP 
+330.0  
+17.6  
+6.8  
+5.4  
+1.2  
+8.0  
+12.0  
+Q1 
+ 
+ 
+ 
+
+===== PAGE 11 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+11 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+Package Outline Dimensions 
+SC70-5 /SOT-353 
+ 
+ 
+ 
+ 
+
+===== PAGE 12 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+12 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+ 
+ 
+SOT23-5 
+ 
+SOIC-8 
+ 
+ 
+ 
+
+===== PAGE 13 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+13 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+TSSOP8 
+ 
+ 
+ 
+
+===== PAGE 14 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+14 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+MSOP-8 
+ 
+ 
+ 
+
+===== PAGE 15 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+15 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+DFN-8 2*2  
+ 
+ 
+ 
+ 
+ 
+
+===== PAGE 16 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+16 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+SOIC-14 
+ 
+TSSOP-14 
+ 
+ 
+ 
+
+===== PAGE 17 =====
+www.3peakic.com.cn 
+Rev.0.04 
+ 
+ 
+ 
+ 
+ 
+17 / 17 
+TP6001/TP6002/TP6004 
+1MHz, 80μA, RRIO, Op Amps 
+ 
+ 3PEAK and the 3PEAK logo are registered trademarks of 3PEAK INCORPORATED. All 
+other trademarks are the property of their respective owners. 

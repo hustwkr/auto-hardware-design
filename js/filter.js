@@ -12,9 +12,143 @@
   function gv(id) { var el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
   function gvs(id) { var el = document.getElementById(id); return el ? el.value : ""; }
 
+  /* ── Op-amp selection & analysis ─── */
+  var OA = global.OpampAnalysis;
+
+  function fmtHz(f) {
+    if (f == null || !isFinite(f)) return "—";
+    if (f >= 1e6) return FM.fv(f / 1e6, 2) + " MHz";
+    if (f >= 1e3) return FM.fv(f / 1e3, 2) + " kHz";
+    return FM.fv(f, 2) + " Hz";
+  }
+
+  function fmtMV(v) { // mV value → adaptive unit string
+    if (!isFinite(v)) return "—";
+    var a = Math.abs(v);
+    if (a >= 100) return FM.fv(v, 0) + " mV";
+    if (a >= 1) return FM.fv(v, 2) + " mV";
+    if (a >= 0.001) return FM.fv(v, 3) + " mV";
+    return FM.fv(v * 1000, 1) + " µV";
+  }
+
+  function opampSpecLine(op) {
+    var t = global._t || function(k){return k;};
+    if (!op) return "";
+    var ibPa = op.ib_a * 1e12;
+    var s = "<b>" + op.name + "</b> — GBW " + fmtHz(op.gbw_hz) + ", Aol " + op.aol_db + " dB, eN @1kHz " + op.enW_nv + " nV/√Hz" +
+      (op.en_corner_hz > 0 ? " (f/c ≈ " + FM.fv(op.en_corner_hz, op.en_corner_hz >= 100 ? 0 : 1) + " Hz)" : "") +
+      ", iN " + op.in_pa + " pA/√Hz, Ib " + (ibPa >= 1000 ? FM.fv(ibPa / 1000, 1) + " nA" : FM.fv(ibPa, ibPa < 1 ? 2 : 0) + " pA") +
+      ", VOS(max) ±" + (op.eio_uv_max >= 1000 ? FM.fv(op.eio_uv_max / 1000, 2) + " mV" : FM.fv(op.eio_uv_max, op.eio_uv_max < 1 ? 1 : 0) + " µV") +
+      (op.typical ? ", " + t("filter.opamp.typTag") : "");
+    if (op.chopper) s += ", " + t("filter.opamp.chopperTag");
+    return s;
+  }
+
+  function initOpampSelect() {
+    var sel = document.getElementById("filterOpamp");
+    if (!sel || !OA) return;
+    if (sel.options.length) return; // already populated
+    var html = "";
+    for (var i = 0; i < OA.OPAMPS.length; i++) {
+      var op = OA.OPAMPS[i];
+      html += '<option value="' + op.id + '">' + op.name + " · GBW " + fmtHz(op.gbw_hz) + (op.typical ? " *typ" : "") + "</option>";
+    }
+    sel.innerHTML = html;
+    if (!OA.opampById(gvs("filterOpamp"))) sel.value = OA.OPAMPS[0].id;
+    var sp = document.getElementById("filterOpampSpec");
+    if (sp) sp.innerHTML = opampSpecLine(OA.opampById(sel.value));
+  }
+
+  function filterOpampChange() {
+    var sel = document.getElementById("filterOpamp");
+    var sp = document.getElementById("filterOpampSpec");
+    if (sel && sp && OA) sp.innerHTML = opampSpecLine(OA.opampById(gvs("filterOpamp")));
+    renderFilterOpamp();
+  }
+
+  function filterRTolChange() {
+    // 电阻精度只影响运放分析（角点容差），不改变元件取值 → 仅重算分析卡片
+    renderFilterOpamp();
+  }
+
+  /* 容差百分比显示：1 → "1"，0.1 → "0.1" */
+  function fmtPct(p) { return (p % 1 === 0) ? String(p) : p.toFixed(1); }
+
+  function runOpampAnalysis(r) {
+    // r = global._filterResult; returns analyzeCore result or null
+    if (!OA || !r) return null;
+    var op = OA.opampById(gvs("filterOpamp")) || OA.OPAMPS[0];
+    var comps = r.components;
+    var tol = gvs("filterRTol") === "01pct" ? 0.001 : 0.01; // 电阻精度：±0.1% / ±1%（独立于 E24/E12 取值系列）
+    var clEl = document.getElementById("filterCLoad");
+    var clPf = (clEl && clEl.value !== "") ? parseFloat(clEl.value) : NaN;   // 输出负载电容 C_L (pF)，空/非法 → 无载
+    if (!isFinite(clPf) || clPf < 0) clPf = 0;
+    try {
+      if (r.type === "diff1") {
+        return OA.analyzeDiff1({ R1: comps.R1, R2: comps.R2, R3: comps.R3, R4: comps.R4, C4: comps.C4 }, op, { fc_hz: r.fc_actual, tol: tol, cl_pf: clPf });
+      }
+      return OA.analyzeMfb2(comps, op, { fc_hz: r.fc_actual, tol: tol, cl_pf: clPf });
+    } catch (e) { console.error("opamp analysis failed", e); return null; }
+  }
+
+  function renderFilterOpamp() {
+    var card = document.getElementById("filterOpampCard");
+    if (!card || !OA) return;
+    var t = global._t || function(k){return k;};
+    var r = global._filterResult;
+    if (!r) {
+      card.innerHTML = '<p style="color:var(--color-text-soft);font-size:.85rem">' + t("filter.opamp.empty") + "</p>";
+      return;
+    }
+    var res = runOpampAnalysis(r);
+    if (!res) {
+      card.innerHTML = '<p style="color:#b45309;font-size:.85rem">⚠ ' + t("filter.opamp.empty") + "</p>";
+      return;
+    }
+
+    var stabMap = { ok: ["#16a34a", "filter.stab.ok"], marginal: ["#d97706", "filter.stab.marginal"], unstable: ["#dc2626", "filter.stab.unstable"], noCrossing: ["#64748b", "filter.stab.nocross"] };
+    var sm = stabMap[res.stability] || stabMap.noCrossing;
+
+    function ri(label, valHtml) { return '<div class="ri"><div class="rl">' + label + '</div><div class="rv">' + valHtml + "</div></div>"; }
+
+    var html = '<div class="result-grid">';
+    html += ri(t("filter.opamp.stability"), '<span style="color:' + sm[0] + ';font-weight:700">' + t(sm[1]) + "</span>");
+    html += ri(t("filter.opamp.pm"), res.pmDeg != null ? FM.fv(res.pmDeg, 1) + "°" : "—");
+    html += ri(t("filter.opamp.loopgain"), res.loopGainAtFc_dB != null ? FM.fv(res.loopGainAtFc_dB, 1) + " dB" : "—");
+    html += ri(t("filter.opamp.crossover"), fmtHz(res.crossoverHz));
+    html += ri(t("filter.opamp.ng"), FM.fv(res.ngDC.dB, 2) + " dB (" + FM.fv(res.ngDC.lin, 3) + ")");
+    html += ri(t("filter.opamp.noise1k"), (res.noiseDensity1k_nVrtHz >= 1000 ? FM.fv(res.noiseDensity1k_nVrtHz / 1000, 2) + " µV" : FM.fv(res.noiseDensity1k_nVrtHz, res.noiseDensity1k_nVrtHz < 10 ? 2 : 0)) + " /√Hz");
+    html += ri(t("filter.opamp.noiseInt"), (res.noiseRms_uV >= 1000 ? FM.fv(res.noiseRms_uV / 1000, 3) + " mV" : FM.fv(res.noiseRms_uV, res.noiseRms_uV < 10 ? 2 : 1)) + " rms");
+    html += ri(t("filter.opamp.offset"), fmtMV(res.offsetWorst_mV) +
+      ' <span style="color:#94a3b8;font-size:.7rem">(EIO ' + fmtMV(res.eioTerm_mV) + " + Ib " + fmtMV(res.ibTerm_mV) + ")</span>");
+    html += "</div>";
+
+    if (res.tolerance) {
+      var T = res.tolerance;
+      html += '<p style="color:#64748b;font-size:.75rem;margin-top:12px">' + t("filter.opamp.tolTitle") + "（±" + fmtPct(T.pct) + "%）</p>";
+      html += '<div class="result-grid">';
+      html += ri(t("filter.gain"), FM.fv(T.gain[0], 2) + " – " + FM.fv(T.gain[1], 2) + " V/V");
+      html += "</div>";
+    }
+
+    if (res.warnings.length) {
+      html += '<div style="margin-top:10px">';
+      for (var i = 0; i < res.warnings.length; i++) {
+        html += '<p style="color:#b45309;font-size:.78rem;line-height:1.5;margin-bottom:4px">⚠ ' + t(res.warnings[i]) + "</p>";
+      }
+      html += "</div>";
+    } else {
+      html += '<p style="color:#16a34a;font-size:.78rem;margin-top:10px">✓ ' + t("filter.opamp.okline") + "</p>";
+    }
+    html += '<p style="color:#94a3b8;font-size:.72rem;line-height:1.5;margin-top:10px">' + t("filter.opamp.note") + "</p>";
+
+    card.innerHTML = html;
+  }
+
   /* ── Lazy init — show placeholder results ─── */
   function initFilter() {
     filterShowPlaceholders();
+    initOpampSelect();
   }
 
   /* ── Type change handler ─── */
@@ -72,6 +206,7 @@
     _mfb2SvgCache = null;
     global._filterResult = null;
     global._filterPrevResult = null;
+    renderFilterOpamp(); // reset op-amp card to placeholder
   }
 
   /* ── Core calculation ─── */
@@ -124,6 +259,7 @@
     renderFilterResults(result);
     renderFilterChart(result);
     renderFilterSchematic(result);
+    renderFilterOpamp();
 
     // Highlight values that actually changed vs previous run
     setTimeout(function() {
@@ -181,6 +317,7 @@
     _mfb2SvgCache = null;
     global._filterResult = null;
     global._filterPrevResult = null;
+    renderFilterOpamp(); // reset op-amp card to placeholder
   }
 
   /* ── Render KPI results grid ─── */
@@ -564,6 +701,31 @@
     }
     html += '</div>';
 
+    // ── Section 4: Op-amp analysis ──
+    var oaRes = runOpampAnalysis(r);
+    if (oaRes && OA) {
+      var opSel = OA.opampById(gvs("filterOpamp")) || OA.OPAMPS[0];
+      var stabKey = ({ ok: "filter.stab.ok", marginal: "filter.stab.marginal", unstable: "filter.stab.unstable" })[oaRes.stability] || "filter.stab.nocross";
+      html += '<h3>4. ' + t("filter.report.opamp") + '</h3>';
+      html += '<table class="data-tbl"><thead><tr><th>' + t("filter.report.param") + '</th><th>' + t("filter.report.value") + '</th></tr></thead><tbody>';
+      html += '<tr><td>' + t("filter.report.opamp.part") + '</td><td style="font-size:.85rem">' + opampSpecLine(opSel) + '</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.stability") + '</td><td>' + t(stabKey) + '</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.pm") + '</td><td>' + (oaRes.pmDeg != null ? FM.fv(oaRes.pmDeg, 1) + "°" : "—") + '</td></tr>';
+      if (oaRes.loopGainAtFc_dB != null) html += '<tr><td>' + t("filter.opamp.loopgain") + '</td><td>' + FM.fv(oaRes.loopGainAtFc_dB, 1) + ' dB</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.crossover") + '</td><td>' + fmtHz(oaRes.crossoverHz) + '</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.ng") + '</td><td>' + FM.fv(oaRes.ngDC.dB, 2) + ' dB (' + FM.fv(oaRes.ngDC.lin, 3) + ' V/V)</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.noise1k") + '</td><td>' + (oaRes.noiseDensity1k_nVrtHz >= 1000 ? FM.fv(oaRes.noiseDensity1k_nVrtHz / 1000, 2) + " µV/√Hz" : FM.fv(oaRes.noiseDensity1k_nVrtHz, oaRes.noiseDensity1k_nVrtHz < 10 ? 2 : 0) + " nV/√Hz") + '</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.noiseInt") + '</td><td>' + (oaRes.noiseRms_uV >= 1000 ? FM.fv(oaRes.noiseRms_uV / 1000, 3) + " mV" : FM.fv(oaRes.noiseRms_uV, oaRes.noiseRms_uV < 10 ? 2 : 1)) + ' rms</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.offset") + '</td><td>±' + fmtMV(oaRes.offsetWorst_mV) + ' (EIO ±' + fmtMV(oaRes.eioTerm_mV) + ', Ib ±' + fmtMV(oaRes.ibTerm_mV) + ')</td></tr>';
+      if (oaRes.tolerance) {
+        var TW = oaRes.tolerance;
+        html += '<tr><td>' + t("filter.gain") + ' (' + t("filter.opamp.tolTitle") + ' ±' + fmtPct(TW.pct) + '%)</td><td>' + FM.fv(TW.gain[0], 2) + ' – ' + FM.fv(TW.gain[1], 2) + ' V/V</td></tr>';
+      }
+      html += '<tr><td>' + t("filter.opamp.warnings") + '</td><td style="font-size:.85rem">' + (oaRes.warnings.length ? oaRes.warnings.map(function(w){ return "⚠ " + t(w); }).join("<br>") : '✓ ' + t("filter.opamp.okline")) + '</td></tr>';
+      html += '</tbody></table>';
+      html += '<p style="color:#94a3b8;font-size:.75rem;line-height:1.5;margin-top:6px">' + t("filter.opamp.note") + '</p>';
+    }
+
     document.getElementById("filterRc").innerHTML = html;
     if (typeof window._renderLatex === 'function') window._renderLatex();
   }
@@ -629,6 +791,30 @@
     html += '<p>' + (lang === 'en' ? 'See chart in application for Bode plot.' : '幅频/相频特性图请在应用程序中查看。') + '</p>';
     html += '<p>f_c = ' + FM.fv(r.fc_actual, 1) + ' Hz, G = ' + FM.fv(r.gain_actual, 2) + ' V/V (' + FM.fv(20*Math.log10(r.gain_actual||1),2) + ' dB)' + (r.type==="mfb2"?', Q = '+FM.fv(r.Q_actual,3):'') + '</p>';
 
+    // ── Section 4: Op-amp analysis (Word export) ──
+    var oaResW = runOpampAnalysis(r);
+    if (oaResW && OA) {
+      var opSelW = OA.opampById(gvs("filterOpamp")) || OA.OPAMPS[0];
+      var stabKeyW = ({ ok: "filter.stab.ok", marginal: "filter.stab.marginal", unstable: "filter.stab.unstable" })[oaResW.stability] || "filter.stab.nocross";
+      html += '<h3>4. ' + t("filter.report.opamp") + '</h3>';
+      html += '<table><tr><th>' + t("filter.report.param") + '</th><th>' + t("filter.report.value") + '</th></tr>';
+      html += '<tr><td>' + t("filter.report.opamp.part") + '</td><td>' + opSelW.name + ' (GBW ' + fmtHz(opSelW.gbw_hz) + ', Aol ' + opSelW.aol_db + ' dB)</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.stability") + '</td><td>' + t(stabKeyW) + '</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.pm") + '</td><td>' + (oaResW.pmDeg != null ? FM.fv(oaResW.pmDeg, 1) + '°' : "—") + '</td></tr>';
+      if (oaResW.loopGainAtFc_dB != null) html += '<tr><td>' + t("filter.opamp.loopgain") + '</td><td>' + FM.fv(oaResW.loopGainAtFc_dB, 1) + ' dB</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.crossover") + '</td><td>' + fmtHz(oaResW.crossoverHz) + '</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.ng") + '</td><td>' + FM.fv(oaResW.ngDC.dB, 2) + ' dB (' + FM.fv(oaResW.ngDC.lin, 3) + ' V/V)</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.noise1k") + '</td><td>' + (oaResW.noiseDensity1k_nVrtHz >= 1000 ? FM.fv(oaResW.noiseDensity1k_nVrtHz / 1000, 2) + " µV/√Hz" : FM.fv(oaResW.noiseDensity1k_nVrtHz, oaResW.noiseDensity1k_nVrtHz < 10 ? 2 : 0) + " nV/√Hz") + '</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.noiseInt") + '</td><td>' + (oaResW.noiseRms_uV >= 1000 ? FM.fv(oaResW.noiseRms_uV / 1000, 3) + " mV" : FM.fv(oaResW.noiseRms_uV, oaResW.noiseRms_uV < 10 ? 2 : 1)) + ' rms</td></tr>';
+      html += '<tr><td>' + t("filter.opamp.offset") + '</td><td>±' + fmtMV(oaResW.offsetWorst_mV) + ' (EIO ±' + fmtMV(oaResW.eioTerm_mV) + ', Ib ±' + fmtMV(oaResW.ibTerm_mV) + ')</td></tr>';
+      if (oaResW.tolerance) {
+        var TW2 = oaResW.tolerance;
+        html += '<tr><td>' + t("filter.gain") + ' (' + t("filter.opamp.tolTitle") + ' ±' + fmtPct(TW2.pct) + '%)</td><td>' + FM.fv(TW2.gain[0], 2) + ' – ' + FM.fv(TW2.gain[1], 2) + ' V/V</td></tr>';
+      }
+      html += '<tr><td>' + t("filter.opamp.warnings") + '</td><td>' + (oaResW.warnings.length ? oaResW.warnings.map(function(w){ return "⚠ " + t(w); }).join("<br>") : '✓ ' + t("filter.opamp.okline")) + '</td></tr>';
+      html += '</table>';
+    }
+
     html += '<div class="footer"><p>' + (lang === 'en' ? 'Auto-generated by Auto Hardware Design Tool - Filter Designer' : '自动硬件设计工具 - 信号滤波器设计 自动生成') + '</p></div>';
     html += '</body></html>';
 
@@ -650,6 +836,8 @@
   global.initFilter = initFilter;
   global.filterTypeChange = filterTypeChange;
   global.filterCalc = filterCalc;
+  global.filterOpampChange = filterOpampChange;
+  global.filterRTolChange = filterRTolChange;
   global.filterGenRep = filterGenRep;
   global.filterExportWord = filterExportWord;
 

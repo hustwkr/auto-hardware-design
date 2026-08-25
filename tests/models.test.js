@@ -916,6 +916,292 @@ test("lookupClr UL PD2 at 100V → 1.5mm", function () {
   approx(SM.lookupClr(100, 2, "ul", false), 1.5, 0.01);
 });
 
+/* ================================================== */
+/* OpampAnalysis Tests (stability / noise / offset / C_L load) */
+/* ================================================== */
+
+process.stderr.write("\n--- OpampAnalysis ---\n");
+
+loadModel(path.join(__dirname, "../js/models/filter-model.js"), G);
+// opamp-analysis.js 在 Node（无 window）下自挂 globalThis
+new Function(fs.readFileSync(path.join(__dirname, "../js/models/opamp-analysis.js"), "utf8"))();
+var OA = globalThis.OpampAnalysis;
+
+/* ---- 测试侧复数运算（独立于模型实现）---- */
+function C(re, im) { return [re, im === undefined ? 0 : im]; }
+function cadd(a, b) { return [a[0] + b[0], a[1] + b[1]]; }
+function csub(a, b) { return [a[0] - b[0], a[1] - b[1]]; }
+function cmul(a, b) { return [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]]; }
+function cdiv(a, b) { var d = b[0]*b[0] + b[1]*b[1]; return [(a[0]*b[0]+a[1]*b[1])/d, (a[1]*b[0]-a[0]*b[1])/d]; }
+function cmag(a) { return Math.hypot(a[0], a[1]); }
+
+/* ---- 参考设计（Q≈0.707 MFB2 + diff1，前段已验证）---- */
+var compM = { R1: 47e3, R2: 220e3, R3: 82e3, C1: 330e-12, C2: 4.3e-9 };
+var fcM = 1 / (2 * Math.PI * Math.sqrt(compM.C1 * compM.C2 * compM.R2 * compM.R3)); // ≈994.7Hz
+var diffDesign = G.FilterModel.designDiff1(1000, 2, "e24");
+var compD = { R1: diffDesign.components.R1, R2: diffDesign.components.R2, R3: diffDesign.components.R3, R4: diffDesign.components.R4, C4: diffDesign.components.C4 };
+
+var opHuge = { gbw_hz: 1e16, aol_db: 200, enW_nv: 0, en_corner_hz: 0, in_pa: 0, ib_a: 0, eio_uv_max: 0, ro_ohm: 50 };
+var NE5532 = { id: "ne5532", name: "NE5532", gbw_hz: 1e7, aol_db: 104, enW_nv: 5, en_corner_hz: 20, in_pa: 5, ib_a: 80e-9, eio_uv_max: 500, ro_ohm: 100 };
+
+/* MFB2 闭式系数（测试侧克莱姆法则，独立于模型求解器）
+   KCL_A/KCL_x（vo 作参数）: [[a,b],[c,d]]·[vA,vx]ᵀ = [G1·vin+G2·vo, Ix+jwC1·vo]
+   α=vx/vin|vo=0 ; β=vx/vo|vin=0 ; p11=vA/vin|vo=0 */
+function mfb2Coefs(f) {
+  var w = 2 * Math.PI * f;
+  var g1 = 1/compM.R1, g2 = 1/compM.R2, g3 = 1/compM.R3;
+  var a = C(g1+g2+g3, w*compM.C2), b = C(-g3), c = C(-g3), d = C(g3, w*compM.C1);
+  var det = csub(cmul(a,d), cmul(b,c));
+  return {
+    alpha: cdiv(C(g1*g3), det),                                   // y=(a·r2−r1·c)/det, r=[G1,0] → −G1·c/det=G1g3/det
+    beta:  cdiv(csub(cmul(a, C(0, w*compM.C1)), cmul(C(g2), c)), det), // r=[G2,jwC1]
+    p11:   cdiv(cmul(C(g1), d), det)                              // x=(r1·d−b·r2)/det, r=[G1,0] → G1·d/det
+  };
+}
+
+test("opamp: mfb2 H_sig(hugeA) vs ideal formula", function () {
+  var maxRel = 0; var N = 80;
+  for (var i = 0; i < N; i++) {
+    var f = 0.5 * Math.pow(5e6/0.5, i/(N-1));
+    var w = 2*Math.PI*f;
+    var n0 = -compM.R2/compM.R1;
+    var d1c = compM.C1*(compM.R2+compM.R3+compM.R2*compM.R3/compM.R1);
+    var d2c = compM.C1*compM.C2*compM.R2*compM.R3;
+    var den = Math.pow(1-w*w*d2c, 2) + Math.pow(w*d1c, 2);
+    var Hideal = C(n0*(1-w*w*d2c)/den, -n0*w*d1c/den);
+    var Hs = OA._debug.mfb2TransferAt(f, compM, opHuge);
+    maxRel = Math.max(maxRel, cmag(csub(Hs, Hideal)) / cmag(Hideal));
+  }
+  assert.ok(maxRel < 1e-6, "maxRel=" + maxRel.toExponential(2));
+});
+
+test("opamp: mfb2 finite-A H_sig closed form", function () {
+  var op = OA.opampById("tp6004");
+  var maxSig = 0; var N = 80;
+  for (var i = 0; i < N; i++) {
+    var f = 0.5 * Math.pow(5e6/0.5, i/(N-1));
+    var A = OA._debug.aolAt(op, f);
+    var cf = mfb2Coefs(f);
+    var oneAb = cadd(C(1), cmul(A, cf.beta));
+    var HsigC = cdiv(cmul(A, csub(C(0), cf.alpha)), oneAb);   // −Aα/(1+Aβ)
+    maxSig = Math.max(maxSig, cmag(csub(OA._debug.mfb2TransferAt(f, compM, op), HsigC)) / cmag(HsigC));
+  }
+  assert.ok(maxSig < 1e-7, "maxRel=" + maxSig.toExponential(2));
+});
+
+test("opamp: mfb2 finite-A H_e closed form", function () {
+  var op = OA.opampById("tp6004");
+  var maxHe = 0; var N = 80;
+  for (var i = 0; i < N; i++) {
+    var f = 0.5 * Math.pow(5e6/0.5, i/(N-1));
+    var A = OA._debug.aolAt(op, f);
+    var cf = mfb2Coefs(f);
+    var HeC = cdiv(A, cadd(C(1), cmul(A, cf.beta)));
+    maxHe = Math.max(maxHe, cmag(csub(OA._debug.mfb2HeAt(f, compM, op), HeC)) / cmag(HeC));
+  }
+  assert.ok(maxHe < 1e-7, "maxRel=" + maxHe.toExponential(2));
+});
+
+test("opamp: mfb2 β solver vs Cramer's rule", function () {
+  var maxBeta = 0; var N = 80;
+  for (var i = 0; i < N; i++) {
+    var f = 0.5 * Math.pow(5e6/0.5, i/(N-1));
+    var cf = mfb2Coefs(f);
+    maxBeta = Math.max(maxBeta, cmag(csub(OA._debug.mfb2BetaAt(f, compM), cf.beta)) / cmag(cf.beta));
+  }
+  assert.ok(maxBeta < 1e-9, "maxRel=" + maxBeta.toExponential(2));
+});
+
+test("opamp: mfb2 NG(0)=1+R2/R1", function () {
+  var rM = OA.analyzeMfb2(compM, OA.opampById("tp6004"), { fc_hz: fcM });
+  assert.ok(Math.abs(rM.ngDC.lin - (1 + compM.R2/compM.R1)) / (1 + compM.R2/compM.R1) < 1e-4, "got " + rM.ngDC.lin);
+});
+
+test("opamp: diff1 NG(0)=1+R4/R2", function () {
+  var rD = OA.analyzeDiff1(compD, OA.opampById("tp6004"), { fc_hz: diffDesign.fc_actual });
+  assert.ok(Math.abs(rD.ngDC.lin - (1 + compD.R4/compD.R2)) / (1 + compD.R4/compD.R2) < 1e-4, "got " + rD.ngDC.lin);
+});
+
+/* 带载 MFB2 精确闭式（50Ω+1nF → 负载极点≈3.2MHz）：
+   H_e_L=AD/(1+AβD)；H_sig_L=[−Aα+Ro(G2·p11+jwC1·α)]·D/(1+AβD)
+   （第二项 = vin 经 R2/C1 馈通到 vo 节点、绕过输出分压器的电流）*/
+test("opamp: mfb2 loaded H_sig closed form", function () {
+  var op = OA.opampById("tp6004");
+  var load = { ro: op.ro_ohm, cl: 1e-9 };
+  var g2c = C(1/compM.R2);
+  var maxSig = 0; var N = 80;
+  for (var i = 0; i < N; i++) {
+    var f = 0.5 * Math.pow(5e6/0.5, i/(N-1));
+    var w = 2*Math.PI*f;
+    var A = OA._debug.aolAt(op, f);
+    var cf = mfb2Coefs(f);
+    var D = OA._debug.dloadAt("mfb2", w, compM, load.ro, load.cl);
+    var oneAbD = cadd(C(1), cmul(cmul(A, cf.beta), D));
+    var feed = cadd(cmul(g2c, cf.p11), cmul(C(0, w*compM.C1), cf.alpha));   // G2·p11+jwC1·α
+    var HsigC = cdiv(cmul(cadd(csub(C(0), cmul(A, cf.alpha)), cmul(C(load.ro), feed)), D), oneAbD);  // [−Aα+Ro·feed]·D/(1+AβD)
+    maxSig = Math.max(maxSig, cmag(csub(OA._debug.mfb2TransferLoadedAt(f, compM, op, load), HsigC)) / cmag(HsigC));
+  }
+  assert.ok(maxSig < 1e-7, "maxRel=" + maxSig.toExponential(2));
+});
+
+test("opamp: mfb2 loaded H_e closed form", function () {
+  var op = OA.opampById("tp6004");
+  var load = { ro: op.ro_ohm, cl: 1e-9 };
+  var maxHe = 0; var N = 80;
+  for (var i = 0; i < N; i++) {
+    var f = 0.5 * Math.pow(5e6/0.5, i/(N-1));
+    var A = OA._debug.aolAt(op, f);
+    var cf = mfb2Coefs(f);
+    var D = OA._debug.dloadAt("mfb2", 2*Math.PI*f, compM, load.ro, load.cl);
+    var HeC = cdiv(cmul(A, D), cadd(C(1), cmul(cmul(A, cf.beta), D)));
+    maxHe = Math.max(maxHe, cmag(csub(OA._debug.mfb2HeLoadedAt(f, compM, op, load), HeC)) / cmag(HeC));
+  }
+  assert.ok(maxHe < 1e-7, "maxRel=" + maxHe.toExponential(2));
+});
+
+test("opamp: mfb2 Ro→0 ⇒ no-load (C_L has no effect)", function () {
+  var op = OA.opampById("tp6004");
+  var maxRel = 0;
+  [1, 994.7, 3e3, 3.2e6].forEach(function (f) {
+    var Hload = OA._debug.mfb2TransferLoadedAt(f, compM, op, { ro: 1e-3, cl: 1e-9 });
+    var Hfree = OA._debug.mfb2TransferAt(f, compM, op);
+    maxRel = Math.max(maxRel, cmag(csub(Hload, Hfree)) / cmag(Hfree));
+  });
+  assert.ok(maxRel < 1e-4, "maxRel=" + maxRel.toExponential(2));
+});
+
+test("opamp: diff1 Ro→0 ⇒ no-load (C_L has no effect)", function () {
+  var op = OA.opampById("tp555x");
+  var maxRel = 0;
+  [1, diffDesign.fc_actual, 3e3].forEach(function (f) {
+    ["plus", "minus"].forEach(function (drive) {
+      var Hload = OA._debug.diff1TransferLoadedAt(f, compD, op, drive, { ro: 1e-3, cl: 1e-9 });
+      var Hfree = OA._debug.diff1TransferAt(f, compD, op, drive);
+      maxRel = Math.max(maxRel, cmag(csub(Hload, Hfree)) / cmag(Hfree));
+    });
+  });
+  assert.ok(maxRel < 1e-4, "maxRel=" + maxRel.toExponential(2));
+});
+
+/* diff1 闭式（无载+带载，双驱动方向）
+   OP 行 vo=A(ei+vP−vx) ⇒ 恒等式 vo(1+Aβ)=A·ei + A·kp·vinp − A·km·vinm：
+   H_plus=+A·kp/(1+Aβ), H_minus=−A·km/(1+Aβ)；带载: 各系数 ×D */
+test("opamp: diff1 no-load closed forms (plus & minus)", function () {
+  var op = OA.opampById("tp555x");
+  var g1 = 1/compD.R1, g3 = 1/compD.R3;
+  var kp = g1/(g1+g3);                       // R1=R2,R3=R4 ⇒ G1=G2,G3=G4
+  var maxPlus = 0, maxMinus = 0; var N = 80;
+  for (var i = 0; i < N; i++) {
+    var f = 0.5 * Math.pow(5e6/0.5, i/(N-1));
+    var w = 2*Math.PI*f;
+    var A = OA._debug.aolAt(op, f);
+    var Yf = C(1/compD.R4, w*compD.C4), g2 = C(1/compD.R2);
+    var beta = cdiv(Yf, cadd(g2, Yf));
+    var km = cdiv(g2, cadd(g2, Yf));
+    var oneAb = cadd(C(1), cmul(A, beta));
+    maxPlus  = Math.max(maxPlus,  cmag(csub(OA._debug.diff1TransferAt(f, compD, op, "plus"),  cdiv(cmul(A, C(kp)), oneAb))) / cmag(cdiv(cmul(A, C(kp)), oneAb)));
+    maxMinus = Math.max(maxMinus, cmag(csub(OA._debug.diff1TransferAt(f, compD, op, "minus"), cdiv(cmul(A, C(-km[0], -km[1])), oneAb))) / cmag(cdiv(cmul(A, C(-km[0], -km[1])), oneAb)));
+  }
+  assert.ok(maxPlus < 1e-7 && maxMinus < 1e-7, "maxRel=" + Math.max(maxPlus, maxMinus).toExponential(2));
+});
+
+test("opamp: diff1 loaded closed forms (plus & minus)", function () {
+  var op = OA.opampById("tp555x");
+  var g1 = 1/compD.R1, g3 = 1/compD.R3;
+  var kp = g1/(g1+g3);
+  var load = { ro: op.ro_ohm, cl: 1e-9 };
+  var maxLp = 0, maxLm = 0; var N = 80;
+  for (var i = 0; i < N; i++) {
+    var f = 0.5 * Math.pow(5e6/0.5, i/(N-1));
+    var w = 2*Math.PI*f;
+    var A = OA._debug.aolAt(op, f);
+    var Yf = C(1/compD.R4, w*compD.C4), g2 = C(1/compD.R2);
+    var beta = cdiv(Yf, cadd(g2, Yf));
+    var km = cdiv(g2, cadd(g2, Yf));
+    var D = OA._debug.dloadAt("diff1", w, compD, load.ro, load.cl);
+    var oneAbD = cadd(C(1), cmul(cmul(A, beta), D));
+    /* H_plus_L=+A·kp·D/(1+AβD)（vP 不与 vo 耦合，无馈通项）；
+       H_minus_L=−(A−RoYf)·km·D/(1+AβD)（vinm 经 Yf 馈通到 vo 节点）*/
+    var HpC = cdiv(cmul(cmul(A, C(kp)), D), oneAbD);
+    maxLp = Math.max(maxLp, cmag(csub(OA._debug.diff1TransferLoadedAt(f, compD, op, "plus", load), HpC)) / cmag(HpC));
+    var HmCC = cdiv(cmul(cmul(csub(A, cmul(C(load.ro), Yf)), C(-km[0], -km[1])), D), oneAbD);   // −(A−RoYf)·km·D/(1+AβD)
+    maxLm = Math.max(maxLm, cmag(csub(OA._debug.diff1TransferLoadedAt(f, compD, op, "minus", load), HmCC)) / cmag(HmCC));
+  }
+  assert.ok(maxLp < 1e-7 && maxLm < 1e-7, "maxRel=" + Math.max(maxLp, maxLm).toExponential(2));
+});
+
+test("opamp: cl=0 regression (validated reference values)", function () {
+  var r = OA.analyzeMfb2(compM, OA.opampById("tp6004"), { fc_hz: fcM });
+  assert.ok(Math.abs(r.pmDeg - 90.34) < 0.05, "pm got " + r.pmDeg);
+  assert.ok(r.crossoverHz > 0.85e6 && r.crossoverHz < 1.15e6, "fxc got " + r.crossoverHz);
+  assert.ok(Math.abs(r.noiseDensity1k_nVrtHz - 195.3)/195.3 < 0.02, "n1k got " + r.noiseDensity1k_nVrtHz);
+  assert.ok(Math.abs(r.noiseRms_uV - 34.97)/34.97 < 0.02, "nrms got " + r.noiseRms_uV);
+  assert.ok(Math.abs(r.offsetWorst_mV - 17.04)/17.04 < 0.02, "off got " + r.offsetWorst_mV);
+});
+
+test("opamp: PM/fxc/L(fc) monotone in C_L", function () {
+  var op = OA.opampById("tp6004");
+  var res = [0, 10, 100, 1000].map(function (cl) { return OA.analyzeMfb2(compM, op, { fc_hz: fcM, cl_pf: cl }); });
+  for (var i = 1; i < res.length; i++) {
+    assert.ok(res[i].pmDeg <= res[i-1].pmDeg + 1e-9, "PM not monotone at step " + i);
+    assert.ok(res[i].crossoverHz <= res[i-1].crossoverHz + 1e-6, "fxc not monotone at step " + i);
+    assert.ok(res[i].loopGainAtFc_dB <= res[i-1].loopGainAtFc_dB + 1e-9, "L(fc) not monotone at step " + i);
+  }
+});
+
+test("opamp: PM drop (0→1nF) > 2°", function () {
+  var op = OA.opampById("tp6004");
+  var r0 = OA.analyzeMfb2(compM, op, { fc_hz: fcM });
+  var rL = OA.analyzeMfb2(compM, op, { fc_hz: fcM, cl_pf: 1000 });
+  assert.ok(r0.pmDeg - rL.pmDeg > 2, "drop=" + (r0.pmDeg - rL.pmDeg).toFixed(2));
+});
+
+test("opamp: loopGainAtFc_dB == 20log|Aβ|(fc)", function () {
+  var op = OA.opampById("tp6004");
+  var r = OA.analyzeMfb2(compM, op, { fc_hz: fcM });
+  var Afc = OA._debug.aolAt(op, fcM), betaFc = OA._debug.mfb2BetaAt(fcM, compM);
+  var Lref = 20 * Math.log10(cmag(cmul(Afc, betaFc)));
+  assert.ok(Math.abs(r.loopGainAtFc_dB - Lref) < 1e-6, "got " + r.loopGainAtFc_dB + " vs " + Lref);
+});
+
+test("opamp: tp6004 no w.gbWLow; ne5532 L(fc) > tp6004+10dB", function () {
+  var op = OA.opampById("tp6004");
+  var r = OA.analyzeMfb2(compM, op, { fc_hz: fcM });
+  assert.ok(r.warnings.indexOf("w.gbWLow") === -1, JSON.stringify(r.warnings));
+  var rN = OA.analyzeMfb2(compM, NE5532, { fc_hz: fcM });
+  assert.ok(rN.loopGainAtFc_dB > r.loopGainAtFc_dB + 10, rN.loopGainAtFc_dB.toFixed(1) + " vs " + r.loopGainAtFc_dB.toFixed(1));
+});
+
+test("opamp: low-GBW part fires w.gbWLow", function () {
+  var stress = { id: "stress", name: "stress", gbw_hz: 2e4, aol_db: 86, enW_nv: 30, en_corner_hz: 10, in_pa: 5, ib_a: 50e-9, eio_uv_max: 500, ro_ohm: 50 };
+  var rS = OA.analyzeMfb2(compM, stress, { fc_hz: fcM });
+  assert.ok(rS.warnings.indexOf("w.gbWLow") !== -1, "Lfc=" + rS.loopGainAtFc_dB);
+});
+
+test("opamp: tolerance reports DC-gain range only (exact ±tol)", function () {
+  var op = OA.opampById("tp6004");
+  var t = 0.01;
+  var rt = OA.analyzeMfb2(compM, op, { fc_hz: fcM, tol: t });
+  assert.ok(rt.tolerance && Math.abs(rt.tolerance.pct - 1) < 1e-9 && Array.isArray(rt.tolerance.gain), JSON.stringify(Object.keys(rt.tolerance)));
+  assert.ok(!("fc" in rt.tolerance) && !("q" in rt.tolerance) && !("ngMax_dB" in rt.tolerance), "unexpected keys: " + JSON.stringify(Object.keys(rt.tolerance)));
+  var G0 = compM.R2/compM.R1;
+  assert.ok(Math.abs(rt.tolerance.gain[0] - G0*(1-t)/(1+t)) < 1e-12 && Math.abs(rt.tolerance.gain[1] - G0*(1+t)/(1-t)) < 1e-12, JSON.stringify(rt.tolerance.gain));
+});
+
+test("opamp: tolerance offset ≥ baseline (corner upgrade)", function () {
+  var op = OA.opampById("tp6004");
+  var base = OA.analyzeMfb2(compM, op, { fc_hz: fcM });
+  var rt = OA.analyzeMfb2(compM, op, { fc_hz: fcM, tol: 0.01 });
+  assert.ok(rt.offsetWorst_mV >= base.offsetWorst_mV - 1e-9, rt.offsetWorst_mV + " vs " + base.offsetWorst_mV);
+});
+
+test("opamp: diff1 loaded PM finite and decreases with C_L", function () {
+  var op = OA.opampById("tp6004");
+  var r0 = OA.analyzeDiff1(compD, op, { fc_hz: diffDesign.fc_actual });
+  var rL = OA.analyzeDiff1(compD, op, { fc_hz: diffDesign.fc_actual, cl_pf: 100 });
+  assert.ok(isFinite(r0.pmDeg) && isFinite(rL.pmDeg), JSON.stringify([r0.pmDeg, rL.pmDeg]));
+  assert.ok(rL.pmDeg < r0.pmDeg - 0.5, rL.pmDeg + " vs " + r0.pmDeg);
+});
 
 /* ================================================== */
 

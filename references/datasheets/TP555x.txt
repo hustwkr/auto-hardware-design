@@ -1,0 +1,1711 @@
+
+===== PAGE 1 =====
+3PEAK
+ 
+ 
+1 
+TP5551/TP5552 / TP5554 
+ Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+www.3peakic.com.cn                                                               REV B.1 
+Features 
+ 
+Low Offset Voltage: 5μV(max) 
+ 
+Zero Drift: 0.05 µV/°C(max) 
+ 
+No 1/f Noise Corner Down to 0.1Hz 
+- Input Noise Voltage . . . . . . . .. .15 nV/√Hz @ 1kHz 
+-0.1Hz to 10Hz Noise Voltage . . . . . . . . . . 350nVP-P 
+ 
+Slew Rate: 2.5 V/μs 
+ 
+Bandwidth: 3.5MHz 
+ 
+Low Supply Current: 500A per Amplifier 
+ 
+Low Input Bias Current: 50pA Typical 
+ 
+Rail-to-Rail Output Voltage Range 
+ 
+High gain, CMRR, PSRR: 130 dB 
+ 
+7K HBM ESD Rating 
+ 
+–40°C to 125°C Operation Range 
+ 
+Applications 
+ 
+Medical Instrumentation  
+ 
+Temperature Measurements 
+ 
+Precision current sensing  
+ 
+Precision Low Drift, Low Frequency ADC Drivers 
+ 
+Process Control Systems 
+ 
+Precision Voltage Reference Buffers 
+ 
+ 
+Pin Configuration (Top View) 
+Description 
+The family of amplifier are single/dual/quad chopper 
+stabilized zero-drift operational amplifier optimize for 
+single or dual supply operation from 1.8V to 5.5V and 
+±0.9V to ±2.75V. TP555X features very low input offset 
+voltage and low noise with no 1/f noise corner down to 
+0.1Hz. The TP555X is designed to have ultra low offset 
+voltage and offset temperature drift, wide gain 
+bandwidth and rail-to-rail input/output swing while 
+minimizing power consumption. 
+This family amp TP555X can provide very low offset 
+voltage(max 5μV) and near-zero drift over time and 
+temperature with excellent CMRR and PSRR. 
+The TP5551(single version) is available in SOT23-5,  
+SC70-5 and SO-8 packages. The TP5552(dual version)  
+is offered in MOSP-8, SO-8 package. The TP5554(quad 
+version) is available in TSSOP-14,SO-14 package. All 
+versions are specified for operation from -40°C to 125°C. 
+ 
+ 
+3PEAK and the 3PEAK logo are registered trademarks of 
+3PEAK INCORPORATED. All other trademarks are the property of 
+their respective owners. 
+ 
+Related Zero-Drift RRO Op-amps 
+Single 
+ 
+Vos(Max) 
+Supply 
+Current 
+eN @1kHz 
+( nV/√Hz ) 
+GBW 
+TP555X 
+5μV 
+560 μA 
+12 
+3.5 MHz 
+TP553X 
+10μV 
+34 μA 
+55 
+350kHz 
+ 
+TP5551U
+SOT23-5/SC70-5
+(-T and -C Suffixes)
+5
+4
+3
+2
+1
++IN
+-IN
+V-
+V+
+OUT
+A
+TP5551
+SOT23-5/SC70-5
+(-T and -C Suffixes)
+5
+4
+3
+2
+1
+OUT
++IN
+V-
+V+
+-IN
+A
+            
+ 
+Pin Configuration (Top View)  
+0
+5
+10
+15
+20
+25
+30
+35
+-2.5
+-2.25
+-2
+-1.75
+-1.5
+-1.25
+-1
+0
+1
+1.25
+1.5
+1.75
+2
+2.25
+2.5
+Population Of Amplifiers
+Offset Voltage(μV)
+Offset Voltage Distribution
+
+===== PAGE 2 =====
+ 
+2 
+REV B.1                                                             www.3peakic.com.cn 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+8
+6
+5
+7
+3
+2
+1
+4
+NC
+﹣Vs
+﹢In
+﹣In
+﹢Vs
+Out
+NC
+NC
+TP5551
+8-Pin SOIC
+ (-S Suffix)
+TP5554
+14-Pin SOIC/TSSOP
+(-S and -T Suffixes)
+14
+13
+12
+11
+10
+9
+8
+6
+5
+7
+3
+2
+1
+4
+Out A
+﹢In A
+﹣In A
+D
+A
+C
+B
+Out D
+﹢In D
+﹣In D
+Out B
+﹢In B
+﹣In B
+Out C
+﹢In C
+﹣In C
+﹣Vs
+﹢Vs
+TP5552
+8-Pin SOIC/MSOP
+(-S and -V Suffixes)
+8
+6
+5
+7
+3
+2
+1
+4
+Out A
+﹢In A
+﹣In A
+﹢In B
+﹣In B
+Out B
+A
+B
+﹣Vs
+﹢Vs
+Order Information 
+ 
+Model Name 
+Order Number 
+Package 
+MSL 
+Transport Media, Quantity 
+Marking 
+Information 
+TP5551 
+TP5551-TR 
+SOT23-5 
+3 
+Tape and Reel, 3000  
+E51T 
+TP5551L1-TR 
+SOT23-5 
+1 
+Tape and Reel, 3000  
+E51T 
+TP5551-CR 
+SC70-5 
+3 
+Tape and Reel, 3000  
+51C 
+TP5551-SR 
+SO-8 
+3 
+Tape and Reel, 4000  
+TP5551 
+TP5551U 
+TP5551U-TR 
+SOT23-5 
+3 
+Tape and Reel, 3000 
+E51U 
+TP5551U-CR 
+SC70-5 
+3 
+Tape and Reel, 3000 
+51V 
+TP5552 
+TP5552-SR 
+SO-8 
+3 
+Tape and Reel, 4000 
+TP5552 
+TP5552L1-SR 
+SO-8 
+1 
+Tape and Reel, 4000 
+TP5552 
+TP5552-VR 
+MSOP-8 
+3 
+Tape and Reel, 3000 
+TP5552 
+TP5554 
+TP5554-SR 
+SO-14 
+3 
+Tape and Reel, 2500 
+TP5554 
+TP5554-TR 
+TSSOP-14 
+3 
+Tape and Reel, 3000 
+TP5554 
+ 
+Absolute Maximum Ratings Note 1 
+Supply Voltage: .....................................................7V 
+Input Voltage: ....................... ……V– – 0.3 to V+ + 0.3 
+Input Current: +IN, –IN Note 2........................... ±20mA 
+Output Current: OUT...................................... ±60mA 
+Output Short-Circuit Duration Note 3…....... Indefinite 
+Current at Supply Pins……………............... ±50mA 
+Operating Temperature Range.......–40°C to 125°C 
+Maximum Junction Temperature................... 150°C 
+Storage Temperature Range.......... –65°C to 150°C 
+Lead Temperature (Soldering, 10 sec) ......... 260°C 
+Note 1: Stresses beyond those listed under Absolute Maximum Ratings may cause permanent damage to the device. Exposure to 
+any Absolute Maximum Rating condition for extended periods may affect device reliability and lifetime. 
+Note 2: The inputs are protected by ESD protection diodes to each power supply. If the input extends more than 500mV beyond the 
+power supply, the input current should be limited to less than 10mA.  
+Note 3: A heat sink may be required to keep the junction temperature below the absolute maximum. This depends on the power 
+supply voltage and how many amplifiers are shorted. Thermal resistance varies with the amount of PC board metal connected to 
+the package. The specified values are for short traces connected to the leads.  
+ESD, Electrostatic Discharge Protection 
+Symbol 
+Parameter 
+Condition 
+Minimum Level 
+Unit 
+HBM 
+ Human Body Model ESD 
+ANSI/ESDA/JEDEC JS-001 
+7 
+kV 
+CDM 
+ Charged Device Model ESD 
+ANSI/ESDA/JEDEC JS-002 
+2 
+kV 
+
+===== PAGE 3 =====
+        
+ 
+ 
+3 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+www.3peakic.com.cn                                                               REV B.1 
+Electrical Characteristics  
+At TA = 27°C, VDD=5V, RL=10K, Vcm=VDD/2, unless otherwise noted. 
+ 
+VDD=5V,  
+SYMBOL 
+PARAMETER 
+CONDITIONS 
+MIN 
+TYP 
+MAX 
+UNITS 
+VDD 
+Supply Voltage Range 
+ 
+1.8 
+ 
+5.5 
+V 
+IQ 
+Quiescent current per amplifier 
+TP5551 
+ 
+1200 
+1400 
+μA 
+TP5551, TA = -40°C to 85°C 
+ 
+ 
+1600 
+μA 
+TP5551, TA = -40°C to 125°C 
+ 
+ 
+1750 
+μA 
+TP5552/4 
+ 
+550 
+950 
+μA 
+TP5552/4, TA = -40°C to 85°C 
+ 
+ 
+1150 
+μA 
+TP5552/4, TA = -40°C to 
+125°C 
+ 
+ 
+1300 
+μA 
+VOS 
+input Offset Voltage  
+ 
+ 
+±1 
+±5 
+μV 
+TA = -40°C to 125°C 
+ 
+ 
+±10 
+μV 
+dVos/dT 
+vs temperature         
+ 
+ 
+0.008 
+0.05 
+μV/°C 
+PSRR 
+vs power supply        
+Vs=+1.8V to +5.5V 
+110 
+130 
+ 
+dB 
+Vs=+1.8V to +5.5V, TA = 
+-40°C to 125°C 
+105 
+ 
+ 
+ 
+VN (p-p) 
+input voltage noise, f=0.01Hz to 1Hz 
+ 
+ 
+0.1 
+ 
+μVpp 
+input voltage noise, f=0.1Hz to 10Hz 
+ 
+ 
+0.35 
+ 
+μVpp 
+VN 
+Input voltage noise density, f=1kHz 
+ 
+ 
+15 
+ 
+nV/√Hz 
+CIN 
+Input capacitor Differential 
+ 
+ 
+3 
+ 
+pF 
+Input capacitor Common-Mode 
+ 
+ 
+2 
+ 
+pF 
+IB 
+Input Current 
+ 
+ 
+±50 
+ 
+pA 
+Over temperature 
+ 
+ 
+±200 
+ 
+pA 
+IOS 
+Input offset current 
+ 
+ 
+±100 
+ 
+pA 
+VCM 
+Common-mode voltage range 
+ 
+(V-)-0.1 
+ 
+(V+)+0.1 
+V 
+CMRR 
+Common-mode rejection ratio 
+VS=5V, VCM = 0.5V to 4.5V 
+110 
+130 
+ 
+dB 
+CMRR 
+Common-mode rejection ratio 
+VS=5V, VCM = 0V to 5V 
+100 
+120 
+ 
+dB 
+VS=5V, VCM = 0V to 5V, TA = 
+-40°C to 125°C 
+90 
+ 
+ 
+dB 
+VO 
+Output Voltage Swing from rail 
+RL=10kΩ 
+ 
+10 
+25 
+mV 
+RL=10kΩ, TA = -40°C to 125°C 
+ 
+ 
+30 
+mV 
+ISC 
+Short-circuit current 
+ 
+ 
+±50 
+ 
+mA 
+GBW 
+Unity Gain Bandwidth 
+CL=100pF 
+ 
+3.5 
+ 
+MHz 
+SR 
+Slew rate 
+G=+1, CL=100pF 
+ 
+2.5 
+ 
+V/μs 
+tor 
+Overload recovery time 
+G=-10 
+ 
+35 
+ 
+μs 
+ts 
+Settling time to 0.01% 
+CL=100pF 
+ 
+20 
+ 
+μs 
+AVO 
+Open-Loop Voltage Gain 
+(V-)+100mV<VO<(V+)-100mV, 
+RL = 100kΩ 
+100 
+120 
+ 
+dB 
+(V-)+100mV<VO<(V+)-100mV, 
+RL = 100kΩ, TA = -40°C to 
+125°C 
+90 
+ 
+ 
+dB 
+θJA 
+Thermal Resistance Junction to 
+Ambient 
+SOT23-5 
+ 
+200 
+ 
+°C/W 
+MSOP-8 
+ 
+210 
+ 
+SO-8 
+ 
+158 
+ 
+SC70-5 
+ 
+250 
+ 
+SO-14 
+ 
+83 
+ 
+TSSOP-14 
+ 
+100 
+ 
+
+===== PAGE 4 =====
+3PEAK
+ 
+ 
+4 
+www.3peakic.com.cn                                                               REV B.1 
+TP5531/TP5532 
+ Dual/Quad, zero drift, RIRO Op-amps 
+Typical Performance Characteristics
+       
+   
+           
+ 
+      
+ 
+ 
+ 
+0
+5
+10
+15
+20
+25
+30
+35
+40
+45
+50
+500 510 520 530 540 550 560 570 580 590 600
+Population Of Amplifiers
+Supply Curent(μA)
+Supply Current Distribution
+0
+5
+10
+15
+20
+25
+30
+35
+-2.5
+-2.25
+-2
+-1.75
+-1.5
+-1.25
+-1
+0
+1
+1.25
+1.5
+1.75
+2
+2.25
+2.5
+Population Of Amplifiers
+Offset Voltage(μV)
+Offset Voltage Distribution
+100
+200
+300
+400
+500
+600
+700
+800
+900
+1000
+-50
+-25
+0
+25
+50
+75
+100
+125
+150
+IQ(μV)
+Temperature(°C)
+Quiesent Current vs Temperature 
+1
+10
+100
+0.01
+0.1
+1
+10
+100
+1k
+10k
+Volage noise (nV/√Hz)
+Frequency (Hz)
+Voltage Noise Spectral Density vs Frequency
+10
+100
+1k
+10k
+100k
+1M
+10M
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90
+100
+-20
+0
+20
+40
+60
+80
+100
+120
+Aol(dB)
+Frequency(Hz)
+OPEN-LOOP GAIN vs FREQUENCY
+Phase(deg)
+0
+20
+40
+60
+80
+100
+120
+140
+1
+10
+100
+1k
+10k
+100k
+1M
+CMRR(dB)
+Frequency(Hz)
+CMRR vs FREQUENCY
+
+===== PAGE 5 =====
+        
+ 
+ 
+5 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+www.3peakic.com.cn                                                               REV B.1 
+Typical Performance Characteristics(continue) 
+ 
+Small-Scale Step Response
+Output Voltage (50mV/div)
+Time (5μs/div)
+G=+1   
+RL=10KΩ
+        
+Positive Over-Voltage Recovery
+2V/div
+Time (50μs/div)
+1V/div
+Input
+Output
+ 
+ 
+Negative Over-Voltage Recovery
+Time (50μs/div)
+1V/div
+1V/div
+Input
+Output
+       
+Large-Scale Step Response
+Output Voltage (2V/div)
+Time (10μs/div)
+G=+1   
+RL=10KΩ
+ 
+                     
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+===== PAGE 6 =====
+ 
+6 
+REV B.1                                                             www.3peakic.com.cn 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+TYPICAL APPLICATIONS 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+                          
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+                
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+                  
+                  
+                  
+           
+TP5551
++
+-
+TP5551
++
+-
+Single Supply, High Gain Amplifier, AV = 10,000 V/V 
+Thermistor Measurement 
+
+===== PAGE 7 =====
+        
+ 
+ 
+7 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+www.3peakic.com.cn                                                               REV B.1 
+Pin Functions 
+-IN: Inverting Input of the Amplifier. 
++IN: Non-Inverting Input of Amplifier.  
+OUT: Amplifier Output. The voltage range extends to 
+within mV of each supply rail. 
+V+ or +Vs: Positive Power Supply. Typically the voltage 
+is from 1.8V to 5.5V. Split supplies are possible as long 
+as the voltage between V+ and V– is between 1.8V and 
+5.5V. A bypass capacitor of 0.1μF as close to the part as 
+possible should be used between power supply pins or 
+between supply pins and ground. 
+V- or –Vs: Negative Power Supply. It is normally tied to 
+ground. It can also be tied to a voltage other than 
+ground as long as the voltage between V+ and V– is from 
+1.8V to 5.5V. If it is not connected to ground, bypass it 
+with a capacitor of 0.1μF as close to the part as 
+possible.  
+ 
+Operation 
+The TP5551/2/4 op amps are zero drift, rail-to-rail operation amplifiers that can be run from a single-supply voltage. 
+They use an auto-calibration technique with a time-continuous 3.5MHz op amp in the signal path while consuming only 
+550μA of supply current per channel. This amplifier is zero-corrected with an 150kHz clock. Upon power-up, the 
+amplifier requires approximately 100μs to achieve specified Vos accuracy. This design has no aliasing or flicker noise.
+ 
+Applications Information 
+ 
+Rail-To-Rail Input And Output 
+The TP5551/2/4 feature rail-to-rail input and output with a supply voltage from 1.8V to 5.5 V. This allows the amplifier 
+inputs to have a wide common mode range(50mV beyond supply rails)while maintaining high CMRR(120dB) and 
+maximizes the signal to noise ratio of the amplifier by having the VOH and VOL levels be at the V+ and V- rails, 
+respectively. 
+Input Protection 
+The TP5551/2/4 have internal ESD protection diodes that are connect between the inputs and supply rail. When either 
+input exceeds one of the supply rails by more than 300mV, the ESD diodes become forward biased and large amounts 
+of current begin to flow through them. Without current limiting, this excessive fault current causes permanent damage 
+to the device. Thus an external series resistor must be used to ensure the input currents never exceed 10mA (see 
+Figure xx). 
+ 
+IN+
+IN-
+V+
+V-
+500Ω
+500Ω
+INPUT ESD DIODE CURRENT LIMITING- UNITY GAIN
+ 
+ 
+ Ioverload 
+10mA max
+VIN
+Current-limiting resistor 
+required if input voltage 
+exceeds supply rails by 
+>0.5V.
+TP5551
+Vout
++2.5V
+-2.5V
+5kΩ
+
+===== PAGE 8 =====
+ 
+8 
+REV B.1                                                             www.3peakic.com.cn 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+Low Input Referred Noise 
+Flicker noise, as known as 1/f noise, is inherent in semiconductor devices and increases as frequency decreases. So 
+at lower frequencies, flicker noise dominates, causing higher degrees of error for sub-Hertz frequencies or dc precision 
+application. 
+The TP5551/2/4 amplifiers are chopper stabilized amplifiers, the flicker noise is reduced greatly because of this 
+technique. This reduction in 1/f noise allows the TP5551/2/4 to have much lower noise at dc and low frequency 
+compared to standard low noise amplifier. 
+ 
+Residual voltage ripple 
+The chopping technique can be used in amplifier design due to the internal notch filter. Although the chopping related 
+voltage ripple is suppressed, higher noise spectrum exists at the chopping frequency and its harmonics due to residual 
+ripple. 
+So if the frequency of input signal is nearby the chopping frequency, the signal maybe interfered by the residue ripple. 
+To further suppress the noise at the chopping frequency, it is recommended that a post filter be placed at the output of 
+the amplifier. 
+Broad Band And External Resistor Noise Considerations 
+The total broadband noise output from any amplifier is primarily a function of three types of noise: input voltage noise 
+from the amplifier, input current noise from the amplifier, and thermal (Johnson) noise from the external resistors used 
+around the amplifier. These noise sources are not correlated with each other and their combined noise can be 
+summed in a root sum squared manner. The full equation is given as: 
+2
+2 1/2
+[
+4
+(
+) ]
+
+
+
+
+n
+n
+s
+n
+s
+e total
+e
+kTR
+i
+R
+ 
+Where:  
+en= the input voltage noise density of the amplifier.  
+In= the input current noise of the amplifier.  
+RS= source resistance connected to the noninverting terminal.  
+K= Boltzmann‘s constant (1.38x10-23J/K). T= ambient temperature in Kelvin (K). 
+The total equivalent rms noise over a specific bandwidth is expressed as: 
+,
+
+
+n rms
+n
+e
+e total
+BW  
+The input voltage noise density (en) of the TP555x is 55 nV/√Hz, and the input current noise can be neglected. When 
+the source resistance is 190 kΩ, the voltage noise contribution from the source resistor and the amplifier are equal.  
+With source resistance greater than 190 kΩ, the overall noise of the system is dominated by the Johnson noise of the 
+resistor itself. 
+High Source Impedance Application 
+The TP5551/2/4 uses switches at the chopper amplifier input, the input signal is chopped at 125kHz to reduce input 
+offset voltage down to 10µV. The dynamic behavior of these switches induces a charge injection current to the input 
+terminals of the amplifier. The charge injection current has a DC path to ground through the resistances seen at the 
+input terminals of the amplifier. Higher input impedance cause an apparent shift in the input bias current of the 
+amplifier.  
+Because the chopper amplifier has charge injection currents at each terminal, the input offset current will be larger 
+than standard amplifiers. The Ios of TP5551/2/4 are 150pA under the typical condition. So the input impedance should 
+be balanced across each input(see Figure xx). The input impedance of the amplifier should be matched between the 
+IN+ and IN- terminals to minimize total input offset current. Input offset currents show up as an additional output offset 
+voltage, as shown in the following equation: 
+
+===== PAGE 9 =====
+        
+ 
+ 
+9 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+www.3peakic.com.cn                                                               REV B.1 
+,
+
+
+
+os total
+os
+f
+os
+v
+v
+R
+I
+ 
+For a gain configure using 1MΩ feedback resistor, a 150pA total input offset current will have an additional output 
+offset voltage of 0.15mV. By keeping the input impedance low and balanced across the amplifier inputs, the input 
+offset current effect will be suppress efficiently. 
+TP5551
+Ri
++2.5V
+-2.5V
+Rf
+Vref
+Rs
+Rb
+Vout
+Vref
+VIN
+ 
+Figxx Circuit Implication for reducing Input offset current effect  
+PCB Surface Leakage 
+In applications where low input bias current is critical, Printed Circuit Board (PCB) surface leakage effects need to be 
+considered. Surface leakage is caused by humidity, dust or other contamination on the board. It is recommended to 
+use multi-layer PCB layout and route the OPA’s –IN and +IN signal under the PCB surface. 
+The effective way to reduce surface leakage is to use a guard ring around sensitive pins (or traces). The guard ring is 
+biased at the same voltage as the sensitive pin. An example of this type of layout is shown in Figure 2 for Inverting  
+Gain application. 
+1. For Non-Inverting Gain and Unity-Gain Buffer:   
+ 
+a) Connect the non-inverting pin (VIN+) to the input with a wire that does not touch the PCB surface. 
+ 
+b) Connect the guard ring to the inverting input pin (VIN–). This biases the guard ring to the Common Mode input voltage. 
+2. For Inverting Gain and Trans-impedance Gain Amplifiers (convert current to voltage, such as photo detectors): 
+a) Connect the guard ring to the non-inverting input pin (VIN+). This biases the guard ring to the same reference voltage as the 
+op-amp (e.g., VDD/2 or ground). 
+ 
+b) Connect the inverting pin (VIN–) to the input with a wire that does not touch the PCB surface.
+VIN+
+VIN-
++VS
+Guard Ring
+ 
+Figure   The Layout of Guard Ring 
+
+===== PAGE 10 =====
+ 
+10 
+REV B.1                                                             www.3peakic.com.cn 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+D
+e
+A2
+A1
+E
+E1
+e1
+b
+L1
+θ
+Package Outline Dimensions 
+ 
+SOT23-5 / SOT23-6 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Symbol 
+Dimensions 
+In Millimeters 
+Dimensions  
+In Inches 
+Min 
+Max 
+Min 
+Max 
+A1 
+0.000 
+0.100 
+0.000 
+0.004 
+A2 
+1.050 
+1.150 
+0.041 
+0.045 
+b 
+0.300 
+0.400 
+0.012 
+0.016 
+D 
+2.820 
+3.020 
+0.111 
+0.119 
+E 
+1.500 
+1.700 
+0.059 
+0.067 
+E1 
+2.650 
+2.950 
+0.104 
+0.116 
+e 
+0.950TYP 
+0.037TYP 
+e1 
+1.800 
+2.000 
+0.071 
+0.079 
+L1 
+0.300 
+0.460 
+0.012 
+0.024 
+θ 
+0° 
+8° 
+0° 
+8° 
+
+===== PAGE 11 =====
+        
+ 
+ 
+11 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+www.3peakic.com.cn                                                               REV B.1 
+D
+e
+A2
+A1
+E
+E1
+e1
+b
+L1
+C
+θ
+Package Outline Dimensions 
+ 
+SC-70-6 (SOT363) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Symbol 
+Dimensions 
+In Millimeters 
+Dimensions In 
+Inches 
+Min 
+Max 
+Min 
+Max 
+A1 
+0.000 
+0.100 
+0.000 
+0.004 
+A2 
+0.900 
+1.000 
+0.035 
+0.039 
+b 
+0.150 
+0.350 
+0.006 
+0.014 
+C 
+0.080 
+0.150 
+0.003 
+0.006 
+D 
+2.000 
+2.200 
+0.079 
+0.087 
+E 
+1.150 
+1.350 
+0.045 
+0.053 
+E1 
+2.150 
+2.450 
+0.085 
+0.096 
+e 
+0.650TYP 
+0.026TYP 
+e1 
+1.200 
+1.400 
+0.047 
+0.055 
+L1 
+0.260 
+0.460 
+0.010 
+0.018 
+θ 
+0° 
+8° 
+0° 
+8° 
+
+===== PAGE 12 =====
+ 
+12 
+REV B.1                                                             www.3peakic.com.cn 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+D
+E1
+b
+E
+A1
+A2
+e
+θ
+L1
+C
+Package Outline Dimensions 
+ 
+SO-8 (SOIC-8) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Symbol 
+Dimensions 
+In Millimeters 
+Dimensions In 
+Inches 
+Min 
+Max 
+Min 
+Max 
+A1 
+0.100 
+0.250 
+0.004 
+0.010 
+A2 
+1.350 
+1.550 
+0.053 
+0.061 
+b 
+0.330 
+0.510 
+0.013 
+0.020 
+C 
+0.190 
+0.250 
+0.007 
+0.010 
+D 
+4.780 
+5.000 
+0.188 
+0.197 
+E 
+3.800 
+4.000 
+0.150 
+0.157 
+E1 
+5.800 
+6.300 
+0.228 
+0.248 
+e 
+1.270 TYP 
+0.050 TYP 
+L1 
+0.400 
+1.270 
+0.016 
+0.050 
+θ 
+0° 
+8° 
+0° 
+8° 
+
+===== PAGE 13 =====
+        
+ 
+ 
+13 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+www.3peakic.com.cn                                                               REV B.1 
+Package Outline Dimensions 
+ 
+MSOP-8 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Symbol 
+Dimensions 
+In Millimeters 
+Dimensions In 
+Inches 
+Min 
+Max 
+Min 
+Max 
+A 
+0.800 
+1.200 
+0.031 
+0.047 
+A1 
+0.000 
+0.200 
+0.000 
+0.008 
+A2 
+0.760 
+0.970 
+0.030 
+0.038 
+b 
+0.30 TYP 
+0.012 TYP 
+C 
+0.15 TYP 
+0.006 TYP 
+D 
+2.900 
+3.100 
+0.114 
+0.122 
+e 
+0.65 TYP 
+0.026 
+E 
+2.900 
+3.100 
+0.114 
+0.122 
+E1 
+4.700 
+5.100 
+0.185 
+0.201 
+L1 
+0.410 
+0.650 
+0.016 
+0.026 
+θ 
+0° 
+6° 
+0° 
+6° 
+E1
+e
+E
+A1
+A2
+A
+D
+L1
+L2
+L
+R
+R1
+θ
+b
+
+===== PAGE 14 =====
+ 
+14 
+REV B.1                                                             www.3peakic.com.cn 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+ 
+Package Outline Dimensions 
+ 
+ 
+TSSPO-14 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Symbol 
+Dimensions 
+In Millimeters 
+MIN 
+TYP 
+MAX 
+A 
+- 
+- 
+1.20 
+A1 
+0.05 
+- 
+0.15 
+A2 
+0.90 
+1.00 
+1.05 
+b 
+0.20 
+- 
+0.28 
+c 
+0.10 
+- 
+0.19 
+D 
+4.86 
+4.96 
+5.06 
+E 
+6.20 
+6.40 
+6.60 
+E1 
+4.30 
+4.40 
+4.50 
+e 
+0.65 BSC 
+L 
+0.45 
+0.60 
+0.75 
+L1 
+1.00 REF 
+L2 
+0.25 BSC 
+R 
+0.09 
+- 
+- 
+θ 
+0° 
+- 
+8° 
+E
+e
+E1
+A1
+A2
+A
+D
+L1
+L2
+L
+R
+R1
+θ
+c
+
+===== PAGE 15 =====
+        
+ 
+ 
+15 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+www.3peakic.com.cn                                                               REV B.1 
+θ
+e
+b
+E1
+E
+D
+A1
+A A2
+L1
+L
+L2
+ 
+ 
+ 
+Package Outline Dimensions 
+ 
+SO-14 (SOIC-14) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Symbol 
+Dimensions 
+In Millimeters 
+MIN 
+TYP 
+MAX 
+A 
+1.35 
+1.60 
+1.75 
+A1 
+0.10 
+0.15 
+0.25 
+A2 
+1.25 
+1.45 
+1.65 
+b 
+0.36 
+ 
+0.49 
+D 
+8.53 
+8.63 
+8.73 
+E 
+5.80 
+6.00 
+6.20 
+E1 
+3.80 
+3.90 
+4.00 
+e 
+1.27 BSC 
+L 
+0.45 
+0.60 
+0.80 
+L1 
+1.04 REF 
+L2 
+0.25 BSC 
+θ 
+0° 
+ 
+8° 
+
+===== PAGE 16 =====
+ 
+16 
+REV B.1                                                             www.3peakic.com.cn 
+TP5551 / TP5552/TP5554 
+Ultra Low Noise, 3.5MHz, Zero Drift, RRIO Op-amps 
+Revision History 
+2018/8/30 
+Rev B 
+Update Full Temperature Specification 
+2020/5/25 
+Rev B.1 
+Update Specification of PSRR:  
+25degree: min 95-> min 110; 
+-40 to 125degree: min 85->min 105 
+ 

@@ -532,9 +532,9 @@
     "filter.type.diff1": { zh: "一阶差分 (Differential LPF)", en: "1st-Order Differential LPF" },
     "filter.type.mfb2":  { zh: "二阶MFB (Multiple Feedback LPF)", en: "2nd-Order MFB LPF" },
     "filter.series":     { zh: "电阻精度系列", en: "Resistor Series" },
-    "filter.series.hint": { zh: "<b>E24 系列 (5%)</b>：1.0 1.1 1.2 1.3 1.5 1.6 1.8 2.0 2.2 2.4 2.7 3.0 3.3 3.6 3.9 4.3 4.7 5.1 5.6 6.2 6.8 7.5 8.2 9.1<br><br><b>E12 系列 (10%)</b>：1.0 1.2 1.5 1.8 2.2 2.7 3.3 3.9 4.7 5.6 6.8 8.2<hr>以上为各系列的基准值（1~10），实际使用时乘以 10ⁿ 得到完整系列值。", en: "<b>E24 Series (5%)</b>: 1.0 1.1 1.2 1.3 1.5 1.6 1.8 2.0 2.2 2.4 2.7 3.0 3.3 3.6 3.9 4.3 4.7 5.1 5.6 6.2 6.8 7.5 8.2 9.1<br><br><b>E12 Series (10%)</b>: 1.0 1.2 1.5 1.8 2.2 2.7 3.3 3.9 4.7 5.6 6.8 8.2<hr>Values shown are decade base (1~10). Multiply by 10ⁿ for the full series range." },
-    "filter.series.e24": { zh: "E24 (5%)", en: "E24 (5%)" },
-    "filter.series.e12": { zh: "E12 (10%)", en: "E12 (10%)" },
+    "filter.series.hint": { zh: "<b>E24 系列</b>：1.0 1.1 1.2 1.3 1.5 1.6 1.8 2.0 2.2 2.4 2.7 3.0 3.3 3.6 3.9 4.3 4.7 5.1 5.6 6.2 6.8 7.5 8.2 9.1<br><br><b>E12 系列</b>：1.0 1.2 1.5 1.8 2.2 2.7 3.3 3.9 4.7 5.6 6.8 8.2<hr>以上为各系列的基准值（1~10），实际使用时乘以 10ⁿ 得到完整系列值。", en: "<b>E24 Series</b>: 1.0 1.1 1.2 1.3 1.5 1.6 1.8 2.0 2.2 2.4 2.7 3.0 3.3 3.6 3.9 4.3 4.7 5.1 5.6 6.2 6.8 7.5 8.2 9.1<br><br><b>E12 Series</b>: 1.0 1.2 1.5 1.8 2.2 2.7 3.3 3.9 4.7 5.6 6.8 8.2<hr>Values shown are decade base (1~10). Multiply by 10ⁿ for the full series range." },
+    "filter.series.e24": { zh: "E24", en: "E24" },
+    "filter.series.e12": { zh: "E12", en: "E12" },
     "filter.fc":         { zh: "截止频率 (Hz)", en: "Cutoff Frequency (Hz)" },
     "filter.gain":       { zh: "直流增益 (V/V)", en: "DC Gain (V/V)" },
     "filter.q":          { zh: "Q值", en: "Q Factor" },
@@ -563,7 +563,44 @@
     "filter.report.param": { zh: "参数", en: "Parameter" },
     "filter.report.value": { zh: "值", en: "Value" },
     "filter.report.date":  { zh: "报告日期", en: "Report Date" },
-    "filter.report.formulas": { zh: "计算公式", en: "Calculation Formulas" }
+    "filter.report.formulas": { zh: "计算公式", en: "Calculation Formulas" },
+
+    /* Filter — op-amp selection & analysis */
+    "filter.opamp.title":     { zh: "运放选型与分析", en: "Op-Amp Selection & Analysis" },
+    "filter.opamp.select":    { zh: "运放选型", en: "Op-Amp Selection" },
+    "filter.opamp.empty":     { zh: "完成滤波器计算后，此处显示所选运放的稳定性 / 噪声 / 失调分析。", en: "Run the filter design first — stability / noise / offset results for the selected op-amp appear here." },
+    "filter.opamp.typTag":    { zh: "典型值（以手册为准）", en: "typical values (check datasheet)" },
+    "filter.opamp.chopperTag":{ zh: "斩波稳零, fc_chop = 125 kHz", en: "chopper-stabilized, f_chop = 125 kHz" },
+    "filter.opamp.stability": { zh: "稳定性", en: "Stability" },
+    "filter.opamp.pm":        { zh: "相位裕量 PM", en: "Phase Margin (PM)" },
+    "filter.opamp.loopgain":  { zh: "环路增益 @ fc", en: "Loop Gain @ fc" },
+    "filter.opamp.crossover": { zh: "环路穿越频率", en: "Loop Crossover Frequency" },
+    "filter.opamp.ng":        { zh: "噪声增益 (DC)", en: "Noise Gain (DC)" },
+    "filter.opamp.noise1k":   { zh: "输出噪声 @ 1kHz", en: "Output Noise Density @ 1 kHz" },
+    "filter.opamp.noiseInt":  { zh: "积分输出噪声 (0.1Hz–10MHz)", en: "Integrated Output Noise (0.1 Hz – 10 MHz)" },
+    "filter.opamp.offset":    { zh: "最坏输出失调", en: "Worst-Case Output Offset" },
+    "filter.opamp.warnings":  { zh: "提示与告警", en: "Notes & Warnings" },
+    "filter.opamp.okline":    { zh: "无告警 — 所选运放适合该滤波器。", en: "No warnings — the selected op-amp suits this filter." },
+    "filter.rtol":            { zh: "电阻精度", en: "Resistor Tolerance" },
+    "filter.rtol.1pct":       { zh: "±1%", en: "±1%" },
+    "filter.rtol.01pct":      { zh: "±0.1%", en: "±0.1%" },
+    "filter.opamp.cl":        { zh: "输出负载电容 (pF)", en: "Load Capacitance C_L (pF)" },
+    "filter.opamp.tolTitle":  { zh: "元件容差影响", en: "Component Tolerance Impact" },
+    "filter.opamp.note":      { zh: "PM 基于单极点运放模型 A(s)=Aol/(1+s·GBW/Aol)，是主极点补偿器件的近似上限；未建模的内部附加极点会进一步降低实际裕量（如 TP6004 数据手册：G=+1、C_L=60pF 时 PM≈60°）。填写输出负载电容 C_L 后，环路计入 R_o–C_L 极点 f_pL=1/(2πR_oC_L)；R_o 由短路电流估算（TP6004 ≈5V/100mA≈50Ω，TP555x ≈5V/±50mA≈100Ω），故 PM 仍为上限值。L(fc) 衡量有限开环增益下闭环响应偏离理想滤波器形状的程度（偏差 ≈ 1/L）：低于 25 dB 时 fc 附近失真明显。元件容差按所选电阻精度做角点分析，仅给出直流增益范围；失调为跨角点保守最坏值。", en: "PM uses a single-pole op-amp model A(s)=Aol/(1+s·GBW/Aol) — an approximate upper bound for dominant-pole-compensated parts; unmodeled internal poles reduce the real margin (e.g. TP6004 datasheet: PM≈60° at G=+1, C_L=60pF). When a load capacitance C_L is entered, the loop includes the R_o–C_L pole f_pL=1/(2πR_oC_L); R_o is estimated from short-circuit current (TP6004 ≈5V/100mA≈50Ω, TP555x ≈5V/±50mA≈100Ω), so PM remains an upper bound. L(fc) measures how far the closed-loop response deviates from the ideal filter shape under finite open-loop gain (error ≈ 1/L); below 25 dB, distortion near fc becomes noticeable. Component tolerances use corner analysis with the selected resistor tolerance and report the DC-gain range only; offset is the conservative worst case across corners." },
+    "filter.stab.ok":         { zh: "稳定", en: "Stable" },
+    "filter.stab.marginal":   { zh: "临界（PM 30°–45°）", en: "Marginal (PM 30°–45°)" },
+    "filter.stab.unstable":   { zh: "不稳定（PM 不足 30°）", en: "Unstable (PM below 30°)" },
+    "filter.stab.nocross":    { zh: "无环路穿越（环路增益始终小于1）", en: "No loop crossover (loop gain stays under 1)" },
+    "filter.report.opamp":    { zh: "运放分析", en: "Op-Amp Analysis" },
+    "filter.report.opamp.part":{ zh: "所选运放", en: "Selected Op-Amp" },
+
+    /* Filter — op-amp warnings */
+    "w.pmLow":          { zh: "相位裕量偏低（小于45°），存在振荡风险，建议换用更高 GBW 的运放。", en: "Phase margin below 45° — oscillation risk; choose a higher-GBW part." },
+    "w.gbWLow":         { zh: "GBW 不足：fc 处环路增益小于25 dB，幅频/相频响应将明显偏离理想形状。建议换用更高 GBW 的运放或降低 fc。", en: "Insufficient GBW: loop gain at fc below 25 dB — the filter response deviates noticeably from its ideal shape. Use a higher-GBW part or lower fc." },
+    "w.ngHigh":         { zh: "直流噪声增益大于20 dB：输入失调与 1/f 噪声被显著放大。", en: "DC noise gain above 20 dB — input offset and 1/f noise are strongly amplified." },
+    "w.flickerChopper": { zh: "所选运放的 1/f 拐角频率相对 fc 偏高；若要求低频极低失调/噪声，可考虑斩波稳零器件（如 TP555x）。", en: "The selected part's 1/f corner sits high relative to fc — for ultra-low offset / clean low-frequency performance, consider a chopper-stabilized part (e.g. TP555x)." },
+    "w.ibOffset":       { zh: "输入偏置电流项不可忽略，对输出失调贡献显著；建议选用更低 Ib 的运放。", en: "Input bias-current contribution to output offset is significant — consider a lower-Ib part." },
+    "w.chopNear":       { zh: "fc 接近斩波频率（125 kHz）频段，斩波馈通可能进入通带；建议降低 fc 或改用非斩波运放。", en: "fc approaches the 125 kHz chopping band — chopper feedthrough may reach the passband; lower fc or use a non-chopping part." }
   };
 
   /* ── Translation function ─── */
