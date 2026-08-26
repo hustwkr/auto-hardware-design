@@ -74,21 +74,285 @@
   /* 容差百分比显示：1 → "1"，0.1 → "0.1" */
   function fmtPct(p) { return (p % 1 === 0) ? String(p) : p.toFixed(1); }
 
+  /* 输出负载电容 C_L (pF)：空/非法 → 0（无载）。runOpampAnalysis 与报告计算过程共用 */
+  function filterCLoadPf() {
+    var el = document.getElementById("filterCLoad");
+    var v = (el && el.value !== "") ? parseFloat(el.value) : NaN;
+    if (!isFinite(v) || v < 0) return 0;
+    return v;
+  }
+
   function runOpampAnalysis(r) {
     // r = global._filterResult; returns analyzeCore result or null
     if (!OA || !r) return null;
     var op = OA.opampById(gvs("filterOpamp")) || OA.OPAMPS[0];
     var comps = r.components;
     var tol = gvs("filterRTol") === "01pct" ? 0.001 : 0.01; // 电阻精度：±0.1% / ±1%（独立于 E24/E12 取值系列）
-    var clEl = document.getElementById("filterCLoad");
-    var clPf = (clEl && clEl.value !== "") ? parseFloat(clEl.value) : NaN;   // 输出负载电容 C_L (pF)，空/非法 → 无载
-    if (!isFinite(clPf) || clPf < 0) clPf = 0;
+    var clPf = filterCLoadPf();
     try {
       if (r.type === "diff1") {
         return OA.analyzeDiff1({ R1: comps.R1, R2: comps.R2, R3: comps.R3, R4: comps.R4, C4: comps.C4 }, op, { fc_hz: r.fc_actual, tol: tol, cl_pf: clPf });
       }
       return OA.analyzeMfb2(comps, op, { fc_hz: r.fc_actual, tol: tol, cl_pf: clPf });
     } catch (e) { console.error("opamp analysis failed", e); return null; }
+  }
+
+  /* ── 运放分析计算过程（报告用）：与 analyzeCore 同模型同参数复算中间量，呈现"公式+代入值" ─── */
+  var SUP_MAP = { "-": "\u207B", "0": "\u2070", "1": "\u00b9", "2": "\u00b2", "3": "\u00b3", "4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077", "8": "\u2078", "9": "\u2079" };
+
+  function fmtSciTxt(v) { // 纯文本科学计数：3.16×10⁵；否则普通小数
+    if (v == null || !isFinite(v)) return "—";
+    var a = Math.abs(v);
+    if (a !== 0 && (a >= 1e5 || a < 1e-3)) {
+      var e = Math.floor(Math.log10(a));
+      var m = v / Math.pow(10, e);
+      return FM.fv(m, 2) + "\u00d710" + String(e).split("").map(function (c) { return SUP_MAP[c] || c; }).join("");
+    }
+    if (a >= 1000) return FM.fv(v, 0);
+    if (a >= 10) return FM.fv(v, 1);
+    if (a !== 0 && a < 0.1) return FM.fv(v, 3);
+    return FM.fv(v, 2);
+  }
+
+  function fmtSciLatex(v) { // KaTeX 片段：3.16\times 10^{5}；否则普通小数
+    if (v == null || !isFinite(v)) return "\\text{—}";
+    var a = Math.abs(v);
+    if (a !== 0 && (a >= 1e5 || a < 1e-3)) {
+      var e2 = Math.floor(Math.log10(a));
+      var m2 = v / Math.pow(10, e2);
+      return FM.fv(m2, 2) + "\\times 10^{" + e2 + "}";
+    }
+    if (a >= 1000) return FM.fv(v, 0);
+    if (a >= 10) return FM.fv(v, 1);
+    if (a !== 0 && a < 0.1) return FM.fv(v, 3);
+    return FM.fv(v, 2);
+  }
+
+  function fmtHzLatex(f) { return "\\text{" + fmtHz(f) + "}"; }
+  function cmagOf(c) { return c ? Math.hypot(c[0], c[1]) : null; }
+  function cangDeg(c) { return c ? Math.atan2(c[1], c[0]) * 180 / Math.PI : null; }
+
+  /* 复算报告所需的全部中间量（与 analyzeCore 同一模型、同一参数） */
+  function opampCalcFacts(oaRes, opSel, r) {
+    if (!OA || !oaRes || !opSel) return null;
+    var kind = r.type;
+    var comps = (kind === "diff1") ? { R1: r.components.R1, R2: r.components.R2, R3: r.components.R3, R4: r.components.R4, C4: r.components.C4 } : r.components;
+    var clPf = filterCLoadPf();
+    var load = (clPf > 0 && opSel.ro_ohm > 0) ? { ro: opSel.ro_ohm, cl: clPf * 1e-12 } : null;
+    var f = { kind: kind, comps: comps, clPf: clPf, load: load };
+
+    /* 开环模型 */
+    f.Aol = Math.pow(10, opSel.aol_db / 20);
+    f.fp = opSel.gbw_hz / f.Aol;
+
+    try {
+      /* 穿越频率与相位链（PM = 180° + ∠A(fx) + ∠β(fx)[+∠D_load(fx)]） */
+      var fx = oaRes.crossoverHz;
+      if (fx != null && fx > 0) {
+        f.fx = fx;
+        f.angADeg = -Math.atan(fx / f.fp) * 180 / Math.PI;   // 单极点闭式：∠A(f)=−arctan(f/fp)
+        var bFx = kind === "mfb2" ? OA._debug.mfb2BetaAt(fx, comps) : OA._debug.diff1BetaAt(fx, comps);
+        f.betaFxMag = cmagOf(bFx); f.angB = cangDeg(bFx);
+        if (load) {
+          var dFx = OA._debug.dloadAt(kind, 2 * Math.PI * fx, comps, load.ro, load.cl);
+          f.angD = cangDeg(dFx);
+          f.fpL = 1 / (2 * Math.PI * load.ro * load.cl);     // R_o–C_L 极点主导近似
+        }
+      }
+
+      /* 环路增益 @ fc */
+      var fcHz = r.fc_actual;
+      if (fcHz > 0) {
+        f.AfcLin = f.Aol / Math.sqrt(1 + Math.pow(fcHz / f.fp, 2));
+        var bFc = kind === "mfb2" ? OA._debug.mfb2BetaAt(fcHz, comps) : OA._debug.diff1BetaAt(fcHz, comps);
+        f.betaFcMag = cmagOf(bFc);
+      }
+
+      /* 噪声 @1kHz（传递函数幅值） */
+      var enC = opSel.en_corner_hz || 0;
+      f.en1k = enC > 0 ? opSel.enW_nv * Math.sqrt(1 + enC / 1000) : opSel.enW_nv;
+      var t1k = OA._debug.transfersAt(kind, 1000, comps, opSel, load);
+      f.he1k = cmagOf(t1k.he); f.him1k = cmagOf(t1k.him);
+      if (kind === "diff1") f.hip1k = cmagOf(t1k.hip);
+
+      /* 直流传递函数（失调项）与闭式噪声增益 */
+      var tdc = OA._debug.transfersAt(kind, 0.01, comps, opSel, load);
+      f.himDC = cmagOf(tdc.him);
+      if (kind === "diff1") f.hipDC = cmagOf(tdc.hip);
+      f.ngClosed = kind === "mfb2" ? 1 + comps.R2 / comps.R1 : 1 + comps.R4 / comps.R2;
+
+      /* 容差闭式（直流增益角点） */
+      if (oaRes.tolerance) {
+        var t = oaRes.tolerance.pct / 100;
+        f.gNom = kind === "mfb2" ? comps.R2 / comps.R1 : comps.R4 / comps.R2;
+        f.gMinF = f.gNom * (1 - t) / (1 + t);
+        f.gMaxF = f.gNom * (1 + t) / (1 - t);
+      }
+    } catch (e) { console.error("opamp calc facts failed", e); return null; }
+    return f;
+  }
+
+  /* HTML 报告（KaTeX）：计算过程块 */
+  function opampCalcProcessHtml(f, oaRes, opSel) {
+    var t = global._t || function (k) { return k; };
+    var kind = f.kind;
+    var n = 0;
+    function sec(key) { n++; return '<p style="font-size:.78rem;color:#334155;font-weight:600;margin-top:12px">' + n + ". " + t(key) + "</p>"; }
+
+    var h = '<div class="rep-model-box" style="margin-top:12px">';
+    h += '<p style="font-size:.8rem;font-weight:700;color:#334155;margin-bottom:2px">' + t("filter.calc.title") + "</p>";
+
+    /* ① 稳定性 / PM */
+    h += sec("filter.calc.stab");
+    h += '<p><span class="latex" data-l="A_{OL} = 10^{' + opSel.aol_db + '/20} = ' + fmtSciLatex(f.Aol) + ",\\qquad f_p = \\frac{GBW}{A_{OL}} = " + fmtHzLatex(f.fp) + "</span></p>";
+    h += '<p><span class="latex" data-l="A(f) = \\dfrac{A_{OL}}{1 + j\\,f/f_p}"></span> <span style="font-size:.72rem;color:#64748b">' + t("filter.calc.aolModel") + "</span></p>";
+    if (kind === "diff1") {
+      h += '<p>' + t("filter.calc.betaDiff1") + ' <span class="latex" data-l="\\beta(f) = \\frac{Y_f}{G_2 + Y_f},\\qquad Y_f = \\dfrac{1}{R_4} + j\\omega C_4"></span></p>';
+    } else {
+      h += '<p>' + t("filter.calc.betaMfb2") + "</p>";
+    }
+    if (f.fx != null) {
+      h += '<p><span class="latex" data-l="|L(f_x)| = 1 \\;\\Rightarrow\\; f_x = ' + fmtHzLatex(f.fx) + ',\\qquad |A(f_x)|\\,|\\beta(f_x)| = 1"></span></p>';
+      h += '<p><span class="latex" data-l="\\angle A(f_x) = -\\arctan\\frac{f_x}{f_p} = ' + FM.fv(f.angADeg, 2) + "^\\circ" + (f.betaFxMag != null ? ",\\qquad |\\beta(f_x)| = " + fmtSciLatex(f.betaFxMag) : "") + "</span></p>";
+      if (f.angB != null) h += '<p><span class="latex" data-l="\\angle\\beta(f_x) = ' + FM.fv(f.angB, 2) + '^\\circ"></span></p>';
+      var pmParts = "180^\\circ";
+      pmParts += (f.angADeg < 0 ? "-" : "+") + FM.fv(Math.abs(f.angADeg), 2) + "^\\circ";
+      if (f.angB != null) pmParts += (f.angB < 0 ? "-" : "+") + FM.fv(Math.abs(f.angB), 2) + "^\\circ";
+      if (f.load && f.angD != null) pmParts += (f.angD < 0 ? "-" : "+") + FM.fv(Math.abs(f.angD), 2) + "^\\circ";
+      h += '<p><span class="latex" data-l="PM = ' + pmParts + " = " + FM.fv(oaRes.pmDeg, 2) + '^\\circ"></span></p>';
+    }
+
+    /* ② 负载电容（仅 C_L>0） */
+    if (f.load) {
+      h += sec("filter.calc.load");
+      h += '<p><span class="latex" data-l="D_{load}(f) = \\frac{Z_l}{Z_l + R_o} = \\dfrac{1}{1 + R_o\\left(Y_{dp} + j\\omega C_L\\right)}"></span></p>';
+      h += '<p style="font-size:.72rem;color:#64748b">' + t("filter.calc.ydpNote") + "</p>";
+      if (f.fpL != null) h += '<p><span class="latex" data-l="f_{pL} \\approx \\frac{1}{2\\pi R_o C_L} = ' + fmtHzLatex(f.fpL) + ",\\qquad \\angle D_{load}(f_x) = " + FM.fv(f.angD, 2) + '^\\circ"></span></p>';
+    }
+
+    /* ③ 环路增益 @ fc */
+    h += sec("filter.calc.loopFc");
+    if (f.AfcLin != null && f.betaFcMag != null) {
+      var lfc = 20 * Math.log10(f.AfcLin * f.betaFcMag);
+      h += '<p><span class="latex" data-l="|A(f_c)| = \\dfrac{A_{OL}}{\\sqrt{1 + (f_c/f_p)^2}} = ' + FM.fv(20 * Math.log10(f.AfcLin), 1) + "\\ \\text{dB},\\qquad |\\beta(f_c)| = " + fmtSciLatex(f.betaFcMag) + "</span></p>";
+      h += '<p><span class="latex" data-l="L(f_c) = |A(f_c)|\\,|\\beta(f_c)| = ' + FM.fv(lfc, 1) + '\\ \\text{dB}"></span></p>';
+    }
+    h += '<p style="font-size:.72rem;color:#64748b">' + t("filter.calc.loopFcNote") + "</p>";
+
+    /* ④ 输出噪声 */
+    h += sec("filter.calc.noise");
+    var enC = opSel.en_corner_hz || 0;
+    if (enC > 0) {
+      h += '<p><span class="latex" data-l="e_n(f) = e_{nW}\\sqrt{1 + \\frac{f_{c,en}}{f}},\\qquad e_n(1\\,\\text{kHz}) = ' + FM.fv(opSel.enW_nv, 0) + "\\sqrt{1 + " + FM.fv(enC, 0) + "/1000} = " + fmtSciLatex(f.en1k) + '\\ \\tfrac{\\text{nV}}{\\sqrt{\\text{Hz}}}"></span></p>';
+    } else {
+      h += '<p><span class="latex" data-l="e_n(f) = e_{nW} = ' + FM.fv(opSel.enW_nv, 0) + '\\ \\tfrac{\\text{nV}}{\\sqrt{\\text{Hz}}}"></span></p>';
+    }
+    var niTerm = kind === "diff1" ? " + \\bigl(|H_{i^+}(f)|\\,i_n\\bigr)^2" : "";
+    h += '<p><span class="latex" data-l="v^2_{n,out}(f) = |H_e(f)|^2\\,e_n^2(f) + \\bigl(|H_{i^-}(f)|\\,i_n\\bigr)^2' + niTerm + "</span></p>";
+    if (f.he1k != null) {
+      h += '<p><span class="latex" data-l="|H_e(1\\,\\text{kHz})| = ' + fmtSciLatex(f.he1k) + ",\\quad |H_{i^-}(1\\,\\text{kHz})| = " + fmtSciLatex(f.him1k) + (kind === "diff1" ? ",\\quad |H_{i^+}| = " + fmtSciLatex(f.hip1k) : "") + "</span></p>";
+      h += '<p><span class="latex" data-l="v_{n,out}(1\\,\\text{kHz}) = ' + fmtSciLatex(oaRes.noiseDensity1k_nVrtHz) + '\\ \\tfrac{\\text{nV}}{\\sqrt{\\text{Hz}}}"></span></p>';
+    }
+    h += '<p><span class="latex" data-l="v_{n,rms} = \\sqrt{\\int_{0.1\\,\\text{Hz}}^{10\\,\\text{MHz}} v^2_{n,out}(f)\\,df} = ' + fmtSciLatex(oaRes.noiseRms_uV) + '\\ \\mu\\text{V}"></span> <span style="font-size:.72rem;color:#64748b">' + t('filter.calc.intNote') + '</span></p>';
+
+    /* ⑤ 输出失调 */
+    h += sec("filter.calc.offset");
+    var ngRatio = kind === "mfb2" ? "\\dfrac{R_2}{R_1}" : "\\dfrac{R_4}{R_2}";
+    h += '<p><span class="latex" data-l="NG(0) = 1 + ' + ngRatio + " = " + fmtSciLatex(f.ngClosed) + "</span></p>";
+    if (f.himDC != null) {
+      h += '<p><span class="latex" data-l="|H_{i^-}(0)| = ' + fmtSciLatex(f.himDC) + '\\ \\Omega' + (kind === "diff1" ? ',\\quad |H_{i^+}(0)| = ' + fmtSciLatex(f.hipDC) + '\\ \\Omega' : '') + '</span></p>';
+    }
+    var ibExpr = kind === "mfb2" ? "|H_{i^-}(0)|\\,I_b" : "\\sqrt{\\bigl(|H_{i^+}(0)|\\,I_b\\bigr)^2 + \\bigl(|H_{i^-}(0)|\\,I_b\\bigr)^2}";
+    h += '<p><span class="latex" data-l="V_{o,worst} = NG\\cdot EIO_{max} + ' + ibExpr + " = " + fmtSciLatex(oaRes.eioTerm_mV) + '\\ \\text{mV} + ' + fmtSciLatex(oaRes.ibTerm_mV) + '\\ \\text{mV} = ' + fmtSciLatex(oaRes.offsetWorst_mV) + '\\ \\text{mV}"></span></p>';
+
+    /* ⑥ 电阻容差（直流增益） */
+    if (oaRes.tolerance && f.gNom != null) {
+      h += sec("filter.calc.tol");
+      var ratio = kind === "mfb2" ? "\\dfrac{R_2}{R_1}" : "\\dfrac{R_4}{R_2}";
+      h += '<p><span class="latex" data-l="G = ' + ratio + ",\\qquad G_{min} = G\\cdot\\frac{1-t}{1+t},\\qquad G_{max} = G\\cdot\\frac{1+t}{1-t}\\ \\ (t = " + fmtPct(oaRes.tolerance.pct) + '\\%)"></span></p>';
+      h += '<p><span class="latex" data-l="G_{min} = ' + fmtSciLatex(f.gMinF) + ",\\qquad G_{max} = " + fmtSciLatex(f.gMaxF) + "</span></p>";
+    }
+
+    h += '</div>';
+    return h;
+  }
+
+  /* Word 导出：纯文本计算过程（无 KaTeX，Unicode 数学符号） */
+  function opampCalcProcessWord(f, oaRes, opSel) {
+    var t = global._t || function (k) { return k; };
+    var kind = f.kind;
+    var n = 0;
+    function sec(key) { n++; return '<p style="margin:8px 0 2px"><b>' + n + ". " + t(key) + "</b></p>"; }
+
+    var h = "";
+    /* ① 稳定性 */
+    h += sec("filter.calc.stab");
+    h += '<p>A<sub>OL</sub> = 10^(' + opSel.aol_db + '/20) = ' + fmtSciTxt(f.Aol) + "；f_p = GBW/A_OL ≈ " + fmtHz(f.fp) + "（" + t("filter.calc.aolModel") + "：A(f)=A_OL/(1+j·f/f_p)）</p>";
+    if (kind === "diff1") {
+      h += '<p>' + t("filter.calc.betaDiff1") + ' β(f) = Y_f/(G₂+Y_f)，Y_f = 1/R₄ + jωC₄</p>';
+    } else {
+      h += '<p>' + t("filter.calc.betaMfb2") + "</p>";
+    }
+    if (f.fx != null) {
+      h += '<p>f_x = ' + fmtHz(f.fx) + "（|L(f_x)|=1）；∠A(f_x) = −arctan(f_x/f_p) = " + FM.fv(f.angADeg, 2) + "°" + (f.betaFxMag != null ? "；|β(f_x)| = " + fmtSciTxt(f.betaFxMag) : "") + "</p>";
+      if (f.angB != null) h += '<p>∠β(f_x) = ' + FM.fv(f.angB, 2) + "°" + (f.load && f.angD != null ? "；∠D_load(f_x) = " + FM.fv(f.angD, 2) + "°" : "") + "</p>";
+      var pmParts = "180°";
+      pmParts += (f.angADeg < 0 ? "−" : "+") + FM.fv(Math.abs(f.angADeg), 2) + "°";
+      if (f.angB != null) pmParts += (f.angB < 0 ? "−" : "+") + FM.fv(Math.abs(f.angB), 2) + "°";
+      if (f.load && f.angD != null) pmParts += (f.angD < 0 ? "−" : "+") + FM.fv(Math.abs(f.angD), 2) + "°";
+      h += '<p><b>PM = ' + pmParts + " = " + FM.fv(oaRes.pmDeg, 2) + "°</b></p>";
+    }
+
+    /* ② 负载电容 */
+    if (f.load) {
+      h += sec("filter.calc.load");
+      h += '<p>D_load(f) = Z_l/(Z_l+R_o) = 1/[1+R_o·(Y_dp+jωC_L)]；' + t("filter.calc.ydpNote") + "</p>";
+      if (f.fpL != null) h += '<p>f_pL ≈ 1/(2πR_oC_L) = ' + fmtHz(f.fpL) + "（主导近似）</p>";
+    }
+
+    /* ③ 环路增益 @ fc */
+    h += sec("filter.calc.loopFc");
+    if (f.AfcLin != null && f.betaFcMag != null) {
+      var lfc = 20 * Math.log10(f.AfcLin * f.betaFcMag);
+      h += '<p>|A(f_c)| = A_OL/√(1+(f_c/f_p)²) = ' + FM.fv(20 * Math.log10(f.AfcLin), 1) + " dB；|β(f_c)| = " + fmtSciTxt(f.betaFcMag) + "</p>";
+      h += '<p><b>L(f_c) = |A|·|β| = ' + FM.fv(lfc, 1) + " dB</b></p>";
+    }
+    h += '<p style="color:#64748b">' + t("filter.calc.loopFcNote") + "</p>";
+
+    /* ④ 噪声 */
+    h += sec("filter.calc.noise");
+    var enC = opSel.en_corner_hz || 0;
+    if (enC > 0) {
+      h += '<p>e_n(f) = e_nW·√(1+f_c,en/f)；e_n(1kHz) = ' + FM.fv(opSel.enW_nv, 0) + "·√(1+" + FM.fv(enC, 0) + "/1000) = " + fmtSciTxt(f.en1k) + " nV/√Hz</p>";
+    } else {
+      h += '<p>e_n(f) = e_nW = ' + FM.fv(opSel.enW_nv, 0) + " nV/√Hz</p>";
+    }
+    var niTerm = kind === "diff1" ? " + (|H_i+(f)|·i_n)²" : "";
+    h += '<p>v²_out(f) = |H_e(f)|²·e_n²(f) + (|H_i−(f)|·i_n)²' + niTerm + "</p>";
+    if (f.he1k != null) {
+      h += '<p>|H_e(1kHz)| = ' + fmtSciTxt(f.he1k) + "；|H_i−(1kHz)| = " + fmtSciTxt(f.him1k) + (kind === "diff1" ? "；|H_i+(1kHz)| = " + fmtSciTxt(f.hip1k) : "") + "</p>";
+      h += '<p>v_out(1kHz) = ' + fmtSciTxt(oaRes.noiseDensity1k_nVrtHz) + " nV/√Hz</p>";
+    }
+    h += '<p><b>v_rms = √∫[0.1Hz→10MHz] v²_out(f)df = ' + fmtSciTxt(oaRes.noiseRms_uV) + " µV</b> " + t("filter.calc.intNote") + "</p>";
+
+    /* ⑤ 失调 */
+    h += sec("filter.calc.offset");
+    var ngRatio = kind === "mfb2" ? "1+R₂/R₁" : "1+R₄/R₂";
+    h += '<p>NG(0) = ' + ngRatio + " = " + fmtSciTxt(f.ngClosed) + "</p>";
+    if (f.himDC != null) {
+      h += '<p>|H_i−(0)| = ' + fmtSciTxt(f.himDC) + " Ω" + (kind === "diff1" ? "；|H_i+(0)| = " + fmtSciTxt(f.hipDC) + " Ω" : "") + "</p>";
+    }
+    var ibExpr = kind === "mfb2" ? "|H_i−(0)|·I_b" : "√((|H_i+(0)|·I_b)²+(|H_i−(0)|·I_b)²)";
+    h += '<p><b>V_o,worst = NG·EIO_max + ' + ibExpr + " = " + fmtSciTxt(oaRes.eioTerm_mV) + " mV + " + fmtSciTxt(oaRes.ibTerm_mV) + " mV = " + fmtSciTxt(oaRes.offsetWorst_mV) + " mV</b></p>";
+
+    /* ⑥ 容差 */
+    if (oaRes.tolerance && f.gNom != null) {
+      h += sec("filter.calc.tol");
+      var ratio = kind === "mfb2" ? "R₂/R₁" : "R₄/R₂";
+      h += '<p>G = ' + ratio + "，各电阻 ±" + fmtPct(oaRes.tolerance.pct) + "% → G_min = G·(1−t)/(1+t)，G_max = G·(1+t)/(1−t)</p>";
+      h += '<p><b>G_min = ' + fmtSciTxt(f.gMinF) + "；G_max = " + fmtSciTxt(f.gMaxF) + "</b></p>";
+    }
+    return h;
   }
 
   function renderFilterOpamp() {
@@ -723,6 +987,8 @@
       }
       html += '<tr><td>' + t("filter.opamp.warnings") + '</td><td style="font-size:.85rem">' + (oaRes.warnings.length ? oaRes.warnings.map(function(w){ return "⚠ " + t(w); }).join("<br>") : '✓ ' + t("filter.opamp.okline")) + '</td></tr>';
       html += '</tbody></table>';
+      var calcF = opampCalcFacts(oaRes, opSel, r);
+      if (calcF) html += opampCalcProcessHtml(calcF, oaRes, opSel);
       html += '<p style="color:#94a3b8;font-size:.75rem;line-height:1.5;margin-top:6px">' + t("filter.opamp.note") + '</p>';
     }
 
@@ -813,6 +1079,11 @@
       }
       html += '<tr><td>' + t("filter.opamp.warnings") + '</td><td>' + (oaResW.warnings.length ? oaResW.warnings.map(function(w){ return "⚠ " + t(w); }).join("<br>") : '✓ ' + t("filter.opamp.okline")) + '</td></tr>';
       html += '</table>';
+      var calcFW = opampCalcFacts(oaResW, opSelW, r);
+      if (calcFW) {
+        html += '<p style="margin-top:10px"><b>' + t("filter.calc.title") + '</b></p>';
+        html += opampCalcProcessWord(calcFW, oaResW, opSelW);
+      }
     }
 
     html += '<div class="footer"><p>' + (lang === 'en' ? 'Auto-generated by Auto Hardware Design Tool - Filter Designer' : '自动硬件设计工具 - 信号滤波器设计 自动生成') + '</p></div>';

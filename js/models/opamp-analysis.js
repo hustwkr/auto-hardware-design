@@ -444,11 +444,22 @@
     return r ? r[2] : null;
   }
 
+  /* 测试/报告用：频率 f (Hz) 处的传递函数 H_e=vo/e_i、H_i±=vo/i_inj（可选带载） */
+  function transfersAt(kind, f, comp, op, load) {
+    var w = 2 * Math.PI * f;
+    if (kind === "mfb2") {
+      var A1 = aolAt(op, f);
+      return { he: mfb2Solve(w, comp, A1, 0, 0, 1, load)[2], him: mfb2Solve(w, comp, A1, 0, 1, 0, load)[2] };
+    }
+    var A2 = aolAt(op, f);
+    return { he: diff1Solve(w, comp, A2, 0, 0, 0, 0, 1, load)[2], hip: diff1Solve(w, comp, A2, 0, 0, 1, 0, 0, load)[2], him: diff1Solve(w, comp, A2, 0, 0, 0, 1, 0, load)[2] };
+  }
+
   global.OpampAnalysis = {
     OPAMPS: OPAMPS,
     opampById: opampById,
     analyzeMfb2: analyzeMfb2,
     analyzeDiff1: analyzeDiff1,
-    _debug: { mfb2TransferAt: mfb2TransferAt, diff1TransferAt: diff1TransferAt, aolAt: aolAt, mfb2BetaAt: mfb2BetaAt, diff1BetaAt: diff1BetaAt, dloadAt: dloadAt, mfb2YdpAt: mfb2YdpAt, diff1YdpAt: diff1YdpAt, mfb2TransferLoadedAt: mfb2TransferLoadedAt, mfb2HeAt: mfb2HeAt, mfb2HeLoadedAt: mfb2HeLoadedAt, diff1TransferLoadedAt: diff1TransferLoadedAt }
+    _debug: { mfb2TransferAt: mfb2TransferAt, diff1TransferAt: diff1TransferAt, aolAt: aolAt, mfb2BetaAt: mfb2BetaAt, diff1BetaAt: diff1BetaAt, dloadAt: dloadAt, mfb2YdpAt: mfb2YdpAt, diff1YdpAt: diff1YdpAt, mfb2TransferLoadedAt: mfb2TransferLoadedAt, mfb2HeAt: mfb2HeAt, mfb2HeLoadedAt: mfb2HeLoadedAt, diff1TransferLoadedAt: diff1TransferLoadedAt, transfersAt: transfersAt }
   };
 })(typeof window !== "undefined" ? window : globalThis);
