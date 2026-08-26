@@ -83,7 +83,10 @@ const MIME = {
   ".png":  "image/png",
   ".jpg":  "image/jpeg",
   ".svg":  "image/svg+xml",
-  ".pdf":  "application/pdf"
+  ".pdf":  "application/pdf",
+  ".woff2":"font/woff2",
+  ".woff": "font/woff",
+  ".ttf":   "font/ttf"
 };
 
 const MAX_BODY = 1e6; // 1 MB body limit (DoS protection)
