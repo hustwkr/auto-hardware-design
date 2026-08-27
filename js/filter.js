@@ -204,7 +204,7 @@
 
     /* ① 稳定性 / PM */
     h += sec("filter.calc.stab");
-    h += '<p><span class="latex" data-l="A_{OL} = 10^{' + opSel.aol_db + '/20} = ' + fmtSciLatex(f.Aol) + ",\\qquad f_p = \\frac{GBW}{A_{OL}} = " + fmtHzLatex(f.fp) + "</span></p>";
+    h += '<p><span class="latex" data-l="A_{OL} = 10^{' + opSel.aol_db + '/20} = ' + fmtSciLatex(f.Aol) + ',\\qquad f_p = \\frac{GBW}{A_{OL}} = ' + fmtHzLatex(f.fp) + '"></span></p>';
     h += '<p><span class="latex" data-l="A(f) = \\dfrac{A_{OL}}{1 + j\\,f/f_p}"></span> <span style="font-size:.72rem;color:#64748b">' + t("filter.calc.aolModel") + "</span></p>";
     if (kind === "diff1") {
       h += '<p>' + t("filter.calc.betaDiff1") + ' <span class="latex" data-l="\\beta(f) = \\frac{Y_f}{G_2 + Y_f},\\qquad Y_f = \\dfrac{1}{R_4} + j\\omega C_4"></span></p>';
@@ -213,13 +213,13 @@
     }
     if (f.fx != null) {
       h += '<p><span class="latex" data-l="|L(f_x)| = 1 \\;\\Rightarrow\\; f_x = ' + fmtHzLatex(f.fx) + ',\\qquad |A(f_x)|\\,|\\beta(f_x)| = 1"></span></p>';
-      h += '<p><span class="latex" data-l="\\angle A(f_x) = -\\arctan\\frac{f_x}{f_p} = ' + FM.fv(f.angADeg, 2) + "^\\circ" + (f.betaFxMag != null ? ",\\qquad |\\beta(f_x)| = " + fmtSciLatex(f.betaFxMag) : "") + "</span></p>";
+      h += '<p><span class="latex" data-l="\\angle A(f_x) = -\\arctan\\frac{f_x}{f_p} = ' + FM.fv(f.angADeg, 2) + '^\\circ' + (f.betaFxMag != null ? ',\\qquad |\\beta(f_x)| = ' + fmtSciLatex(f.betaFxMag) : '') + '"></span></p>';
       if (f.angB != null) h += '<p><span class="latex" data-l="\\angle\\beta(f_x) = ' + FM.fv(f.angB, 2) + '^\\circ"></span></p>';
       var pmParts = "180^\\circ";
       pmParts += (f.angADeg < 0 ? "-" : "+") + FM.fv(Math.abs(f.angADeg), 2) + "^\\circ";
       if (f.angB != null) pmParts += (f.angB < 0 ? "-" : "+") + FM.fv(Math.abs(f.angB), 2) + "^\\circ";
       if (f.load && f.angD != null) pmParts += (f.angD < 0 ? "-" : "+") + FM.fv(Math.abs(f.angD), 2) + "^\\circ";
-      h += '<p><span class="latex" data-l="PM = ' + pmParts + " = " + FM.fv(oaRes.pmDeg, 2) + '^\\circ"></span></p>';
+      h += '<p><span class="latex" data-l="PM = ' + pmParts + ' = ' + FM.fv(oaRes.pmDeg, 2) + '^\\circ"></span></p>';
     }
 
     /* ② 负载电容（仅 C_L>0） */
@@ -227,14 +227,14 @@
       h += sec("filter.calc.load");
       h += '<p><span class="latex" data-l="D_{load}(f) = \\frac{Z_l}{Z_l + R_o} = \\dfrac{1}{1 + R_o\\left(Y_{dp} + j\\omega C_L\\right)}"></span></p>';
       h += '<p style="font-size:.72rem;color:#64748b">' + t("filter.calc.ydpNote") + "</p>";
-      if (f.fpL != null) h += '<p><span class="latex" data-l="f_{pL} \\approx \\frac{1}{2\\pi R_o C_L} = ' + fmtHzLatex(f.fpL) + ",\\qquad \\angle D_{load}(f_x) = " + FM.fv(f.angD, 2) + '^\\circ"></span></p>';
+      if (f.fpL != null) h += '<p><span class="latex" data-l="f_{pL} \\approx \\frac{1}{2\\pi R_o C_L} = ' + fmtHzLatex(f.fpL) + ',\\qquad \\angle D_{load}(f_x) = ' + FM.fv(f.angD, 2) + '^\\circ"></span></p>';
     }
 
     /* ③ 环路增益 @ fc */
     h += sec("filter.calc.loopFc");
     if (f.AfcLin != null && f.betaFcMag != null) {
       var lfc = 20 * Math.log10(f.AfcLin * f.betaFcMag);
-      h += '<p><span class="latex" data-l="|A(f_c)| = \\dfrac{A_{OL}}{\\sqrt{1 + (f_c/f_p)^2}} = ' + FM.fv(20 * Math.log10(f.AfcLin), 1) + "\\ \\text{dB},\\qquad |\\beta(f_c)| = " + fmtSciLatex(f.betaFcMag) + "</span></p>";
+      h += '<p><span class="latex" data-l="|A(f_c)| = \\dfrac{A_{OL}}{\\sqrt{1 + (f_c/f_p)^2}} = ' + FM.fv(20 * Math.log10(f.AfcLin), 1) + '\\ \\text{dB},\\qquad |\\beta(f_c)| = ' + fmtSciLatex(f.betaFcMag) + '"></span></p>';
       h += '<p><span class="latex" data-l="L(f_c) = |A(f_c)|\\,|\\beta(f_c)| = ' + FM.fv(lfc, 1) + '\\ \\text{dB}"></span></p>';
     }
     h += '<p style="font-size:.72rem;color:#64748b">' + t("filter.calc.loopFcNote") + "</p>";
@@ -243,14 +243,14 @@
     h += sec("filter.calc.noise");
     var enC = opSel.en_corner_hz || 0;
     if (enC > 0) {
-      h += '<p><span class="latex" data-l="e_n(f) = e_{nW}\\sqrt{1 + \\frac{f_{c,en}}{f}},\\qquad e_n(1\\,\\text{kHz}) = ' + FM.fv(opSel.enW_nv, 0) + "\\sqrt{1 + " + FM.fv(enC, 0) + "/1000} = " + fmtSciLatex(f.en1k) + '\\ \\tfrac{\\text{nV}}{\\sqrt{\\text{Hz}}}"></span></p>';
+      h += '<p><span class="latex" data-l="e_n(f) = e_{nW}\\sqrt{1 + \\frac{f_{c,en}}{f}},\\qquad e_n(1\\,\\text{kHz}) = ' + FM.fv(opSel.enW_nv, 0) + '\\sqrt{1 + ' + FM.fv(enC, 0) + '/1000} = ' + fmtSciLatex(f.en1k) + '\\ \\tfrac{\\text{nV}}{\\sqrt{\\text{Hz}}}"></span></p>';
     } else {
       h += '<p><span class="latex" data-l="e_n(f) = e_{nW} = ' + FM.fv(opSel.enW_nv, 0) + '\\ \\tfrac{\\text{nV}}{\\sqrt{\\text{Hz}}}"></span></p>';
     }
-    var niTerm = kind === "diff1" ? " + \\bigl(|H_{i^+}(f)|\\,i_n\\bigr)^2" : "";
-    h += '<p><span class="latex" data-l="v^2_{n,out}(f) = |H_e(f)|^2\\,e_n^2(f) + \\bigl(|H_{i^-}(f)|\\,i_n\\bigr)^2' + niTerm + "</span></p>";
+    var niTerm = kind === 'diff1' ? ' + \\bigl(|H_{i^+}(f)|\\,i_n\\bigr)^2' : '';
+    h += '<p><span class="latex" data-l="v^2_{n,out}(f) = |H_e(f)|^2\\,e_n^2(f) + \\bigl(|H_{i^-}(f)|\\,i_n\\bigr)^2' + niTerm + '"></span></p>';
     if (f.he1k != null) {
-      h += '<p><span class="latex" data-l="|H_e(1\\,\\text{kHz})| = ' + fmtSciLatex(f.he1k) + ",\\quad |H_{i^-}(1\\,\\text{kHz})| = " + fmtSciLatex(f.him1k) + (kind === "diff1" ? ",\\quad |H_{i^+}| = " + fmtSciLatex(f.hip1k) : "") + "</span></p>";
+      h += '<p><span class="latex" data-l="|H_e(1\\,\\text{kHz})| = ' + fmtSciLatex(f.he1k) + ',\\quad |H_{i^-}(1\\,\\text{kHz})| = ' + fmtSciLatex(f.him1k) + (kind === 'diff1' ? ',\\quad |H_{i^+}| = ' + fmtSciLatex(f.hip1k) : '') + '"></span></p>';
       h += '<p><span class="latex" data-l="v_{n,out}(1\\,\\text{kHz}) = ' + fmtSciLatex(oaRes.noiseDensity1k_nVrtHz) + '\\ \\tfrac{\\text{nV}}{\\sqrt{\\text{Hz}}}"></span></p>';
     }
     h += '<p><span class="latex" data-l="v_{n,rms} = \\sqrt{\\int_{0.1\\,\\text{Hz}}^{10\\,\\text{MHz}} v^2_{n,out}(f)\\,df} = ' + fmtSciLatex(oaRes.noiseRms_uV) + '\\ \\mu\\text{V}"></span> <span style="font-size:.72rem;color:#64748b">' + t('filter.calc.intNote') + '</span></p>';
@@ -258,19 +258,19 @@
     /* ⑤ 输出失调 */
     h += sec("filter.calc.offset");
     var ngRatio = kind === "mfb2" ? "\\dfrac{R_2}{R_1}" : "\\dfrac{R_4}{R_2}";
-    h += '<p><span class="latex" data-l="NG(0) = 1 + ' + ngRatio + " = " + fmtSciLatex(f.ngClosed) + "</span></p>";
+    h += '<p><span class="latex" data-l="NG(0) = 1 + ' + ngRatio + ' = ' + fmtSciLatex(f.ngClosed) + '"></span></p>';
     if (f.himDC != null) {
-      h += '<p><span class="latex" data-l="|H_{i^-}(0)| = ' + fmtSciLatex(f.himDC) + '\\ \\Omega' + (kind === "diff1" ? ',\\quad |H_{i^+}(0)| = ' + fmtSciLatex(f.hipDC) + '\\ \\Omega' : '') + '</span></p>';
+      h += '<p><span class="latex" data-l="|H_{i^-}(0)| = ' + fmtSciLatex(f.himDC) + '\\ \\Omega' + (kind === 'diff1' ? ',\\quad |H_{i^+}(0)| = ' + fmtSciLatex(f.hipDC) + '\\ \\Omega' : '') + '"></span></p>';
     }
     var ibExpr = kind === "mfb2" ? "|H_{i^-}(0)|\\,I_b" : "\\sqrt{\\bigl(|H_{i^+}(0)|\\,I_b\\bigr)^2 + \\bigl(|H_{i^-}(0)|\\,I_b\\bigr)^2}";
-    h += '<p><span class="latex" data-l="V_{o,worst} = NG\\cdot EIO_{max} + ' + ibExpr + " = " + fmtSciLatex(oaRes.eioTerm_mV) + '\\ \\text{mV} + ' + fmtSciLatex(oaRes.ibTerm_mV) + '\\ \\text{mV} = ' + fmtSciLatex(oaRes.offsetWorst_mV) + '\\ \\text{mV}"></span></p>';
+    h += '<p><span class="latex" data-l="V_{o,worst} = NG\\cdot EIO_{max} + ' + ibExpr + ' = ' + fmtSciLatex(oaRes.eioTerm_mV) + '\\ \\text{mV} + ' + fmtSciLatex(oaRes.ibTerm_mV) + '\\ \\text{mV} = ' + fmtSciLatex(oaRes.offsetWorst_mV) + '\\ \\text{mV}"></span></p>';
 
     /* ⑥ 电阻容差（直流增益） */
     if (oaRes.tolerance && f.gNom != null) {
       h += sec("filter.calc.tol");
       var ratio = kind === "mfb2" ? "\\dfrac{R_2}{R_1}" : "\\dfrac{R_4}{R_2}";
-      h += '<p><span class="latex" data-l="G = ' + ratio + ",\\qquad G_{min} = G\\cdot\\frac{1-t}{1+t},\\qquad G_{max} = G\\cdot\\frac{1+t}{1-t}\\ \\ (t = " + fmtPct(oaRes.tolerance.pct) + '\\%)"></span></p>';
-      h += '<p><span class="latex" data-l="G_{min} = ' + fmtSciLatex(f.gMinF) + ",\\qquad G_{max} = " + fmtSciLatex(f.gMaxF) + "</span></p>";
+      h += '<p><span class="latex" data-l="G = ' + ratio + ',\\qquad G_{min} = G\\cdot\\frac{1-t}{1+t},\\qquad G_{max} = G\\cdot\\frac{1+t}{1-t}\\ \\ (t = ' + fmtPct(oaRes.tolerance.pct) + '\\%)"></span></p>';
+      h += '<p><span class="latex" data-l="G_{min} = ' + fmtSciLatex(f.gMinF) + ',\\qquad G_{max} = ' + fmtSciLatex(f.gMaxF) + '"></span></p>';
     }
 
     h += '</div>';

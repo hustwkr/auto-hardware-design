@@ -113,7 +113,9 @@
 
   function renderLatex(){
     try{document.querySelectorAll('.latex').forEach(function(e){
-      try{var w=window;if(!w.katex){e.textContent=e.getAttribute('data-l');return}
+      if(e.querySelector('.katex'))return;
+      try{var w=window;if(!w.katex)return;
+        while(e.firstChild)e.removeChild(e.firstChild);
         w.katex.render(e.getAttribute('data-l'),e,{throwOnError:false})}
       catch(er){}})
     }catch(er){}

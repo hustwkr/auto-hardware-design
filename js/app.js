@@ -9,14 +9,40 @@
   }
   window.saveBlobWithDialog = saveBlobWithDialog;
 
-  /* ── Shared LaTeX renderer (called after innerHTML with .latex spans) ─ */
+  /* ── Shared LaTeX renderer ── */
+  /* Renders all .latex spans that haven't been rendered yet. */
+  /* Uses data-rendered flag to prevent double-rendering.     */
   window._renderLatex = function(){
-    try{document.querySelectorAll('.latex').forEach(function(e){
-      try{var w=window;if(!w.katex){e.textContent=e.getAttribute('data-l');return}
-        w.katex.render(e.getAttribute('data-l'),e,{throwOnError:false})}
-      catch(er){}})
+    try{
+      var spans = document.querySelectorAll('.latex');
+      for(var i=0; i<spans.length; i++){
+        var e = spans[i];
+        if(e.getAttribute('data-rendered') === '1') continue;
+        var latex = e.getAttribute('data-l');
+        if(!latex){ e.textContent=''; e.setAttribute('data-rendered','1'); continue; }
+        if(!window.katex) continue;
+        try{
+          while(e.firstChild) e.removeChild(e.firstChild);
+          window.katex.render(latex, e, {throwOnError:false});
+          e.setAttribute('data-rendered','1');
+        }catch(er){
+          while(e.firstChild) e.removeChild(e.firstChild);
+          e.textContent = latex;
+          e.setAttribute('data-rendered','1');
+        }
+      }
     }catch(er){}
   };
+
+  /* ── KaTeX load watcher ─── */
+  (function _waitForKatex(){
+    if(window.katex){ window._renderLatex(); return; }
+    var tries=0;
+    var id=setInterval(function(){
+      if(window.katex){ clearInterval(id); window._renderLatex(); }
+      else if(++tries>=50){ clearInterval(id); }
+    },100);
+  })();
 
   /* ── Export dropdown toggle ────────────── */
   function toggleExportDropdown(e,tab){e.stopPropagation();var d=document.getElementById('export'+tab.charAt(0).toUpperCase()+tab.slice(1)+'Dropdown');d.classList.toggle('show')}
